@@ -1,0 +1,14 @@
+{
+  "name": "channel-partner-admin",
+  "version": "1.0.0",
+  "description": "InstantllyCards Channel Partner Admin Portal",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static HTML - No build needed'",
+    "start": "npx serve ."
+  },
+  "keywords": ["admin", "channel-partner", "instantlly"],
+  "author": "InstantllyCards",
+  "license": "MIT"
+}
