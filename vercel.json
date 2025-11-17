@@ -1,6 +1,7 @@
 {
   "version": 2,
   "name": "channel-partner-admin",
+  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/(.*)",
