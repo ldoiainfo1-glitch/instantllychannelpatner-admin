@@ -276,10 +276,15 @@
 
         // Check if already logged in
         window.addEventListener('DOMContentLoaded', () => {
+            console.log('🔍 Checking for existing login...');
             const token = localStorage.getItem('channelPartnerToken');
             const rememberAdmin = localStorage.getItem('rememberAdmin');
             
+            console.log('📋 Token exists:', !!token);
+            console.log('📋 Remember me:', rememberAdmin);
+            
             if (token && rememberAdmin) {
+                console.log('✅ Token found, verifying...');
                 // Verify token is still valid
                 fetch(`${API_BASE_URL}/admin-auth/verify`, {
                     headers: {
@@ -288,15 +293,24 @@
                 })
                 .then(res => res.json())
                 .then(data => {
+                    console.log('📥 Verify response:', data);
                     if (data.success) {
+                        console.log('✅ Token valid, redirecting to dashboard...');
                         window.location.href = 'dashboard.html';
+                    } else {
+                        console.log('❌ Token invalid, clearing storage');
+                        localStorage.removeItem('channelPartnerToken');
+                        localStorage.removeItem('rememberAdmin');
                     }
                 })
-                .catch(() => {
+                .catch((err) => {
+                    console.error('❌ Verify failed:', err);
                     // Token invalid, clear storage
                     localStorage.removeItem('channelPartnerToken');
                     localStorage.removeItem('rememberAdmin');
                 });
+            } else {
+                console.log('ℹ️ No token or remember me not set, staying on login page');
             }
         });
     </script>

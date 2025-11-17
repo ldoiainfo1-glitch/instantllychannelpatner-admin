@@ -366,22 +366,10 @@
         }
 
         function checkAdminAccess() {
-            const adminPassword = localStorage.getItem('adminPassword');
-            if (adminPassword === 'admin123') {
-                isAdmin = true;
-                loadAdminData();
-            } else {
-                // Prompt for password
-                const password = prompt('Enter admin password to access this page:');
-                if (password === 'admin123') {
-                    isAdmin = true;
-                    localStorage.setItem('adminPassword', password);
-                    loadAdminData();
-                } else {
-                    alert('Invalid password! Redirecting to homepage...');
-                    window.location.href = 'index.html';
-                }
-            }
+            console.log('✅ Admin access granted via token authentication');
+            // Token is already verified in DOMContentLoaded, just load data
+            isAdmin = true;
+            loadAdminData();
         }
 
         async function loadAdminData() {
