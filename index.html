@@ -277,7 +277,14 @@
         // Check if already logged in - DISABLED to prevent auto-redirect loops
         // Users must manually login each time
         window.addEventListener('DOMContentLoaded', () => {
-            console.log('✅ Login page loaded - auto-login disabled');
+            console.log('✅ Login page loaded');
+            
+            // IMPORTANT: Clear any old tokens to prevent redirect loops
+            localStorage.removeItem('channelPartnerToken');
+            localStorage.removeItem('rememberAdmin');
+            localStorage.removeItem('adminPassword');
+            
+            console.log('🗑️ Cleared old authentication data');
             console.log('ℹ️ Please enter your credentials to login');
         });
     </script>
