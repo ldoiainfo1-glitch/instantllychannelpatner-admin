@@ -216,6 +216,9 @@
             loginBtnText.textContent = 'Signing in...';
             loginSpinner.style.display = 'inline-block';
 
+            console.log('🔐 Attempting login...');
+            console.log('📡 API URL:', `${API_BASE_URL}/admin-auth/login`);
+
             try {
                 const response = await fetch(`${API_BASE_URL}/admin-auth/login`, {
                     method: 'POST',
@@ -227,10 +230,16 @@
 
                 const data = await response.json();
 
+                console.log('📥 Response status:', response.status);
+                console.log('📥 Response data:', data);
+
                 if (response.ok && data.success) {
+                    console.log('✅ Login successful!');
                     // Store token as channelPartnerToken for admin
                     localStorage.setItem('channelPartnerToken', data.data.token);
                     localStorage.setItem('adminUsername', username);
+                    
+                    console.log('💾 Token stored:', data.data.token.substring(0, 30) + '...');
                     
                     // Store remember me preference
                     if (rememberMe) {
@@ -242,14 +251,19 @@
                     errorDiv.style.display = 'block';
                     errorMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i>Login successful! Redirecting...';
 
+                    console.log('🔄 Redirecting to dashboard in 1 second...');
+
                     // Redirect to dashboard
                     setTimeout(() => {
+                        console.log('➡️  Navigating to dashboard.html');
                         window.location.href = 'dashboard.html';
                     }, 1000);
                 } else {
+                    console.error('❌ Login failed:', data.message);
                     throw new Error(data.message || 'Invalid credentials');
                 }
             } catch (error) {
+                console.error('❌ Login error:', error);
                 errorDiv.className = 'alert alert-danger';
                 errorDiv.style.display = 'block';
                 errorMessage.textContent = error.message || 'Login failed. Please check your credentials.';
