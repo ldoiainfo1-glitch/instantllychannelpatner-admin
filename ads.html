@@ -41,16 +41,39 @@
         }
 
         .ad-image {
-            max-width: 100px;
-            max-height: 80px;
+            height: 48px;
+            width: auto;
+            max-width: 150px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
             cursor: pointer;
             transition: transform 0.3s;
+            display: block;
         }
 
         .ad-image:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .ad-images-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ad-image-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ad-image-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 4px;
         }
 
         .status-badge {
@@ -981,21 +1004,23 @@
                     <tr>
                         <td>${globalIndex}</td>
                         <td>
-                            <div class="d-flex flex-column gap-2">
-                                <div>
-                                    <small class="text-muted d-block">Bottom</small>
+                            <div class="ad-images-container">
+                                <div class="ad-image-wrapper">
+                                    <span class="ad-image-label">Bottom</span>
                                     <img src="${getImageUrl(ad._id, 'bottom')}" 
+                                        alt="${ad.title} - Bottom"
                                         class="ad-image" onclick="showImageModal('${ad._id}', 'bottom')" 
-                                        title="Bottom Banner"
-                                        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
+                                        title="Click to view full size"
+                                        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22><rect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22>Image Error</text></svg>'">
                                 </div>
                                 ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
-                                    <div>
-                                        <small class="text-muted d-block">Full</small>
+                                    <div class="ad-image-wrapper">
+                                        <span class="ad-image-label">Full</span>
                                         <img src="${getImageUrl(ad._id, 'fullscreen')}" 
+                                            alt="${ad.title} - Fullscreen"
                                             class="ad-image" onclick="showImageModal('${ad._id}', 'fullscreen')" 
-                                            title="Fullscreen"
-                                            onerror="this.style.display='none'">
+                                            title="Click to view full size"
+                                            onerror="this.style.display='none'; this.parentElement.style.display='none';">
                                     </div>
                                 ` : ''}
                             </div>
@@ -1118,21 +1143,23 @@
                 <tr>
                     <td>${index + 1}</td>
                     <td>
-                        <div class="d-flex flex-column gap-2">
-                            <div>
-                                <small class="text-muted d-block">Bottom</small>
+                        <div class="ad-images-container">
+                            <div class="ad-image-wrapper">
+                                <span class="ad-image-label">Bottom</span>
                                 <img src="${getImageUrl(ad._id, 'bottom')}" 
+                                    alt="${ad.title} - Bottom"
                                     class="ad-image" onclick="showImageModal('${ad._id}', 'bottom')" 
-                                    title="Bottom Banner"
-                                    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
+                                    title="Click to view full size"
+                                    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22><rect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22>Image Error</text></svg>'">
                             </div>
                             ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
-                                <div>
-                                    <small class="text-muted d-block">Full</small>
+                                <div class="ad-image-wrapper">
+                                    <span class="ad-image-label">Full</span>
                                     <img src="${getImageUrl(ad._id, 'fullscreen')}" 
+                                        alt="${ad.title} - Fullscreen"
                                         class="ad-image" onclick="showImageModal('${ad._id}', 'fullscreen')" 
-                                        title="Fullscreen"
-                                        onerror="this.style.display='none'">
+                                        title="Click to view full size"
+                                        onerror="this.style.display='none'; this.parentElement.style.display='none';">
                                 </div>
                             ` : ''}
                         </div>
