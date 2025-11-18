@@ -197,6 +197,9 @@
             ? 'http://localhost:8080/api'
             : 'https://instantlly-cards-backend-6ki0.onrender.com/api';
 
+        console.log('🌐 API Base URL:', API_BASE_URL);
+        console.log('🌐 Current hostname:', window.location.hostname);
+
         const loginForm = document.getElementById('loginForm');
         const errorDiv = document.getElementById('errorDiv');
         const errorMessage = document.getElementById('errorMessage');
@@ -211,16 +214,18 @@
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
 
+            console.log('🔐 Login attempt:', { username, rememberMe });
+
             errorDiv.style.display = 'none';
             loginBtn.disabled = true;
             loginBtnText.textContent = 'Signing in...';
             loginSpinner.style.display = 'inline-block';
 
-            console.log('🔐 Attempting login...');
-            console.log('📡 API URL:', `${API_BASE_URL}/admin-auth/login`);
-
             try {
-                const response = await fetch(`${API_BASE_URL}/admin-auth/login`, {
+                const loginUrl = `${API_BASE_URL}/admin-auth/login`;
+                console.log('📡 POST:', loginUrl);
+
+                const response = await fetch(loginUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -228,36 +233,35 @@
                     body: JSON.stringify({ username, password })
                 });
 
-                const data = await response.json();
-
                 console.log('📥 Response status:', response.status);
+                const data = await response.json();
                 console.log('📥 Response data:', data);
 
                 if (response.ok && data.success) {
                     console.log('✅ Login successful!');
-                    // Store token as channelPartnerToken for admin
+                    
+                    // Store token
                     localStorage.setItem('channelPartnerToken', data.data.token);
                     localStorage.setItem('adminUsername', username);
                     
-                    console.log('💾 Token stored:', data.data.token.substring(0, 30) + '...');
-                    
-                    // Store remember me preference
                     if (rememberMe) {
                         localStorage.setItem('rememberAdmin', 'true');
+                    } else {
+                        localStorage.removeItem('rememberAdmin');
                     }
+
+                    console.log('💾 Token stored');
 
                     // Success message
                     errorDiv.className = 'alert alert-success';
                     errorDiv.style.display = 'block';
                     errorMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i>Login successful! Redirecting...';
 
-                    console.log('🔄 Redirecting to dashboard in 1 second...');
-
-                    // Redirect to dashboard
+                    // Redirect immediately
                     setTimeout(() => {
-                        console.log('➡️  Navigating to dashboard.html');
+                        console.log('➡️ Redirecting to dashboard');
                         window.location.href = 'dashboard.html';
-                    }, 1000);
+                    }, 500);
                 } else {
                     console.error('❌ Login failed:', data.message);
                     throw new Error(data.message || 'Invalid credentials');
@@ -266,7 +270,7 @@
                 console.error('❌ Login error:', error);
                 errorDiv.className = 'alert alert-danger';
                 errorDiv.style.display = 'block';
-                errorMessage.textContent = error.message || 'Login failed. Please check your credentials.';
+                errorMessage.textContent = error.message || 'Login failed. Please check your credentials and try again.';
                 
                 loginBtn.disabled = false;
                 loginBtnText.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Sign In';
@@ -274,18 +278,10 @@
             }
         });
 
-        // Check if already logged in - DISABLED to prevent auto-redirect loops
-        // Users must manually login each time
+        // On page load - clear any redirect loops
         window.addEventListener('DOMContentLoaded', () => {
-            console.log('✅ Login page loaded');
-            
-            // IMPORTANT: Clear any old tokens to prevent redirect loops
-            localStorage.removeItem('channelPartnerToken');
-            localStorage.removeItem('rememberAdmin');
-            localStorage.removeItem('adminPassword');
-            
-            console.log('🗑️ Cleared old authentication data');
-            console.log('ℹ️ Please enter your credentials to login');
+            console.log('📄 Login page loaded');
+            console.log('ℹ️ Ready for login');
         });
     </script>
 </body>

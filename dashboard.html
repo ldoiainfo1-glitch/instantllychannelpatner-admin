@@ -274,18 +274,22 @@
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 Dashboard loading...');
+            
             // Check if user is logged in
             const token = localStorage.getItem('channelPartnerToken');
+            
             if (!token) {
-                console.log('❌ No token found, redirecting to login...');
-                // Redirect to login page
+                console.log('❌ No token found - redirecting to login');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('✅ Token found, loading dashboard...');
+            console.log('✅ Token found - loading dashboard');
+            console.log('🔑 Token length:', token.length);
             
-            checkAdminAccess();
+            // Load dashboard data
+            loadAdminData();
             setupTabAutoReload();
         });
 
@@ -365,18 +369,19 @@
             }
         }
 
-        function checkAdminAccess() {
-            console.log('✅ Admin access granted via token authentication');
-            // Token is already verified in DOMContentLoaded, just load data
-            isAdmin = true;
-            loadAdminData();
-        }
-
         async function loadAdminData() {
+            console.log('📊 Loading admin data...');
+            
             try {
                 // Load dashboard stats
                 const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard`);
+                
+                if (!statsResponse.ok) {
+                    throw new Error('Failed to load dashboard stats');
+                }
+                
                 const stats = await statsResponse.json();
+                console.log('✅ Dashboard stats loaded:', stats);
                 
                 document.getElementById('totalPositions').textContent = stats.totalPositions || 0;
                 document.getElementById('availablePositions').textContent = stats.availablePositions || 0;
