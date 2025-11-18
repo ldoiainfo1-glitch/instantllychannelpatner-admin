@@ -246,8 +246,12 @@
                     
                     if (rememberMe) {
                         localStorage.setItem('rememberAdmin', 'true');
+                        localStorage.setItem('savedUsername', username);
+                        localStorage.setItem('savedPassword', password);
                     } else {
                         localStorage.removeItem('rememberAdmin');
+                        localStorage.removeItem('savedUsername');
+                        localStorage.removeItem('savedPassword');
                     }
 
                     console.log('💾 Token stored');
@@ -278,9 +282,31 @@
             }
         });
 
-        // On page load - clear any redirect loops
+        // On page load - load saved credentials and check auth
         window.addEventListener('DOMContentLoaded', () => {
             console.log('📄 Login page loaded');
+            
+            // Check if already logged in
+            const token = localStorage.getItem('channelPartnerToken');
+            if (token && localStorage.getItem('rememberAdmin') === 'true') {
+                console.log('✅ Token found, redirecting to dashboard');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            // Load saved credentials if remember me was checked
+            if (localStorage.getItem('rememberAdmin') === 'true') {
+                const savedUsername = localStorage.getItem('savedUsername');
+                const savedPassword = localStorage.getItem('savedPassword');
+                
+                if (savedUsername && savedPassword) {
+                    document.getElementById('username').value = savedUsername;
+                    document.getElementById('password').value = savedPassword;
+                    document.getElementById('rememberMe').checked = true;
+                    console.log('📝 Loaded saved credentials');
+                }
+            }
+            
             console.log('ℹ️ Ready for login');
         });
     </script>
