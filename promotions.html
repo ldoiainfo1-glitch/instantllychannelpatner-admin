@@ -15,8 +15,8 @@
     <style>
         .language-upload-card {
             border: 2px dashed #dee2e6;
-            border-radius: 10px;
-            padding: 1.5rem;
+            border-radius: 8px;
+            padding: 0.75rem;
             transition: all 0.3s ease;
         }
         
@@ -31,22 +31,28 @@
             background: #d1e7dd;
         }
         
+        .language-upload-card h6 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem !important;
+        }
+        
         .image-preview {
-            max-width: 200px;
-            max-height: 200px;
+            max-width: 120px;
+            max-height: 120px;
             object-fit: contain;
-            border-radius: 8px;
-            margin-top: 1rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
         }
         
         .upload-btn {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.5rem;
             border: 2px dashed #6c757d;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-size: 0.85rem;
         }
         
         .upload-btn:hover {
@@ -57,6 +63,15 @@
         .upload-btn.has-file {
             border-color: #198754;
             background: #d1e7dd;
+        }
+        
+        .upload-btn i {
+            font-size: 1.5rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .upload-btn small {
+            font-size: 0.7rem;
         }
     </style>
 </head>
@@ -225,6 +240,15 @@
             
             // Load existing promotions
             loadExistingPromotions();
+            
+            // Listen for date changes to reset uploads
+            document.getElementById('promotionDate').addEventListener('change', () => {
+                // Clear all uploaded files
+                uploadedFiles.clear();
+                
+                // Reset the cards
+                createLanguageCards();
+            });
         });
         
         // Create language upload cards
@@ -236,13 +260,13 @@
                 col.className = 'col-md-6 col-lg-4';
                 col.innerHTML = `
                     <div class="language-upload-card" id="card-${lang.code}">
-                        <h6 class="mb-3">
-                            <span class="me-2">${lang.icon}</span>
+                        <h6 class="mb-2">
+                            <span class="me-1">${lang.icon}</span>
                             ${lang.name}
                         </h6>
                         <label for="file-${lang.code}" class="upload-btn" id="btn-${lang.code}">
-                            <i class="fas fa-cloud-upload-alt fa-2x mb-2 d-block"></i>
-                            <span class="d-block">Click to upload</span>
+                            <i class="fas fa-cloud-upload-alt mb-1 d-block"></i>
+                            <span class="d-block small">Click to upload</span>
                             <small class="text-muted">PNG, JPG (Max 10MB)</small>
                         </label>
                         <input type="file" id="file-${lang.code}" accept="image/*" class="d-none" onchange="handleFileSelect(event, '${lang.code}')">
@@ -276,8 +300,8 @@
             card.classList.add('uploaded');
             btn.classList.add('has-file');
             btn.innerHTML = `
-                <i class="fas fa-check-circle fa-2x mb-2 d-block text-success"></i>
-                <span class="d-block">${file.name}</span>
+                <i class="fas fa-check-circle mb-1 d-block text-success"></i>
+                <span class="d-block small text-truncate">${file.name}</span>
                 <small class="text-muted">Click to change</small>
             `;
             
