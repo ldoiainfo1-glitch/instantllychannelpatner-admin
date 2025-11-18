@@ -806,14 +806,22 @@
 
         // Edit Application Info
         async function editApplication(appId, currentName, currentPhone) {
-            const newName = prompt('Enter new name:', currentName);
+            // Create a custom dialog with both fields
+            const newName = prompt(`Edit Partner Information\n\nCurrent Name: ${currentName}\n\nEnter new name (or press OK to keep current):`,  currentName);
             if (newName === null) return; // User cancelled
             
-            const newPhone = prompt('Enter new phone number:', currentPhone);
+            const newPhone = prompt(`Edit Partner Information\n\nCurrent Phone: ${currentPhone}\n\nEnter new phone number (or press OK to keep current):`, currentPhone);
             if (newPhone === null) return; // User cancelled
             
-            if (newName === currentName && newPhone === currentPhone) {
+            // Check if anything changed
+            if (newName.trim() === currentName && newPhone.trim() === currentPhone) {
                 alert('No changes made');
+                return;
+            }
+            
+            // Validate phone number
+            if (newPhone && !/^\d{10}$/.test(newPhone.trim())) {
+                alert('Please enter a valid 10-digit phone number');
                 return;
             }
             
@@ -824,13 +832,13 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        name: newName || currentName,
-                        phone: newPhone || currentPhone
+                        name: newName.trim(),
+                        phone: newPhone.trim()
                     })
                 });
                 
                 if (response.ok) {
-                    showNotification('✅ Application updated! Changes live on website.', 'success');
+                    showNotification('✅ Partner info updated! Changes are now live on the website.', 'success');
                     await refreshDashboardStats();
                     
                     // Reload approved applications
@@ -851,15 +859,39 @@
         async function transferPosition(appId, applicantName, currentPosition) {
             const positionTitle = currentPosition ? currentPosition.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ') : 'N/A';
             
-            const newPosition = prompt(`Transfer ${applicantName}:\n\nCurrent: ${positionTitle}\n\nEnter new position ID:\n(e.g., pos_Central-India_Maharashtra_Mumbai)`);
+            const instructions = `Transfer ${applicantName} to New Position
+
+Current Position: ${positionTitle}
+ID: ${currentPosition}
+
+Enter the new Position ID:
+(You can copy Position IDs from the Channel Partner website)
+
+Examples:
+- pos_Central-India_Maharashtra_Mumbai
+- pos_Central-India_Maharashtra_Thane
+- pos_president_india`;
+
+            const newPosition = prompt(instructions);
             
-            if (!newPosition) return;
-            if (newPosition === currentPosition) {
-                alert('Same position. No changes.');
+            if (!newPosition || newPosition.trim() === '') {
+                return; // User cancelled or entered nothing
+            }
+            
+            if (newPosition.trim() === currentPosition) {
+                alert('Same position selected. No changes made.');
                 return;
             }
             
-            if (!confirm(`Transfer ${applicantName}?\n\nFrom: ${positionTitle}\nTo: ${newPosition}`)) {
+            // Validate position ID format
+            if (!newPosition.startsWith('pos_')) {
+                alert('Invalid position ID format. Position ID must start with "pos_"');
+                return;
+            }
+            
+            const newPositionTitle = newPosition.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ');
+            
+            if (!confirm(`Confirm Transfer:\n\n${applicantName}\n\nFrom: ${positionTitle}\n\nTo: ${newPositionTitle}\n\nProceed?`)) {
                 return;
             }
             
@@ -870,12 +902,13 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        newPositionId: newPosition
+                        newPositionId: newPosition.trim()
                     })
                 });
                 
                 if (response.ok) {
-                    showNotification(`✅ ${applicantName} transferred! Website updated.`, 'success');
+                    const result = await response.json();
+                    showNotification(`✅ ${applicantName} transferred successfully!\n\nOld position is now available.\nNew position updated on website.`, 'success');
                     await refreshDashboardStats();
                     
                     // Reload approved applications
