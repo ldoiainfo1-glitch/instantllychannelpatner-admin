@@ -412,6 +412,16 @@
         let selectedModalUser = null;
         let searchTimeout = null;
 
+        // Logging utilities
+        const log = {
+            frontend: (msg, ...args) => console.log(`%c🖥️  [FRONTEND]%c ${msg}`, 'color: #3b82f6; font-weight: bold', '', ...args),
+            api: (endpoint, method = 'GET') => console.log(`%c🌐 [API CALL]%c ${method} ${endpoint}`, 'color: #8b5cf6; font-weight: bold', ''),
+            success: (msg, data) => console.log(`%c✅ [SUCCESS]%c ${msg}`, 'color: #10b981; font-weight: bold', '', data || ''),
+            error: (source, msg, error) => console.error(`%c❌ [${source}]%c ${msg}`, 'color: #ef4444; font-weight: bold', '', error || ''),
+            warn: (msg, ...args) => console.warn(`%c⚠️  [WARNING]%c ${msg}`, 'color: #f59e0b; font-weight: bold', '', ...args),
+            backend: (msg, data) => console.log(`%c⚙️  [BACKEND]%c ${msg}`, 'color: #06b6d4; font-weight: bold', '', data || '')
+        };
+
         // Check admin auth
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('channelPartnerToken');
@@ -465,19 +475,33 @@
 
         async function loadTransactions() {
             try {
+                log.frontend('Loading transactions...');
                 itemsPerPage = parseInt(document.getElementById('limitFilter').value);
                 
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/admin/all-transactions?limit=1000`, {
+                const endpoint = `${API_BASE_URL}/admin/all-transactions?limit=1000`;
+                log.api(endpoint, 'GET');
+                
+                const response = await fetch(endpoint, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     }
                 });
 
+                log.backend('Transaction response status', { status: response.status, ok: response.ok });
+
                 if (response.ok) {
                     const data = await response.json();
+                    log.backend('Transaction data received', { 
+                        transactionCount: data.transactions?.length || 0,
+                        hasTransactions: !!data.transactions,
+                        data: data 
+                    });
+                    
                     allTransactions = data.transactions || [];
                     filteredTransactions = allTransactions;
+                    
+                    log.success(`Loaded ${allTransactions.length} transactions`);
                     
                     // Calculate today's stats
                     const today = new Date().toDateString();
@@ -487,23 +511,35 @@
                     );
                     const todayAmount = todayTransfers.reduce((sum, t) => sum + t.amount, 0);
                     
+                    log.frontend('Today stats', { transfers: todayTransfers.length, amount: todayAmount });
+                    
                     document.getElementById('transfersToday').textContent = (todayTransfers.length / 2).toFixed(0);
                     document.getElementById('creditsMoved').textContent = (todayAmount / 2).toLocaleString('en-IN');
                     
                     displayTransactions();
                 } else {
+                    const errorText = await response.text();
+                    log.error('API', `Failed to load transactions - Status: ${response.status}`, errorText);
                     showError('Failed to load transactions');
                 }
             } catch (error) {
-                console.error('Load transactions error:', error);
+                log.error('LOAD_TRANSACTIONS', 'Exception loading transactions', error);
                 showError('Error loading transactions');
             }
         }
 
         function displayTransactions() {
+            log.frontend('Displaying transactions', { 
+                total: allTransactions.length, 
+                filtered: filteredTransactions.length,
+                currentPage: currentPage,
+                itemsPerPage: itemsPerPage
+            });
+            
             const tbody = document.getElementById('transactionsTableBody');
             
             if (filteredTransactions.length === 0) {
+                log.warn('No transactions to display');
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="8" class="text-center py-5">
@@ -519,6 +555,8 @@
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
             const pageTransactions = filteredTransactions.slice(start, end);
+            
+            log.frontend(`Showing ${pageTransactions.length} transactions (${start + 1} to ${Math.min(end, filteredTransactions.length)})`);
 
             tbody.innerHTML = pageTransactions.map(tx => {
                 const date = new Date(tx.createdAt).toLocaleString('en-IN', {
