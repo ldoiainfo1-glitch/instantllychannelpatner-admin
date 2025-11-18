@@ -59,8 +59,9 @@
 
         .ad-images-container {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            flex-direction: row;
+            gap: 8px;
+            align-items: flex-start;
         }
 
         .ad-image-wrapper {
@@ -70,10 +71,11 @@
         }
 
         .ad-image-label {
-            font-size: 11px;
-            font-weight: 500;
+            font-size: 10px;
+            font-weight: 600;
             color: #6c757d;
-            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .status-badge {
@@ -184,7 +186,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="admin.html">
-                <img src="images/logo.jpeg" alt="Instantly Cards Logo" height="40" class="me-3">
+                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="me-3">
+                    <circle cx="50" cy="50" r="45" fill="#1e3c72"/>
+                    <text x="50" y="65" font-size="60" font-weight="bold" fill="white" text-anchor="middle">I</text>
+                </svg>
                 Instantly Cards Admin
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -1417,6 +1422,12 @@
         function setupUploadArea() {
             const uploadArea = document.getElementById('uploadArea');
             const imageInput = document.getElementById('imageInput');
+
+            // Check if elements exist before adding event listeners
+            if (!uploadArea || !imageInput) {
+                console.log('Upload area elements not found - skipping setup');
+                return;
+            }
 
             uploadArea.addEventListener('click', (e) => {
                 if (e.target !== imageInput) imageInput.click();
