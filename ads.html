@@ -850,51 +850,39 @@
         // Load all ads
         async function loadAllAds() {
             try {
-                const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/admin/ads/all`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                console.log('📥 Loading all ads from:', `${API_BASE_URL}/ads`);
+                const response = await fetch(`${API_BASE_URL}/ads`);
 
                 if (!response.ok) {
-                    if (response.status === 401) {
-                        showLoginModal();
-                    }
-                    throw new Error('Failed to load ads');
+                    throw new Error(`Failed to load ads: ${response.status}`);
                 }
 
                 const data = await response.json();
-                allAds = data.ads || [];
+                console.log('✅ Loaded ads:', data.data?.length || 0);
+                allAds = data.data || [];
                 filteredAds = allAds; // Initialize filtered ads
                 updateStats();
                 renderAllAdsTable();
             } catch (error) {
-                console.error('Error loading ads:', error);
+                console.error('❌ Error loading ads:', error);
             }
         }
 
         // Load pending ads
         async function loadPendingAds() {
             try {
-                const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/admin/ads/pending`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                console.log('📥 Loading pending ads from:', `${API_BASE_URL}/ads/pending`);
+                const response = await fetch(`${API_BASE_URL}/ads/pending`);
 
                 if (!response.ok) {
-                    if (response.status === 401) {
-                        showLoginModal();
-                    }
-                    throw new Error('Failed to load pending ads');
+                    throw new Error(`Failed to load pending ads: ${response.status}`);
                 }
 
                 const data = await response.json();
-                renderPendingAdsTable(data.ads || []);
+                console.log('✅ Loaded pending ads:', data.data?.length || 0);
+                renderPendingAdsTable(data.data || []);
             } catch (error) {
-                console.error('Error loading pending ads:', error);
+                console.error('❌ Error loading pending ads:', error);
             }
         }
 
@@ -1014,18 +1002,24 @@
                                     <span class="ad-image-label">Bottom</span>
                                     <img src="${getImageUrl(ad._id, 'bottom')}" 
                                         alt="${ad.title} - Bottom"
-                                        class="ad-image" onclick="showImageModal('${ad._id}', 'bottom')" 
+                                        class="ad-image" 
+                                        onclick="showImageModal('${ad._id}', 'bottom')" 
                                         title="Click to view full size"
-                                        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22><rect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22>Image Error</text></svg>'">
+                                        crossorigin="anonymous"
+                                        onload="console.log('✅ Bottom image loaded:', '${ad._id}')"
+                                        onerror="console.error('❌ Bottom image failed:', '${getImageUrl(ad._id, 'bottom')}'); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22%3E%3Crect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22%3ELoading...%3C/text%3E%3C/svg%3E'">
                                 </div>
                                 ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
                                     <div class="ad-image-wrapper">
                                         <span class="ad-image-label">Full</span>
                                         <img src="${getImageUrl(ad._id, 'fullscreen')}" 
                                             alt="${ad.title} - Fullscreen"
-                                            class="ad-image" onclick="showImageModal('${ad._id}', 'fullscreen')" 
+                                            class="ad-image" 
+                                            onclick="showImageModal('${ad._id}', 'fullscreen')" 
                                             title="Click to view full size"
-                                            onerror="this.style.display='none'; this.parentElement.style.display='none';">
+                                            crossorigin="anonymous"
+                                            onload="console.log('✅ Full image loaded:', '${ad._id}')"
+                                            onerror="console.error('❌ Full image failed:', '${getImageUrl(ad._id, 'fullscreen')}'); this.style.display='none'; this.parentElement.style.display='none';">
                                     </div>
                                 ` : ''}
                             </div>
@@ -1153,18 +1147,24 @@
                                 <span class="ad-image-label">Bottom</span>
                                 <img src="${getImageUrl(ad._id, 'bottom')}" 
                                     alt="${ad.title} - Bottom"
-                                    class="ad-image" onclick="showImageModal('${ad._id}', 'bottom')" 
+                                    class="ad-image" 
+                                    onclick="showImageModal('${ad._id}', 'bottom')" 
                                     title="Click to view full size"
-                                    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22><rect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22>Image Error</text></svg>'">
+                                    crossorigin="anonymous"
+                                    onload="console.log('✅ Pending bottom image loaded:', '${ad._id}')"
+                                    onerror="console.error('❌ Pending bottom image failed:', '${getImageUrl(ad._id, 'bottom')}'); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22%3E%3Crect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22%3ELoading...%3C/text%3E%3C/svg%3E'">
                             </div>
                             ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
                                 <div class="ad-image-wrapper">
                                     <span class="ad-image-label">Full</span>
                                     <img src="${getImageUrl(ad._id, 'fullscreen')}" 
                                         alt="${ad.title} - Fullscreen"
-                                        class="ad-image" onclick="showImageModal('${ad._id}', 'fullscreen')" 
+                                        class="ad-image" 
+                                        onclick="showImageModal('${ad._id}', 'fullscreen')" 
                                         title="Click to view full size"
-                                        onerror="this.style.display='none'; this.parentElement.style.display='none';">
+                                        crossorigin="anonymous"
+                                        onload="console.log('✅ Pending full image loaded:', '${ad._id}')"
+                                        onerror="console.error('❌ Pending full image failed:', '${getImageUrl(ad._id, 'fullscreen')}'); this.style.display='none'; this.parentElement.style.display='none';">
                                 </div>
                             ` : ''}
                         </div>
@@ -1603,7 +1603,9 @@
         // Utility functions
         function getImageUrl(adId, type) {
             // Match InstantllyAds format exactly
-            return `${BACKEND_URL}/api/ads/image/${adId}/${type}`;
+            const url = `${BACKEND_URL}/api/ads/image/${adId}/${type}`;
+            console.log(`🖼️  getImageUrl: ${type} -> ${url}`);
+            return url;
         }
 
         function showImageModal(adId, type) {
