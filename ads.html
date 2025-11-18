@@ -933,6 +933,16 @@
         let selectedAdId = null;
         let selectedFiles = [];
 
+        // Logging utilities with clear source identification
+        const log = {
+            frontend: (msg, ...args) => console.log(`%c🖥️  [FRONTEND]%c ${msg}`, 'color: #3b82f6; font-weight: bold', '', ...args),
+            api: (endpoint, method = 'GET') => console.log(`%c🌐 [API CALL]%c ${method} ${endpoint}`, 'color: #8b5cf6; font-weight: bold', ''),
+            success: (msg, data) => console.log(`%c✅ [SUCCESS]%c ${msg}`, 'color: #10b981; font-weight: bold', '', data || ''),
+            error: (source, msg, error) => console.error(`%c❌ [${source}]%c ${msg}`, 'color: #ef4444; font-weight: bold', '', error || ''),
+            warn: (msg, ...args) => console.warn(`%c⚠️  [WARNING]%c ${msg}`, 'color: #f59e0b; font-weight: bold', '', ...args),
+            backend: (msg, data) => console.log(`%c⚙️  [BACKEND]%c ${msg}`, 'color: #06b6d4; font-weight: bold', '', data || '')
+        };
+
         // Check admin authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Check if user is logged in
@@ -951,14 +961,15 @@
             const token = localStorage.getItem('channelPartnerToken');
             
             if (!token) {
-                console.log('❌ No token found - redirecting to login');
+                log.error('AUTH', 'No token found - redirecting to login');
                 window.location.href = 'index.html';
                 return false;
             }
 
-            console.log('✅ Token found - loading ads page');
+            log.frontend('Token found - loading ads page');
 
             try {
+                log.api(`${API_BASE_URL}/admin-auth/verify`, 'GET');
                 const response = await fetch(`${API_BASE_URL}/admin-auth/verify`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -966,21 +977,22 @@
                 });
 
                 if (!response.ok) {
-                    console.log('❌ Token verification failed');
+                    log.error('AUTH', 'Token verification failed - Status: ' + response.status);
                     localStorage.removeItem('channelPartnerToken');
                     window.location.href = 'index.html';
                     return false;
                 }
 
                 const data = await response.json();
+                log.backend('Auth verification response', data);
                 if (data.success) {
-                    console.log('✅ Admin authenticated - loading ads');
+                    log.success('Admin authenticated - loading ads');
                     // Admin is authenticated, load data
                     await Promise.all([loadAllAds(), loadPendingAds()]);
                     return true;
                 }
             } catch (error) {
-                console.error('Auth check error:', error);
+                log.error('AUTH', 'Auth check exception', error);
                 window.location.href = 'index.html';
                 return false;
             }
@@ -1012,16 +1024,18 @@
                 const data = await response.json();
 
                 if (data.success && data.data.token) {
+                    log.success('Login successful');
                     localStorage.setItem('channelPartnerToken', data.data.token);
                     bootstrap.Modal.getInstance(document.getElementById('adminLoginModal')).hide();
                     await Promise.all([loadAllAds(), loadPendingAds()]);
                     setupUploadArea();
                 } else {
+                    log.error('LOGIN', 'Login failed: ' + (data.message || 'Unknown error'));
                     errorDiv.textContent = data.message || 'Login failed';
                     errorDiv.style.display = 'block';
                 }
             } catch (error) {
-                console.error('Login error:', error);
+                log.error('LOGIN', 'Login exception', error);
                 errorDiv.textContent = 'Server error. Please try again.';
                 errorDiv.style.display = 'block';
             }
@@ -1037,7 +1051,7 @@
         // Load all ads
         async function loadAllAds() {
             try {
-                console.log('📥 Loading all ads from:', `${API_BASE_URL}/ads`);
+                log.api(`${API_BASE_URL}/ads`, 'GET');
                 const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/ads`, {
                     headers: {
@@ -1047,17 +1061,19 @@
                 });
 
                 if (!response.ok) {
+                    log.error('API', `Failed to load ads - Status: ${response.status}`);
                     throw new Error(`Failed to load ads: ${response.status}`);
                 }
 
                 const data = await response.json();
-                console.log('✅ Loaded ads:', data.data?.length || 0);
+                log.backend('Loaded ads response', { count: data.data?.length || 0, data: data });
+                log.success(`Loaded ${data.data?.length || 0} ads successfully`);
                 allAds = data.data || [];
                 filteredAds = allAds; // Initialize filtered ads
                 updateStats();
                 renderAllAdsTable();
             } catch (error) {
-                console.error('❌ Error loading ads:', error);
+                log.error('LOAD_ADS', 'Error loading ads', error);
             }
         }
 
@@ -1187,8 +1203,8 @@
                                         onclick="showImageModal('${ad._id}', 'bottom')" 
                                         title="Click to view full size"
                                         crossorigin="anonymous"
-                                        onload="console.log('✅ Bottom image loaded:', '${ad._id}')"
-                                        onerror="console.error('❌ Bottom image failed:', '${getImageUrl(ad._id, 'bottom')}'); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22%3E%3Crect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22%3ELoading...%3C/text%3E%3C/svg%3E'">
+                                        onload="log.success('Bottom image loaded', '${ad._id}')"
+                                        onerror="log.error('IMAGE', 'Bottom image failed to load', '${getImageUrl(ad._id, 'bottom')}'); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22%3E%3Crect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22%3EImage Error%3C/text%3E%3C/svg%3E'">
                                 </div>
                                 ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
                                     <div class="ad-image-wrapper">
@@ -1199,8 +1215,8 @@
                                             onclick="showImageModal('${ad._id}', 'fullscreen')" 
                                             title="Click to view full size"
                                             crossorigin="anonymous"
-                                            onload="console.log('✅ Full image loaded:', '${ad._id}')"
-                                            onerror="console.error('❌ Full image failed:', '${getImageUrl(ad._id, 'fullscreen')}'); this.style.display='none'; this.parentElement.style.display='none';">
+                                            onload="log.success('Full image loaded', '${ad._id}')"
+                                            onerror="log.error('IMAGE', 'Full image failed to load', '${getImageUrl(ad._id, 'fullscreen')}'); this.style.display='none'; this.parentElement.style.display='none';">
                                     </div>
                                 ` : ''}
                             </div>
