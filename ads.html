@@ -851,7 +851,13 @@
         async function loadAllAds() {
             try {
                 console.log('📥 Loading all ads from:', `${API_BASE_URL}/ads`);
-                const response = await fetch(`${API_BASE_URL}/ads`);
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/ads`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
                 if (!response.ok) {
                     throw new Error(`Failed to load ads: ${response.status}`);
@@ -872,7 +878,13 @@
         async function loadPendingAds() {
             try {
                 console.log('📥 Loading pending ads from:', `${API_BASE_URL}/ads/pending`);
-                const response = await fetch(`${API_BASE_URL}/ads/pending`);
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/ads/pending`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
                 if (!response.ok) {
                     throw new Error(`Failed to load pending ads: ${response.status}`);
