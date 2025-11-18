@@ -488,6 +488,16 @@
                         <i class="fas fa-times me-2"></i> Reject
                     </button>
                 `;
+            } else if (status === 'approved') {
+                // Show edit and transfer buttons for approved applications
+                actionButtons = `
+                    <button class="btn btn-primary admin-action-btn" onclick="editApplication('${app._id}', '${app.applicantInfo.name}', '${app.applicantInfo.phone}')">
+                        <i class="fas fa-edit me-2"></i> Edit Info
+                    </button>
+                    <button class="btn btn-warning admin-action-btn" onclick="transferPosition('${app._id}', '${app.applicantInfo.name}', '${app.positionId}')">
+                        <i class="fas fa-exchange-alt me-2"></i> Transfer
+                    </button>
+                `;
             }
             
             // Always show delete button for all statuses
@@ -793,6 +803,94 @@
                 window.location.href = 'index.html';
             }
         });
+
+        // Edit Application Info
+        async function editApplication(appId, currentName, currentPhone) {
+            const newName = prompt('Enter new name:', currentName);
+            if (newName === null) return; // User cancelled
+            
+            const newPhone = prompt('Enter new phone number:', currentPhone);
+            if (newPhone === null) return; // User cancelled
+            
+            if (newName === currentName && newPhone === currentPhone) {
+                alert('No changes made');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/applications/${appId}/edit`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: newName || currentName,
+                        phone: newPhone || currentPhone
+                    })
+                });
+                
+                if (response.ok) {
+                    showNotification('✅ Application updated! Changes live on website.', 'success');
+                    await refreshDashboardStats();
+                    
+                    // Reload approved applications
+                    const approvedResponse = await fetch(`${API_BASE_URL}/admin/applications/approved`);
+                    const approvedApplications = await approvedResponse.json();
+                    displayApprovedApplications(approvedApplications);
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Failed to update', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating:', error);
+                showNotification('Error updating application', 'error');
+            }
+        }
+
+        // Transfer to Another Position
+        async function transferPosition(appId, applicantName, currentPosition) {
+            const positionTitle = currentPosition ? currentPosition.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ') : 'N/A';
+            
+            const newPosition = prompt(`Transfer ${applicantName}:\n\nCurrent: ${positionTitle}\n\nEnter new position ID:\n(e.g., pos_Central-India_Maharashtra_Mumbai)`);
+            
+            if (!newPosition) return;
+            if (newPosition === currentPosition) {
+                alert('Same position. No changes.');
+                return;
+            }
+            
+            if (!confirm(`Transfer ${applicantName}?\n\nFrom: ${positionTitle}\nTo: ${newPosition}`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/applications/${appId}/transfer`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        newPositionId: newPosition
+                    })
+                });
+                
+                if (response.ok) {
+                    showNotification(`✅ ${applicantName} transferred! Website updated.`, 'success');
+                    await refreshDashboardStats();
+                    
+                    // Reload approved applications
+                    const approvedResponse = await fetch(`${API_BASE_URL}/admin/applications/approved`);
+                    const approvedApplications = await approvedResponse.json();
+                    displayApprovedApplications(approvedApplications);
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Failed to transfer', 'error');
+                }
+            } catch (error) {
+                console.error('Error transferring:', error);
+                showNotification('Error transferring position', 'error');
+            }
+        }
     </script>
 </body>
 </html>
