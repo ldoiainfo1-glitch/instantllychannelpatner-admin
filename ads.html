@@ -1064,26 +1064,8 @@
 
         // Load pending ads
         async function loadPendingAds() {
-            try {
-                console.log('📥 Loading pending ads from:', `${API_BASE_URL}/ads/pending`);
-                const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/ads/pending`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to load pending ads: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('✅ Loaded pending ads:', data.data?.length || 0);
-                renderPendingAdsTable(data.data || []);
-            } catch (error) {
-                console.error('❌ Error loading pending ads:', error);
-            }
+            // Pending ads endpoint not implemented yet - skip silently
+            return;
         }
 
         // Update statistics
