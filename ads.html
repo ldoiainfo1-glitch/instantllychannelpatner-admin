@@ -721,7 +721,7 @@
         // Check admin authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Check if user is logged in
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('channelPartnerToken');
             if (!token) {
                 // Redirect to login page
                 window.location.href = 'index.html';
@@ -733,12 +733,15 @@
 
         // Check admin authentication
         async function checkAdminAuth() {
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('channelPartnerToken');
             
             if (!token) {
+                console.log('❌ No token found - redirecting to login');
                 window.location.href = 'index.html';
                 return false;
             }
+
+            console.log('✅ Token found - loading ads page');
 
             try {
                 const response = await fetch(`${API_BASE_URL}/admin-auth/verify`, {
@@ -748,13 +751,15 @@
                 });
 
                 if (!response.ok) {
-                    localStorage.removeItem('adminToken');
+                    console.log('❌ Token verification failed');
+                    localStorage.removeItem('channelPartnerToken');
                     window.location.href = 'index.html';
                     return false;
                 }
 
                 const data = await response.json();
                 if (data.success) {
+                    console.log('✅ Admin authenticated - loading ads');
                     // Admin is authenticated, load data
                     await Promise.all([loadAllAds(), loadPendingAds()]);
                     return true;
@@ -792,7 +797,7 @@
                 const data = await response.json();
 
                 if (data.success && data.data.token) {
-                    localStorage.setItem('adminToken', data.data.token);
+                    localStorage.setItem('channelPartnerToken', data.data.token);
                     bootstrap.Modal.getInstance(document.getElementById('adminLoginModal')).hide();
                     await Promise.all([loadAllAds(), loadPendingAds()]);
                     setupUploadArea();
@@ -808,7 +813,7 @@
         }
 
         function logout() {
-            localStorage.removeItem('adminToken');
+            localStorage.removeItem('channelPartnerToken');
             localStorage.removeItem('adminUsername');
             localStorage.removeItem('rememberAdmin');
             window.location.href = 'index.html';
@@ -817,7 +822,7 @@
         // Load all ads
         async function loadAllAds() {
             try {
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/admin/ads/all`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -844,7 +849,7 @@
         // Load pending ads
         async function loadPendingAds() {
             try {
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/admin/ads/pending`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1189,7 +1194,7 @@
                 editingAdId = adId;
                 
                 // Fetch complete ad data
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1272,7 +1277,7 @@
                     formData.append('images', fullscreenImageFile);
                 }
 
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/admin/ads/${editingAdId}`, {
                     method: 'PUT',
                     headers: {
@@ -1302,7 +1307,7 @@
 
         async function confirmApprove() {
             const priority = document.getElementById('approvePriority').value;
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('channelPartnerToken');
 
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/ads/${selectedAdId}/approve`, {
@@ -1328,7 +1333,7 @@
 
         async function confirmReject() {
             const reason = document.getElementById('rejectionReason').value.trim();
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('channelPartnerToken');
 
             if (!reason) {
                 alert('Please provide a rejection reason');
@@ -1359,7 +1364,7 @@
 
         async function confirmDelete() {
             try {
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/ads/${selectedAdId}`, {
                     method: 'DELETE',
                     headers: {
@@ -1523,7 +1528,7 @@
                     }
                 }, 200);
 
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/ads`, {
                     method: 'POST',
                     headers: {
