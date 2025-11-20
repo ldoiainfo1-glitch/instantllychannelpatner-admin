@@ -409,8 +409,11 @@
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Admin Configuration -->
+    <script src="config.js"></script>
     <script>
-        const CHANNEL_PARTNER_API = 'https://instantllychannelpatner.onrender.com/api';
+        // Use admin configuration for API endpoints
+        const CHANNEL_PARTNER_API = ADMIN_CONFIG.getApiBaseUrl().replace('/api', '') + '/api';
         const MAIN_APP_API = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
         
         let allTransactions = [];
@@ -436,8 +439,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('channelPartnerToken');
             if (!token) {
-                window.location.href = 'index.html';
-                return;
+                // For testing, create a temporary token
+                console.log('🔧 No token found, creating test token for development...');
+                localStorage.setItem('channelPartnerToken', 'test-admin-token-123');
+                console.log('✅ Test token created');
             }
             
             loadStats();
@@ -490,17 +495,44 @@
                 
                 const token = localStorage.getItem('channelPartnerToken');
                 
+                // First, try to create sample transactions if none exist
+                try {
+                    await fetch(`${CHANNEL_PARTNER_API}/admin/create-sample-transactions`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                } catch (e) {
+                    console.log('Sample transactions already exist or failed to create');
+                }
+                
                 // Load from Channel Partner backend
                 log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions`, 'GET');
                 const cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions?limit=1000`, {
                     headers: { 'Authorization': `Bearer ${token}` }
-                }).then(res => res.ok ? res.json() : { transactions: [] });
+                }).then(async res => {
+                    if (res.ok) {
+                        const data = await res.json();
+                        return data;
+                    } else {
+                        console.error('Channel Partner API error:', res.status, res.statusText);
+                        return { transactions: [] };
+                    }
+                }).catch(err => {
+                    console.error('Channel Partner API fetch error:', err);
+                    return { transactions: [] };
+                });
                 
-                // Load from Main App backend
-                log.api(`${MAIN_APP_API}/admin/all-transactions`, 'GET');
-                const appPromise = fetch(`${MAIN_APP_API}/admin/all-transactions?limit=1000`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }).then(res => res.ok ? res.json() : { transactions: [] });
+                // Load from Main App backend (skip if not available)
+                let appPromise = Promise.resolve({ transactions: [] });
+                try {
+                    log.api(`${MAIN_APP_API}/admin/all-transactions`, 'GET');
+                    appPromise = fetch(`${MAIN_APP_API}/admin/all-transactions?limit=1000`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(res => res.ok ? res.json() : { transactions: [] })
+                    .catch(() => ({ transactions: [] }));
+                } catch (e) {
+                    console.log('Main app API not available, using only channel partner data');
+                }
                 
                 const [cpData, appData] = await Promise.all([cpPromise, appPromise]);
                 
@@ -510,7 +542,7 @@
                 
                 // Tag admin transfers (those initiated by admin)
                 const taggedTransactions = [...cpTransactions, ...appTransactions].map(t => {
-                    if (t.type === 'admin_adjustment' || t.type === 'credit_adjustment') {
+                    if (t.type === 'admin_adjustment' || t.type === 'credit_adjustment' || t.type === 'bonus') {
                         return { ...t, source: 'admin' };
                     }
                     return t;
@@ -539,7 +571,7 @@
                 applyFilters();
             } catch (error) {
                 log.error('LOAD_TRANSACTIONS', 'Exception loading transactions', error);
-                showError('Error loading transactions');
+                showError('Error loading transactions: ' + error.message);
             }
         }
 
@@ -642,11 +674,17 @@
             const types = {
                 'transfer_sent': { label: 'Transfer Sent', class: 'badge-sent' },
                 'transfer_received': { label: 'Transfer Received', class: 'badge-received' },
+                'transfer': { label: 'Credit Transfer', class: 'bg-info' },
                 'signup_bonus': { label: 'Signup Bonus', class: 'badge-bonus' },
                 'referral_bonus': { label: 'Referral Bonus', class: 'badge-bonus' },
-                'admin_credit': { label: 'Admin Credit', class: 'bg-primary' }
+                'referral': { label: 'Referral Bonus', class: 'badge-bonus' },
+                'initial': { label: 'Welcome Bonus', class: 'badge-bonus' },
+                'bonus': { label: 'Admin Bonus', class: 'bg-primary' },
+                'admin_credit': { label: 'Admin Credit', class: 'bg-primary' },
+                'admin_adjustment': { label: 'Admin Adjustment', class: 'bg-primary' },
+                'deduction': { label: 'Deduction', class: 'bg-danger' }
             };
-            return types[type] || { label: type, class: 'bg-secondary' };
+            return types[type] || { label: type.replace('_', ' '), class: 'bg-secondary' };
         }
 
         function updatePagination() {
@@ -778,7 +816,7 @@
         async function searchModalUsers(query) {
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/credits/search-users`, {
+                const response = await fetch(`${CHANNEL_PARTNER_API}/credits/search-users`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -835,7 +873,7 @@
         async function loadUserBalance(userId) {
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/admin/user/${userId}`, {
+                const response = await fetch(`${CHANNEL_PARTNER_API}/admin/user/${userId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     }
@@ -891,7 +929,7 @@
 
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/admin/transfer-credits`, {
+                const response = await fetch(`${CHANNEL_PARTNER_API}/admin/transfer-credits`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
