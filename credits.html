@@ -12,8 +12,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/admin-theme.css">
+    <style>
+        /* Inline critical CSS to avoid MIME type issues */
+        body {
+            padding-top: 76px;
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+    </style>
     
     <style>
         body {
@@ -631,15 +670,21 @@
             log.frontend(`Showing ${pageTransactions.length} transactions (${start + 1} to ${Math.min(end, filteredTransactions.length)})`);
 
             tbody.innerHTML = pageTransactions.map(tx => {
-                const date = new Date(tx.createdAt).toLocaleString('en-IN', {
+                // Ensure we have valid data
+                if (!tx || typeof tx !== 'object') {
+                    console.warn('Invalid transaction data:', tx);
+                    return '';
+                }
+
+                const date = tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-IN', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
-                });
+                }) : 'Unknown Date';
 
-                const typeInfo = getTypeInfo(tx.type);
+                const typeInfo = getTypeInfo(tx.type || 'unknown');
                 const fromUser = tx.fromUser?.name || '-';
                 const toUser = tx.toUser?.name || '-';
                 const fromPhone = tx.fromUser?.phone || '';
@@ -658,9 +703,9 @@
                             ${toPhone ? `<br><small class="text-muted">${toPhone}</small>` : ''}
                         </td>
                         <td class="${tx.type.includes('received') || tx.type.includes('bonus') ? 'amount-positive' : 'amount-negative'}">
-                            ${tx.type.includes('received') || tx.type.includes('bonus') ? '+' : '-'}${tx.amount.toLocaleString('en-IN')}
+                            ${tx.type.includes('received') || tx.type.includes('bonus') ? '+' : '-'}${(tx.amount || 0).toLocaleString('en-IN')}
                         </td>
-                        <td>${tx.balanceAfter.toLocaleString('en-IN')}</td>
+                        <td>${(tx.balanceAfter || 0).toLocaleString('en-IN')}</td>
                         <td>${tx.description || '-'}</td>
                         <td><span class="badge bg-success">Completed</span></td>
                     </tr>
