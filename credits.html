@@ -478,12 +478,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('channelPartnerToken');
             if (!token) {
-                // For testing, create a temporary token
-                console.log('🔧 No token found, creating test token for development...');
-                localStorage.setItem('channelPartnerToken', 'test-admin-token-123');
-                console.log('✅ Test token created');
+                window.location.href = 'index.html';
+                return;
             }
             
+            console.log('🔑 Using auth token for real-time data');
             loadStats();
             loadTransactions();
             setupModalListeners();
@@ -510,20 +509,48 @@
             try {
                 const token = localStorage.getItem('channelPartnerToken');
                 
-                // Load user stats from channel partner API
-                const usersRes = await fetch(`${CHANNEL_PARTNER_API}/admin/users-stats`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
+                log.frontend('Loading real-time statistics from database...');
+                log.api(`${CHANNEL_PARTNER_API}/admin/users-stats`, 'GET');
+                
+                // Try test endpoint first, then fallback to auth endpoint
+                let usersRes;
+                try {
+                    // First try the test endpoint without auth
+                    usersRes = await fetch(`${CHANNEL_PARTNER_API}/admin/users-stats-test`);
+                    if (!usersRes.ok) {
+                        // If test fails, try with auth
+                        usersRes = await fetch(`${CHANNEL_PARTNER_API}/admin/users-stats`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                            }
+                        });
                     }
-                });
+                } catch (error) {
+                    console.error('❌ Both API attempts failed:', error);
+                    throw error;
+                }
+                
+                console.log('📊 Stats response status:', usersRes.status);
                 
                 if (usersRes.ok) {
                     const userData = await usersRes.json();
+                    console.log('📊 Stats data received:', userData);
+                    
                     document.getElementById('totalUsers').textContent = (userData.totalUsers || 0).toLocaleString('en-IN');
                     document.getElementById('totalCredits').textContent = (userData.totalCredits || 0).toLocaleString('en-IN');
+                    
+                    log.success('Stats loaded successfully', userData);
+                } else {
+                    console.error('❌ Stats API error:', usersRes.status, usersRes.statusText);
+                    // Show default values
+                    document.getElementById('totalUsers').textContent = '0';
+                    document.getElementById('totalCredits').textContent = '0';
                 }
             } catch (error) {
                 log.error('STATS', 'Stats loading error', error);
+                // Show default values on error
+                document.getElementById('totalUsers').textContent = '0';
+                document.getElementById('totalCredits').textContent = '0';
             }
         }
 
@@ -534,30 +561,37 @@
                 
                 const token = localStorage.getItem('channelPartnerToken');
                 
-                // First, try to create sample transactions if none exist
+                // Load real-time transaction data from database
+                
+                // Load from Channel Partner backend (real-time database)
+                let cpPromise;
                 try {
-                    await fetch(`${CHANNEL_PARTNER_API}/admin/create-sample-transactions`, {
-                        method: 'POST',
+                    // Try test endpoint first (no auth)
+                    log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions-test`, 'GET');
+                    cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions-test?limit=1000`);
+                } catch (error) {
+                    // Fallback to auth endpoint
+                    log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions`, 'GET');
+                    cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions?limit=1000`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                } catch (e) {
-                    console.log('Sample transactions already exist or failed to create');
                 }
                 
-                // Load from Channel Partner backend
-                log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions`, 'GET');
-                const cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions?limit=1000`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }).then(async res => {
+                cpPromise = cpPromise.then(async res => {
+                    console.log('📊 Transactions response status:', res.status);
                     if (res.ok) {
                         const data = await res.json();
+                        console.log('📊 Raw transaction data:', data);
+                        console.log('📊 Transaction count:', data.transactions?.length || 0);
                         return data;
                     } else {
-                        console.error('Channel Partner API error:', res.status, res.statusText);
+                        console.error('❌ Channel Partner API error:', res.status, res.statusText);
+                        const errorText = await res.text();
+                        console.error('❌ Error details:', errorText);
                         return { transactions: [] };
                     }
                 }).catch(err => {
-                    console.error('Channel Partner API fetch error:', err);
+                    console.error('❌ Channel Partner API fetch error:', err);
                     return { transactions: [] };
                 });
                 
