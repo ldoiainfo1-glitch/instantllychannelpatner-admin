@@ -225,6 +225,11 @@
             try {
                 const loginUrl = `${API_BASE_URL}/admin-auth/login`;
                 console.log('📡 POST:', loginUrl);
+                console.log('🔗 Full request details:', {
+                    url: loginUrl,
+                    method: 'POST',
+                    body: { username, password: '***' }
+                });
 
                 const response = await fetch(loginUrl, {
                     method: 'POST',
@@ -284,8 +289,14 @@
                 console.error('❌ Login error:', error);
                 
                 // If API is not available, try offline login with default credentials
-                if (error.message.includes('Backend server error') || error.message.includes('fetch')) {
-                    console.log('🔄 Trying offline login...');
+                if (error.message.includes('Backend server error') || 
+                    error.message.includes('fetch') || 
+                    error.message.includes('Failed to fetch') ||
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('Unable to connect')) {
+                    
+                    console.log('🔄 API unavailable, trying offline login...');
+                    console.log('🔧 Error details:', error.message);
                     
                     if (username === ADMIN_CONFIG.DEFAULT_CREDENTIALS.username && 
                         password === ADMIN_CONFIG.DEFAULT_CREDENTIALS.password) {
@@ -327,9 +338,39 @@
             }
         });
 
+        // Test API connectivity on page load
+        async function testApiConnectivity() {
+            try {
+                console.log('🔍 Testing API connectivity...');
+                const healthUrl = `${API_BASE_URL}/health`;
+                console.log('🏥 Health check URL:', healthUrl);
+                
+                const response = await fetch(healthUrl, { method: 'GET' });
+                console.log('🏥 Health response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ API is accessible:', data);
+                    return true;
+                } else {
+                    console.log('⚠️ API returned error status:', response.status);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ API connectivity test failed:', error);
+                return false;
+            }
+        }
+
         // On page load - load saved credentials and check auth
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             console.log('📄 Login page loaded');
+            
+            // Test API connectivity first
+            const apiWorking = await testApiConnectivity();
+            if (!apiWorking) {
+                console.log('⚠️ API not accessible, offline mode will be used');
+            }
             
             // Check if already logged in
             const token = localStorage.getItem('channelPartnerToken');
