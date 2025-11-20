@@ -235,6 +235,15 @@
                 });
 
                 console.log('📥 Response status:', response.status);
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const textResponse = await response.text();
+                    console.error('❌ Non-JSON response received:', textResponse.substring(0, 200));
+                    throw new Error(`Backend server error. Expected JSON but got: ${contentType || 'unknown'}. Check if backend is running on the correct port.`);
+                }
+                
                 const data = await response.json();
                 console.log('📥 Response data:', data);
 
@@ -273,6 +282,41 @@
                 }
             } catch (error) {
                 console.error('❌ Login error:', error);
+                
+                // If API is not available, try offline login with default credentials
+                if (error.message.includes('Backend server error') || error.message.includes('fetch')) {
+                    console.log('🔄 Trying offline login...');
+                    
+                    if (username === ADMIN_CONFIG.DEFAULT_CREDENTIALS.username && 
+                        password === ADMIN_CONFIG.DEFAULT_CREDENTIALS.password) {
+                        
+                        console.log('✅ Offline login successful!');
+                        
+                        // Create a temporary token for offline use
+                        const offlineToken = 'offline-admin-token-' + Date.now();
+                        localStorage.setItem('channelPartnerToken', offlineToken);
+                        localStorage.setItem('adminUsername', username);
+                        localStorage.setItem('offlineMode', 'true');
+                        
+                        if (rememberMe) {
+                            localStorage.setItem('rememberAdmin', 'true');
+                            localStorage.setItem('savedUsername', username);
+                            localStorage.setItem('savedPassword', password);
+                        }
+                        
+                        // Success message
+                        errorDiv.className = 'alert alert-warning';
+                        errorDiv.style.display = 'block';
+                        errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Backend offline. Logged in with cached credentials.';
+                        
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1000);
+                        
+                        return;
+                    }
+                }
+                
                 errorDiv.className = 'alert alert-danger';
                 errorDiv.style.display = 'block';
                 errorMessage.textContent = error.message || 'Login failed. Please check your credentials and try again.';
