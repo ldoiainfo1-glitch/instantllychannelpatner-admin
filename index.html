@@ -316,9 +316,9 @@
                         }
                         
                         // Success message
-                        errorDiv.className = 'alert alert-warning';
+                        errorDiv.className = 'alert alert-success';
                         errorDiv.style.display = 'block';
-                        errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Backend offline. Logged in with cached credentials.';
+                        errorMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i>Login successful! (Offline Mode)';
                         
                         setTimeout(() => {
                             window.location.href = 'dashboard.html';
