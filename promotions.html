@@ -313,12 +313,7 @@
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', () => {
-            // Check authentication
-            const token = localStorage.getItem('channelPartnerToken');
-            if (!token) {
-                window.location.href = 'index.html';
-                return;
-            }
+            console.log('📢 Loading promotions management page');
 
             // Set today's date as default
             const today = new Date().toISOString().split('T')[0];

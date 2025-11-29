@@ -474,15 +474,9 @@
             backend: (msg, data) => console.log(`%c⚙️  [BACKEND]%c ${msg}`, 'color: #06b6d4; font-weight: bold', '', data || '')
         };
 
-        // Check admin auth
+        // Load credits page (auth already verified at dashboard)
         document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('channelPartnerToken');
-            if (!token) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            console.log('🔑 Using auth token for real-time data');
+            console.log('💳 Loading credits management page');
             loadStats();
             loadTransactions();
             setupModalListeners();

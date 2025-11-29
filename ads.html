@@ -903,58 +903,12 @@
 
         // Check admin authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is logged in
-            const token = localStorage.getItem('channelPartnerToken');
-            if (!token) {
-                // Redirect to login page
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            checkAdminAuth();
+            // Just load ads - no auth redirect needed (already logged in)
+            log.frontend('Loading ads page');
+            Promise.all([loadAllAds(), loadPendingAds()]);
         });
 
-        // Check admin authentication
-        async function checkAdminAuth() {
-            const token = localStorage.getItem('channelPartnerToken');
-            
-            if (!token) {
-                log.error('AUTH', 'No token found - redirecting to login');
-                window.location.href = 'index.html';
-                return false;
-            }
-
-            log.frontend('Token found - loading ads page');
-
-            try {
-                log.api(`${API_BASE_URL}/admin-auth/verify`, 'GET');
-                const response = await fetch(`${API_BASE_URL}/admin-auth/verify`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    log.error('AUTH', 'Token verification failed - Status: ' + response.status);
-                    localStorage.removeItem('channelPartnerToken');
-                    window.location.href = 'index.html';
-                    return false;
-                }
-
-                const data = await response.json();
-                log.backend('Auth verification response', data);
-                if (data.success) {
-                    log.success('Admin authenticated - loading ads');
-                    // Admin is authenticated, load data
-                    await Promise.all([loadAllAds(), loadPendingAds()]);
-                    return true;
-                }
-            } catch (error) {
-                log.error('AUTH', 'Auth check exception', error);
-                window.location.href = 'index.html';
-                return false;
-            }
-        }
+        // Removed redundant auth check - authentication handled at dashboard level
 
         // Show login modal
         function showLoginModal() {

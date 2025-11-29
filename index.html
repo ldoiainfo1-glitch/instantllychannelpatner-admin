@@ -201,6 +201,14 @@
         console.log('🌐 API Base URL:', API_BASE_URL);
         console.log('🌐 Current hostname:', window.location.hostname);
 
+        // Auto-redirect if already logged in
+        const existingToken = localStorage.getItem('channelPartnerToken');
+        if (existingToken) {
+            console.log('✅ Already logged in - redirecting to dashboard');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
         const loginForm = document.getElementById('loginForm');
         const errorDiv = document.getElementById('errorDiv');
         const errorMessage = document.getElementById('errorMessage');
