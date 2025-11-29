@@ -965,10 +965,9 @@
         async function loadAllAds() {
             try {
                 log.api(`${API_BASE_URL}/ads`, 'GET');
-                const token = localStorage.getItem('channelPartnerToken');
+                // NO AUTH REQUIRED - endpoint is public for Channel Partner Admin
                 const response = await fetch(`${API_BASE_URL}/ads`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
