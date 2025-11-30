@@ -991,8 +991,30 @@
 
         // Load pending ads
         async function loadPendingAds() {
-            // Pending ads endpoint not implemented yet - skip silently
-            return;
+            try {
+                log.api(`${API_BASE_URL}/ads?approvalStatus=pending`, 'GET');
+                const response = await fetch(`${API_BASE_URL}/ads?approvalStatus=pending`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    log.error('API', `Failed to load pending ads - Status: ${response.status}`);
+                    return;
+                }
+
+                const data = await response.json();
+                log.backend('Loaded pending ads response', { count: data.data?.length || 0 });
+                
+                const pendingAds = data.data || [];
+                renderPendingAdsTable(pendingAds);
+                
+                // Update pending count in stats
+                document.getElementById('pendingAds').textContent = pendingAds.length;
+            } catch (error) {
+                log.error('LOAD_PENDING_ADS', 'Error loading pending ads', error);
+            }
         }
 
         // Update statistics
