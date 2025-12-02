@@ -965,7 +965,7 @@
         async function loadAllAds() {
             try {
                 // IMPORTANT: Admin needs to see ALL ads (pending, approved, rejected)
-                const url = `${API_BASE_URL}/ads?approvalStatus=all`;
+                const url = `${API_BASE_URL}/admin/ads?approvalStatus=all`;
                 log.api(url, 'GET');
                 log.frontend('Fetching ALL ads (including pending, approved, rejected)');
                 
@@ -1009,8 +1009,8 @@
         // Load pending ads
         async function loadPendingAds() {
             try {
-                log.api(`${API_BASE_URL}/ads?approvalStatus=pending`, 'GET');
-                const response = await fetch(`${API_BASE_URL}/ads?approvalStatus=pending`, {
+                log.api(`${API_BASE_URL}/admin/ads?approvalStatus=pending`, 'GET');
+                const response = await fetch(`${API_BASE_URL}/admin/ads?approvalStatus=pending`, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -1375,7 +1375,7 @@
                 
                 // Fetch complete ad data
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/ads/${adId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1545,7 +1545,7 @@
         async function confirmDelete() {
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/ads/${selectedAdId}`, {
+                const response = await fetch(`${API_BASE_URL}/admin/ads/${selectedAdId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
