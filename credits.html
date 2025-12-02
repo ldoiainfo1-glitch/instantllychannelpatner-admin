@@ -548,7 +548,7 @@
                 
                 // Load from Channel Partner backend (real-time database)
                 log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions`, 'GET');
-                const cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions?limit=1000`, {
+                let cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions?limit=1000`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
