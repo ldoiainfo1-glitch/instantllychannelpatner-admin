@@ -964,9 +964,13 @@
         // Load all ads
         async function loadAllAds() {
             try {
-                log.api(`${API_BASE_URL}/ads`, 'GET');
+                // IMPORTANT: Admin needs to see ALL ads (pending, approved, rejected)
+                const url = `${API_BASE_URL}/ads?approvalStatus=all`;
+                log.api(url, 'GET');
+                log.frontend('Fetching ALL ads (including pending, approved, rejected)');
+                
                 // NO AUTH REQUIRED - endpoint is public for Channel Partner Admin
-                const response = await fetch(`${API_BASE_URL}/ads`, {
+                const response = await fetch(url, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -986,6 +990,19 @@
                 renderAllAdsTable();
             } catch (error) {
                 log.error('LOAD_ADS', 'Error loading ads', error);
+                // Show error in table
+                const tbody = document.getElementById('allAdsTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+                            <p class="text-danger">Failed to load ads: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadAllAds()">
+                                <i class="fas fa-sync-alt me-1"></i>Retry
+                            </button>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
