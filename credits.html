@@ -889,7 +889,9 @@
         async function searchModalUsers(query) {
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${CHANNEL_PARTNER_API}/credits/search-users`, {
+                console.log('🔍 Searching users with query:', query);
+                
+                const response = await fetch(`${CHANNEL_PARTNER_API}/admin/search-users`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -898,12 +900,17 @@
                     body: JSON.stringify({ phonePrefix: query })
                 });
 
+                console.log('📊 Search response status:', response.status);
+
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('✅ Found users:', data.users?.length || 0);
                     displayModalSearchResults(data.users || []);
+                } else {
+                    console.error('❌ Search failed:', response.status);
                 }
             } catch (error) {
-                console.error('Modal search error:', error);
+                console.error('❌ Modal search error:', error);
             }
         }
 
