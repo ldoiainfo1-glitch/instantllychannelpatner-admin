@@ -923,12 +923,30 @@
                 return;
             }
 
-            resultsDiv.innerHTML = users.map(user => `
-                <div class="user-search-item" onclick='selectModalUser(${JSON.stringify(user)})'>
-                    <strong>${user.name}</strong><br>
-                    <small class="text-muted">${user.displayPhone}</small>
-                </div>
-            `).join('');
+            resultsDiv.innerHTML = users.map(user => {
+                // Escape single quotes in JSON for onclick attribute
+                const userJson = JSON.stringify(user).replace(/'/g, "\\'");
+                
+                // Determine badge color and icon based on user type
+                const badgeClass = user.userType === 'App User' ? 'bg-primary' : 'bg-success';
+                const icon = user.userType === 'App User' ? 'fa-mobile-alt' : 'fa-users';
+                
+                return `
+                    <div class="user-search-item" onclick='selectModalUser(${userJson})'>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${user.name}</strong>
+                                <span class="badge ${badgeClass} ms-2" style="font-size: 0.7rem;">
+                                    <i class="fas ${icon} me-1"></i>${user.userType || 'User'}
+                                </span>
+                                <br>
+                                <small class="text-muted">${user.displayPhone}</small>
+                            </div>
+                            <small class="text-success fw-bold">${(user.credits || 0).toLocaleString('en-IN')} cr</small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
             
             resultsDiv.classList.remove('d-none');
         }
@@ -940,20 +958,35 @@
             document.getElementById('modalPhoneSearch').value = user.displayPhone;
             
             document.getElementById('modalSelectedUser').classList.remove('d-none');
-            document.getElementById('modalSelectedUserName').textContent = user.name;
-            document.getElementById('modalSelectedUserPhone').textContent = user.displayPhone;
-            document.getElementById('modalSelectedUserBalance').textContent = 'Loading...';
             
-            // Load user balance
-            loadUserBalance(user._id);
+            // Show user type badge
+            const userTypeLabel = user.userType || 'User';
+            const badgeClass = user.userType === 'App User' ? 'bg-primary' : 'bg-success';
+            const icon = user.userType === 'App User' ? 'fa-mobile-alt' : 'fa-users';
+            
+            document.getElementById('modalSelectedUserName').innerHTML = `
+                ${user.name} 
+                <span class="badge ${badgeClass} ms-2" style="font-size: 0.7rem;">
+                    <i class="fas ${icon} me-1"></i>${userTypeLabel}
+                </span>
+            `;
+            document.getElementById('modalSelectedUserPhone').textContent = user.displayPhone;
+            document.getElementById('modalSelectedUserBalance').textContent = (user.credits || 0).toLocaleString('en-IN') + ' credits';
+            
+            // Load fresh user balance from database
+            loadUserBalance(user._id, user.source);
             
             validateModalForm();
         }
 
-        async function loadUserBalance(userId) {
+        async function loadUserBalance(userId, source) {
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${CHANNEL_PARTNER_API}/admin/user/${userId}`, {
+                const url = source ? `${CHANNEL_PARTNER_API}/admin/user/${userId}?source=${source}` : `${CHANNEL_PARTNER_API}/admin/user/${userId}`;
+                
+                console.log('💰 Loading user balance:', userId, 'from', source || 'auto-detect');
+                
+                const response = await fetch(url, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     }
@@ -961,11 +994,20 @@
 
                 if (response.ok) {
                     const data = await response.json();
+                    const credits = data.user.credits || 0;
+                    const userTypeLabel = data.user.userType || 'User';
+                    
+                    console.log('✅ User balance:', credits, 'credits for', userTypeLabel);
+                    
                     document.getElementById('modalSelectedUserBalance').textContent = 
-                        (data.user.credits || 0).toLocaleString('en-IN') + ' credits';
+                        credits.toLocaleString('en-IN') + ' credits';
+                } else {
+                    console.error('❌ Failed to load balance:', response.status);
+                    document.getElementById('modalSelectedUserBalance').textContent = 'Error loading balance';
                 }
             } catch (error) {
-                console.error('Load balance error:', error);
+                console.error('❌ Load balance error:', error);
+                document.getElementById('modalSelectedUserBalance').textContent = 'Error loading balance';
             }
         }
 
@@ -1009,6 +1051,14 @@
 
             try {
                 const token = localStorage.getItem('channelPartnerToken');
+                
+                console.log('💸 Initiating transfer:', {
+                    user: selectedModalUser.name,
+                    userType: selectedModalUser.userType,
+                    source: selectedModalUser.source,
+                    amount: amount
+                });
+                
                 const response = await fetch(`${CHANNEL_PARTNER_API}/admin/transfer-credits`, {
                     method: 'POST',
                     headers: {
@@ -1018,14 +1068,17 @@
                     body: JSON.stringify({
                         toUserId: selectedModalUser._id,
                         amount: amount,
-                        description: note || `Admin credit - ${amount.toLocaleString('en-IN')} credits`
+                        description: note || `Admin credit transfer - ${amount.toLocaleString('en-IN')} credits`,
+                        userType: selectedModalUser.userType,
+                        source: selectedModalUser.source
                     })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert(`Successfully transferred ${amount.toLocaleString('en-IN')} credits to ${selectedModalUser.name}`);
+                    const userTypeLabel = selectedModalUser.userType || 'User';
+                    alert(`✅ Successfully transferred ${amount.toLocaleString('en-IN')} credits to ${selectedModalUser.name} (${userTypeLabel})\n\nNew Balance: ${data.receiverCredits?.toLocaleString('en-IN')} credits`);
                     
                     // Close modal
                     bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
@@ -1039,7 +1092,7 @@
                     loadTransactions();
                     loadStats();
                 } else {
-                    alert(data.message || 'Transfer failed');
+                    alert('❌ Transfer failed: ' + (data.message || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Transfer error:', error);
