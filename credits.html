@@ -506,23 +506,12 @@
                 log.frontend('Loading real-time statistics from database...');
                 log.api(`${CHANNEL_PARTNER_API}/admin/users-stats`, 'GET');
                 
-                // Try test endpoint first, then fallback to auth endpoint
-                let usersRes;
-                try {
-                    // First try the test endpoint without auth
-                    usersRes = await fetch(`${CHANNEL_PARTNER_API}/admin/users-stats-test`);
-                    if (!usersRes.ok) {
-                        // If test fails, try with auth
-                        usersRes = await fetch(`${CHANNEL_PARTNER_API}/admin/users-stats`, {
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                            }
-                        });
+                // Use auth endpoint
+                const usersRes = await fetch(`${CHANNEL_PARTNER_API}/admin/users-stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
                     }
-                } catch (error) {
-                    console.error('❌ Both API attempts failed:', error);
-                    throw error;
-                }
+                });
                 
                 console.log('📊 Stats response status:', usersRes.status);
                 
@@ -558,18 +547,10 @@
                 // Load real-time transaction data from database
                 
                 // Load from Channel Partner backend (real-time database)
-                let cpPromise;
-                try {
-                    // Try test endpoint first (no auth)
-                    log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions-test`, 'GET');
-                    cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions-test?limit=1000`);
-                } catch (error) {
-                    // Fallback to auth endpoint
-                    log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions`, 'GET');
-                    cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions?limit=1000`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                }
+                log.api(`${CHANNEL_PARTNER_API}/admin/all-transactions`, 'GET');
+                const cpPromise = fetch(`${CHANNEL_PARTNER_API}/admin/all-transactions?limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 
                 cpPromise = cpPromise.then(async res => {
                     console.log('📊 Transactions response status:', res.status);
@@ -589,17 +570,9 @@
                     return { transactions: [] };
                 });
                 
-                // Load from Main App backend (skip if not available)
-                let appPromise = Promise.resolve({ transactions: [] });
-                try {
-                    log.api(`${MAIN_APP_API}/admin/all-transactions`, 'GET');
-                    appPromise = fetch(`${MAIN_APP_API}/admin/all-transactions?limit=1000`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    }).then(res => res.ok ? res.json() : { transactions: [] })
-                    .catch(() => ({ transactions: [] }));
-                } catch (e) {
-                    console.log('Main app API not available, using only channel partner data');
-                }
+                // Note: App users don't have transaction history, only Channel Partner users do
+                // So we only load from Channel Partner backend
+                const appPromise = Promise.resolve({ transactions: [] });
                 
                 const [cpData, appData] = await Promise.all([cpPromise, appPromise]);
                 
