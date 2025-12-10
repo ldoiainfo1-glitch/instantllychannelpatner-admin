@@ -68,20 +68,44 @@
         <div class="search-section mb-4">
             <h4 class="mb-4"><i class="fas fa-search me-2"></i>Find User Application</h4>
             <div class="alert alert-light mb-3">
-                <strong>📋 How to use:</strong> Go to Dashboard → Copy the "ID" from any approved position → Paste it below
+                <strong>🔍 How to find Position ID:</strong><br>
+                1. Go to Dashboard and scroll to the position row<br>
+                2. Open browser DevTools (F12) → Console tab<br>
+                3. Click on the row → It will log the position object<br>
+                4. Copy the <code>_id</code> field value (24-character string)<br>
+                5. Paste it below<br>
+                <br>
+                <strong>OR use direct database query (easier):</strong><br>
+                Enter position details like: <code>Central</code> or <code>Zone Head</code>
             </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold">Search by Position Name/Location</label>
+                    <input type="text" class="form-control form-control-lg" id="searchKeyword" 
+                           placeholder="Type: Central, Zone Head, Maharashtra, etc." 
+                           onkeypress="if(event.key==='Enter')searchByKeyword()">
+                    <small class="text-white-50">Search for positions with applications</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-warning btn-lg w-100" onclick="searchByKeyword()">
+                        <i class="fas fa-search me-2"></i>Search by Name
+                    </button>
+                </div>
+            </div>
+            <div class="text-center mb-2"><strong>- OR -</strong></div>
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label fw-bold">Paste Position ID from Dashboard</label>
+                    <label class="form-label fw-bold">Direct Position ID (MongoDB ObjectId)</label>
                     <input type="text" class="form-control form-control-lg" id="searchAppId" 
-                           placeholder="Example: pos_zone-head_india_central OR 674abc123def..." 
+                           placeholder="675abc123def456789012345 (24-character ID)" 
                            onkeypress="if(event.key==='Enter')searchUser()">
-                    <small class="text-white-50">Accepts both display ID (from table) or MongoDB ObjectId</small>
+                    <small class="text-white-50">If you have the exact ObjectId</small>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">&nbsp;</label>
                     <button class="btn btn-light btn-lg w-100" onclick="searchUser()">
-                        <i class="fas fa-search me-2"></i>Search & Load
+                        <i class="fas fa-search me-2"></i>Load by ID
                     </button>
                 </div>
             </div>
@@ -186,13 +210,14 @@
         let currentPosition = null;
         let currentPricing = null;
         let isEditMode = false;
+        let searchResults = [];
 
-        // Search for user application
-        async function searchUser() {
-            const appId = document.getElementById('searchAppId').value.trim();
-
-            if (!appId) {
-                alert('Please enter Position ID from the dashboard');
+        // Search by keyword (position name/location)
+        async function searchByKeyword() {
+            const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+            
+            if (!keyword) {
+                alert('Please enter a search term (e.g., Central, Zone Head, Maharashtra)');
                 return;
             }
 
@@ -201,56 +226,139 @@
             document.getElementById('applicationSection').style.display = 'none';
 
             try {
-                let response;
-                let position;
+                // Fetch all positions with applications
+                const response = await fetch(`${API_BASE_URL}/positions?limit=10000`);
+                if (!response.ok) throw new Error('Failed to fetch positions');
                 
-                if (appId) {
-                    // Try as MongoDB ObjectId first
-                    try {
-                        response = await fetch(`${API_BASE_URL}/positions/${appId}`);
-                        if (response.ok) {
-                            position = await response.json();
-                        }
-                    } catch (e) {
-                        console.log('Not an ObjectId, trying as string ID...');
-                    }
+                const allPositions = await response.json();
+                
+                // Filter positions that have applications AND match keyword
+                const matches = allPositions.filter(p => {
+                    if (!p.applicantDetails || !p.applicantDetails.name) return false;
                     
-                    // If not found, search all positions for matching ID field
-                    if (!position) {
-                        const allResponse = await fetch(`${API_BASE_URL}/positions?limit=10000`);
-                        const allPositions = await allResponse.json();
-                        
-                        // Search by the ID shown in table (like pos_zone-head_india_central)
-                        position = allPositions.find(p => {
-                            const posId = `pos_${p.post.toLowerCase().replace(/ /g, '-')}_${p.location.country.toLowerCase()}_${(p.location.zone || p.location.state || '').toLowerCase().replace(/ /g, '-')}`;
-                            return posId === appId.toLowerCase() || p._id === appId;
-                        });
-                        
-                        if (!position) throw new Error('Position not found with that ID');
-                    }
-                }
-                
-                if (!position) {
-                    throw new Error('Position not found');
-                }
-                
-                // Check if position has applicant
-                if (!position.applicantDetails || !position.applicantDetails.name) {
-                    throw new Error('No application found for this position - it is still available');
+                    const searchText = `${p.designation} ${p.post} ${JSON.stringify(p.location)} ${p.applicantDetails.name}`.toLowerCase();
+                    return searchText.includes(keyword);
+                });
+
+                if (matches.length === 0) {
+                    throw new Error(`No positions found matching "${keyword}" with applications`);
                 }
 
-                currentPosition = position;
-                currentApplication = position.applicantDetails;
-                
-                // Load and display pricing
-                await loadPricingForPosition(position._id);
-                displayApplicationDetails();
-                
-                document.getElementById('applicationSection').style.display = 'block';
+                if (matches.length === 1) {
+                    // Only one match - load it directly
+                    await loadPosition(matches[0]);
+                } else {
+                    // Multiple matches - show selection
+                    showPositionSelection(matches);
+                }
 
             } catch (error) {
                 console.error('Search error:', error);
                 document.getElementById('noResults').style.display = 'block';
+                document.getElementById('noResults').innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Not Found:</strong> ${error.message}
+                `;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Show position selection when multiple matches
+        function showPositionSelection(positions) {
+            searchResults = positions;
+            const container = document.getElementById('noResults');
+            container.style.display = 'block';
+            container.className = 'alert alert-info';
+            
+            let html = `
+                <h5><i class="fas fa-list me-2"></i>Found ${positions.length} Positions - Select One:</h5>
+                <div class="list-group mt-3">
+            `;
+            
+            positions.forEach((pos, i) => {
+                const location = getLocationString(pos.location);
+                html += `
+                    <button class="list-group-item list-group-item-action text-start" onclick="loadPositionByIndex(${i})">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${pos.designation}</h6>
+                                <p class="mb-1 text-muted small">${location}</p>
+                                <small><strong>Applicant:</strong> ${pos.applicantDetails.name} (${pos.applicantDetails.phone})</small>
+                            </div>
+                            <span class="badge bg-primary">${pos.post}</span>
+                        </div>
+                    </button>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Load position by index from search results
+        async function loadPositionByIndex(index) {
+            await loadPosition(searchResults[index]);
+        }
+
+        // Load a position
+        async function loadPosition(position) {
+            currentPosition = position;
+            currentApplication = position.applicantDetails;
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('noResults').style.display = 'none';
+            
+            await loadPricingForPosition(position._id);
+            displayApplicationDetails();
+            
+            document.getElementById('applicationSection').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Search for user application by ID
+        async function searchUser() {
+            const appId = document.getElementById('searchAppId').value.trim();
+
+            if (!appId) {
+                alert('Please enter Position ObjectId');
+                return;
+            }
+
+            // Validate ObjectId format (24 hex characters)
+            if (!/^[0-9a-fA-F]{24}$/.test(appId)) {
+                alert('Invalid ObjectId format. Must be 24 hexadecimal characters.\n\nTip: Use "Search by Name" above instead - it\'s much easier!');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('applicationSection').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/positions/${appId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Position not found with that ID');
+                }
+                
+                const position = await response.json();
+                
+                // Check if position has applicant
+                if (!position.applicantDetails || !position.applicantDetails.name) {
+                    throw new Error('This position has no application yet - it is still available for users to apply');
+                }
+
+                await loadPosition(position);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('noResults').style.display = 'block';
+                document.getElementById('noResults').className = 'alert alert-warning';
+                document.getElementById('noResults').innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Not Found:</strong> ${error.message}
+                `;
             } finally {
                 document.getElementById('loading').style.display = 'none';
             }
