@@ -67,21 +67,21 @@
         <!-- Search Section -->
         <div class="search-section mb-4">
             <h4 class="mb-4"><i class="fas fa-search me-2"></i>Find User Application</h4>
+            <div class="alert alert-light mb-3">
+                <strong>📋 How to use:</strong> Go to Dashboard → Copy the "ID" from any approved position → Paste it below
+            </div>
             <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Search by Phone Number</label>
-                    <input type="text" class="form-control form-control-lg" id="searchPhone" 
-                           placeholder="Enter phone number..." onkeypress="if(event.key==='Enter')searchUser()">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Or by Application ID</label>
+                <div class="col-md-8">
+                    <label class="form-label fw-bold">Paste Position ID from Dashboard</label>
                     <input type="text" class="form-control form-control-lg" id="searchAppId" 
-                           placeholder="Enter application ID..." onkeypress="if(event.key==='Enter')searchUser()">
+                           placeholder="Example: pos_zone-head_india_central OR 674abc123def..." 
+                           onkeypress="if(event.key==='Enter')searchUser()">
+                    <small class="text-white-50">Accepts both display ID (from table) or MongoDB ObjectId</small>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">&nbsp;</label>
                     <button class="btn btn-light btn-lg w-100" onclick="searchUser()">
-                        <i class="fas fa-search me-2"></i>Search Application
+                        <i class="fas fa-search me-2"></i>Search & Load
                     </button>
                 </div>
             </div>
@@ -189,11 +189,10 @@
 
         // Search for user application
         async function searchUser() {
-            const phone = document.getElementById('searchPhone').value.trim();
             const appId = document.getElementById('searchAppId').value.trim();
 
-            if (!phone && !appId) {
-                alert('Please enter phone number or application ID');
+            if (!appId) {
+                alert('Please enter Position ID from the dashboard');
                 return;
             }
 
@@ -203,24 +202,41 @@
 
             try {
                 let response;
+                let position;
                 
                 if (appId) {
-                    // Search by application ID (position ID)
-                    response = await fetch(`${API_BASE_URL}/positions/${appId}`);
-                } else {
-                    // Search by phone
-                    response = await fetch(`${API_BASE_URL}/positions?phone=${phone}`);
+                    // Try as MongoDB ObjectId first
+                    try {
+                        response = await fetch(`${API_BASE_URL}/positions/${appId}`);
+                        if (response.ok) {
+                            position = await response.json();
+                        }
+                    } catch (e) {
+                        console.log('Not an ObjectId, trying as string ID...');
+                    }
+                    
+                    // If not found, search all positions for matching ID field
+                    if (!position) {
+                        const allResponse = await fetch(`${API_BASE_URL}/positions?limit=10000`);
+                        const allPositions = await allResponse.json();
+                        
+                        // Search by the ID shown in table (like pos_zone-head_india_central)
+                        position = allPositions.find(p => {
+                            const posId = `pos_${p.post.toLowerCase().replace(/ /g, '-')}_${p.location.country.toLowerCase()}_${(p.location.zone || p.location.state || '').toLowerCase().replace(/ /g, '-')}`;
+                            return posId === appId.toLowerCase() || p._id === appId;
+                        });
+                        
+                        if (!position) throw new Error('Position not found with that ID');
+                    }
                 }
-
-                if (!response.ok) throw new Error('Not found');
-
-                const data = await response.json();
                 
-                // Handle array response from phone search
-                const position = Array.isArray(data) ? data[0] : data;
+                if (!position) {
+                    throw new Error('Position not found');
+                }
                 
-                if (!position || !position.applicantDetails) {
-                    throw new Error('No application found');
+                // Check if position has applicant
+                if (!position.applicantDetails || !position.applicantDetails.name) {
+                    throw new Error('No application found for this position - it is still available');
                 }
 
                 currentPosition = position;
