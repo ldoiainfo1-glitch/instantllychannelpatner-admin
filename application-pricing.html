@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Pricing Override - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f8f9fa; }
+        .plan-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .plan-card.custom { 
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);
+        }
+        .plan-card.default {
+            border-color: #dee2e6;
+            background: white;
+        }
+        .custom-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .edit-mode { background: #e7f3ff; }
+        .search-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <i class="fas fa-cog me-2"></i>Instantly Admin
+            </a>
+            <span class="navbar-text text-white me-auto ms-3">
+                <strong>Application Pricing Override</strong>
+            </span>
+            <div class="d-flex">
+                <a href="dashboard.html" class="btn btn-outline-light btn-sm me-2">
+                    <i class="fas fa-arrow-left me-1"></i>Dashboard
+                </a>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Search Section -->
+        <div class="search-section mb-4">
+            <h4 class="mb-4"><i class="fas fa-search me-2"></i>Find User Application</h4>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search by Phone Number</label>
+                    <input type="text" class="form-control form-control-lg" id="searchPhone" 
+                           placeholder="Enter phone number..." onkeypress="if(event.key==='Enter')searchUser()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Or by Application ID</label>
+                    <input type="text" class="form-control form-control-lg" id="searchAppId" 
+                           placeholder="Enter application ID..." onkeypress="if(event.key==='Enter')searchUser()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-light btn-lg w-100" onclick="searchUser()">
+                        <i class="fas fa-search me-2"></i>Search Application
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-5" style="display: none;">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+            <p class="mt-3 text-muted">Searching...</p>
+        </div>
+
+        <!-- No Results -->
+        <div id="noResults" class="alert alert-warning" style="display: none;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Not Found:</strong> No application found with that phone/ID.
+        </div>
+
+        <!-- Application Details -->
+        <div id="applicationSection" style="display: none;">
+            <!-- User Info Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>User & Position Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> <span id="userName">-</span></p>
+                            <p><strong>Phone:</strong> <span id="userPhone">-</span></p>
+                            <p><strong>Email:</strong> <span id="userEmail">-</span></p>
+                            <p><strong>Application ID:</strong> <span id="appId">-</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Position:</strong> <span id="positionName">-</span></p>
+                            <p><strong>Location:</strong> <span id="positionLocation">-</span></p>
+                            <p><strong>Position ID:</strong> <span id="positionId">-</span></p>
+                            <p><strong>Status:</strong> <span class="badge bg-info" id="appStatus">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Pricing Plans -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-eye me-2"></i>What User Currently Sees</h5>
+                    <span class="badge bg-light text-dark" id="pricingSource">-</span>
+                </div>
+                <div class="card-body">
+                    <div id="currentPlans" class="row g-3">
+                        <!-- Plans will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Pricing Section -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Override Pricing</h5>
+                    <button class="btn btn-dark btn-sm" onclick="toggleEditMode()">
+                        <i class="fas fa-pencil-alt me-1"></i><span id="editBtnText">Start Editing</span>
+                    </button>
+                </div>
+                <div class="card-body" id="editSection" style="display: none;">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Instructions:</strong> Edit any plan below. Changes will apply ONLY to this user's application. Other users won't see these changes.
+                    </div>
+                    
+                    <div id="editPlans" class="row g-3">
+                        <!-- Editable plans will be loaded here -->
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <button class="btn btn-secondary me-2" onclick="cancelEdit()">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button class="btn btn-danger me-2" onclick="restoreDefault()" id="restoreBtn" style="display: none;">
+                            <i class="fas fa-undo me-1"></i>Restore Default Pricing
+                        </button>
+                        <button class="btn btn-success btn-lg" onclick="saveCustomPricing()">
+                            <i class="fas fa-save me-1"></i>Save & Apply Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="config.js"></script>
+    <script>
+        // Auth check
+        (function() {
+            const token = localStorage.getItem('channelPartnerToken');
+            if (!token) {
+                window.location.replace('index.html');
+            }
+        })();
+
+        let currentApplication = null;
+        let currentPosition = null;
+        let currentPricing = null;
+        let isEditMode = false;
+
+        // Search for user application
+        async function searchUser() {
+            const phone = document.getElementById('searchPhone').value.trim();
+            const appId = document.getElementById('searchAppId').value.trim();
+
+            if (!phone && !appId) {
+                alert('Please enter phone number or application ID');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('applicationSection').style.display = 'none';
+
+            try {
+                let response;
+                
+                if (appId) {
+                    // Search by application ID (position ID)
+                    response = await fetch(`${API_BASE_URL}/positions/${appId}`);
+                } else {
+                    // Search by phone
+                    response = await fetch(`${API_BASE_URL}/positions?phone=${phone}`);
+                }
+
+                if (!response.ok) throw new Error('Not found');
+
+                const data = await response.json();
+                
+                // Handle array response from phone search
+                const position = Array.isArray(data) ? data[0] : data;
+                
+                if (!position || !position.applicantDetails) {
+                    throw new Error('No application found');
+                }
+
+                currentPosition = position;
+                currentApplication = position.applicantDetails;
+                
+                // Load and display pricing
+                await loadPricingForPosition(position._id);
+                displayApplicationDetails();
+                
+                document.getElementById('applicationSection').style.display = 'block';
+
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('noResults').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Load pricing that user sees
+        async function loadPricingForPosition(positionId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/positions/${positionId}/custom-pricing`);
+                const data = await response.json();
+
+                currentPricing = data;
+                
+                // Determine what user sees
+                let activeTiers, source;
+                if (data.customPricing && data.customPricing.enabled && data.customPricing.tiers.length > 0) {
+                    activeTiers = data.customPricing.tiers;
+                    source = 'Custom Pricing Active';
+                } else {
+                    activeTiers = data.defaultPricing || [];
+                    source = 'Default Pricing';
+                }
+
+                document.getElementById('pricingSource').textContent = source;
+                displayCurrentPlans(activeTiers, data.customPricing?.enabled);
+                
+                if (data.customPricing?.enabled) {
+                    document.getElementById('restoreBtn').style.display = 'inline-block';
+                }
+
+            } catch (error) {
+                console.error('Error loading pricing:', error);
+                alert('Error loading pricing: ' + error.message);
+            }
+        }
+
+        // Display application details
+        function displayApplicationDetails() {
+            document.getElementById('userName').textContent = currentApplication.name || '-';
+            document.getElementById('userPhone').textContent = currentApplication.phone || '-';
+            document.getElementById('userEmail').textContent = currentApplication.email || '-';
+            document.getElementById('appId').textContent = currentPosition._id;
+            document.getElementById('positionName').textContent = currentPosition.designation;
+            document.getElementById('positionLocation').textContent = getLocationString(currentPosition.location);
+            document.getElementById('positionId').textContent = currentPosition._id;
+            document.getElementById('appStatus').textContent = currentPosition.status;
+        }
+
+        // Display current plans (what user sees)
+        function displayCurrentPlans(tiers, isCustom) {
+            const container = document.getElementById('currentPlans');
+            container.innerHTML = '';
+
+            tiers.forEach((tier, i) => {
+                const profitPercent = tier.profitPercentage || Math.round((tier.profit / tier.pay) * 100);
+                const creditPercent = tier.creditPercentage || Math.round((tier.credit / tier.pay) * 100);
+
+                const col = document.createElement('div');
+                col.className = 'col-md-4';
+                col.innerHTML = `
+                    <div class="plan-card ${isCustom ? 'custom' : 'default'} p-3 h-100">
+                        ${isCustom ? '<span class="custom-badge">CUSTOM</span>' : ''}
+                        <h4 class="text-primary mb-3">₹${(tier.pay / 1000).toFixed(0)}K</h4>
+                        <p class="mb-2">
+                            <small class="text-muted">Investment:</small><br>
+                            <strong class="fs-5">₹${tier.pay.toLocaleString()}</strong>
+                        </p>
+                        <p class="mb-2">
+                            <small class="text-muted">Commission:</small><br>
+                            <strong class="fs-5">₹${tier.profit.toLocaleString()}</strong>
+                            <span class="badge bg-success ms-2">${profitPercent}%</span>
+                        </p>
+                        <p class="mb-0">
+                            <small class="text-muted">Ad Credits:</small><br>
+                            <strong class="fs-5">₹${tier.credit.toLocaleString()}</strong>
+                            <span class="badge bg-info ms-2">${creditPercent}%</span>
+                        </p>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        // Toggle edit mode
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const section = document.getElementById('editSection');
+            const btnText = document.getElementById('editBtnText');
+
+            if (isEditMode) {
+                section.style.display = 'block';
+                btnText.textContent = 'Hide Editor';
+                loadEditablePlans();
+            } else {
+                section.style.display = 'none';
+                btnText.textContent = 'Start Editing';
+            }
+        }
+
+        // Load editable plans
+        function loadEditablePlans() {
+            const container = document.getElementById('editPlans');
+            container.innerHTML = '';
+
+            // Get current active tiers
+            let tiers;
+            if (currentPricing.customPricing?.enabled && currentPricing.customPricing.tiers.length > 0) {
+                tiers = currentPricing.customPricing.tiers;
+            } else {
+                tiers = currentPricing.defaultPricing || [];
+            }
+
+            tiers.forEach((tier, i) => {
+                const profitPercent = tier.profitPercentage || Math.round((tier.profit / tier.pay) * 100);
+                const creditPercent = tier.creditPercentage || Math.round((tier.credit / tier.pay) * 100);
+
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4';
+                col.innerHTML = `
+                    <div class="card edit-mode">
+                        <div class="card-header bg-primary text-white py-2">
+                            <strong>₹${(tier.pay / 1000).toFixed(0)}K Plan</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Investment Amount</label>
+                                <input type="number" class="form-control bg-light" id="pay_${i}" 
+                                       value="${tier.pay}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Commission %</label>
+                                <input type="number" class="form-control" id="profitPercent_${i}" 
+                                       value="${profitPercent}" min="0" max="100" step="1"
+                                       onchange="calculateTier(${i})">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Commission Amount</label>
+                                <input type="number" class="form-control bg-light" id="profit_${i}" 
+                                       value="${tier.profit}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Ad Credits %</label>
+                                <input type="number" class="form-control" id="creditPercent_${i}" 
+                                       value="${creditPercent}" min="0" max="200" step="5"
+                                       onchange="calculateTier(${i})">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label small">Credits Amount</label>
+                                <input type="number" class="form-control bg-light" id="credit_${i}" 
+                                       value="${tier.credit}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        // Calculate tier values on % change
+        function calculateTier(index) {
+            const pay = parseInt(document.getElementById(`pay_${index}`).value);
+            const profitPercent = parseFloat(document.getElementById(`profitPercent_${index}`).value);
+            const creditPercent = parseFloat(document.getElementById(`creditPercent_${index}`).value);
+
+            const profit = Math.round(pay * (profitPercent / 100));
+            const credit = Math.round(pay * (creditPercent / 100));
+
+            document.getElementById(`profit_${index}`).value = profit;
+            document.getElementById(`credit_${index}`).value = credit;
+        }
+
+        // Save custom pricing
+        async function saveCustomPricing() {
+            if (!confirm('Save these custom prices for this user? This will override their default pricing.')) {
+                return;
+            }
+
+            try {
+                // Collect edited tiers
+                const container = document.getElementById('editPlans');
+                const tierCount = container.children.length;
+                const tiers = [];
+
+                for (let i = 0; i < tierCount; i++) {
+                    const pay = parseInt(document.getElementById(`pay_${i}`).value);
+                    const profit = parseInt(document.getElementById(`profit_${i}`).value);
+                    const profitPercent = parseFloat(document.getElementById(`profitPercent_${i}`).value);
+                    const credit = parseInt(document.getElementById(`credit_${i}`).value);
+                    const creditPercent = parseFloat(document.getElementById(`creditPercent_${i}`).value);
+
+                    tiers.push({
+                        pay,
+                        profit,
+                        profitPercentage: profitPercent,
+                        credit,
+                        creditPercentage: creditPercent
+                    });
+                }
+
+                // Save to backend
+                const response = await fetch(`${API_BASE_URL}/positions/${currentPosition._id}/custom-pricing`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        enabled: true,
+                        tiers: tiers
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to save');
+
+                alert('✅ Custom pricing saved successfully! User will see these prices when they apply.');
+                
+                // Reload to show updated pricing
+                await loadPricingForPosition(currentPosition._id);
+                toggleEditMode(); // Close editor
+
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('❌ Error saving: ' + error.message);
+            }
+        }
+
+        // Restore default pricing
+        async function restoreDefault() {
+            if (!confirm('Restore this user to default pricing? Custom pricing will be removed.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/positions/${currentPosition._id}/custom-pricing`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Failed to restore');
+
+                alert('✅ Restored to default pricing!');
+                
+                // Reload
+                await loadPricingForPosition(currentPosition._id);
+                document.getElementById('restoreBtn').style.display = 'none';
+                
+                if (isEditMode) toggleEditMode();
+
+            } catch (error) {
+                console.error('Restore error:', error);
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Cancel edit
+        function cancelEdit() {
+            toggleEditMode();
+        }
+
+        // Utility
+        function getLocationString(location) {
+            const parts = [];
+            if (location.village) parts.push(location.village);
+            if (location.pincode) parts.push(location.pincode);
+            if (location.tehsil) parts.push(location.tehsil);
+            if (location.district) parts.push(location.district);
+            if (location.division) parts.push(location.division);
+            if (location.state) parts.push(location.state);
+            if (location.zone) parts.push(location.zone);
+            return parts.join(', ') || location.country || 'Unknown';
+        }
+
+        function logout() {
+            localStorage.removeItem('channelPartnerToken');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
