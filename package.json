@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "npx serve .",
-    "build": "echo 'No build needed - serving static files'",
+    "build": "bash build.sh",
     "start": "npx serve ."
   },
   "keywords": ["admin", "channel-partner", "instantlly"],
