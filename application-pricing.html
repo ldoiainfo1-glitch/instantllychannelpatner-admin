@@ -303,7 +303,7 @@
                 console.log('  Total positions fetched:', allPositions.length);
                 console.log('  First FULL position object:', allPositions[0]);
                 console.log('  First 3 positions summary:', allPositions.slice(0, 3).map(pos => ({
-                    id: pos._id,
+                    _id: pos._id,
                     title: pos.title,
                     designation: pos.designation,
                     post: pos.post,
@@ -312,9 +312,10 @@
                     status: pos.status
                 })));
                 
-                // Search positions by ALL available fields
+                // Search positions by ALL available fields (INCLUDING _id which contains pos_zone-head_india_east!)
                 const matches = allPositions.filter(pos => {
-                    // Get all possible field names from the position object
+                    // IMPORTANT: _id contains the position identifier like "pos_zone-head_india_east"
+                    const id = pos._id || '';
                     const title = pos.title || '';
                     const designation = pos.designation || '';
                     const post = pos.post || '';
@@ -326,8 +327,8 @@
                     const district = pos.location?.district || pos.district || '';
                     const country = pos.location?.country || pos.country || '';
                     
-                    // Create comprehensive search text
-                    const searchText = `${title} ${designation} ${post} ${positionId} ${name} ${zone} ${state} ${division} ${district} ${country}`.toLowerCase();
+                    // Create comprehensive search text - INCLUDE _id field!
+                    const searchText = `${id} ${title} ${designation} ${post} ${positionId} ${name} ${zone} ${state} ${division} ${district} ${country}`.toLowerCase();
                     const isMatch = searchText.includes(keyword);
                     
                     if (isMatch) {
@@ -393,17 +394,18 @@
                 const state = pos.location?.state || pos.state || '';
                 const locationText = zone || state || 'N/A';
                 
-                // Try multiple title/name field variations
-                const displayName = pos.title || pos.designation || pos.name || pos.positionId || 'Position';
+                // Use _id as the main identifier (contains pos_zone-head_india_east)
+                const displayName = pos._id || pos.title || pos.designation || 'Position';
+                const displayDesignation = pos.designation || pos.post || 'Position';
                 
                 html += `
                     <button class="list-group-item list-group-item-action text-start" onclick="loadPositionByIndex(${i})">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h6 class="mb-1">${displayName} ${statusBadge}</h6>
-                                <small><strong>Location:</strong> ${locationText}</small>
+                                <small><strong>Designation:</strong> ${displayDesignation} | <strong>Location:</strong> ${locationText}</small>
                             </div>
-                            <span class="badge bg-primary">${pos.post || pos.designation || 'Position'}</span>
+                            <span class="badge bg-primary">${pos.post || 'Position'}</span>
                         </div>
                     </button>
                 `;
@@ -599,8 +601,9 @@
             document.getElementById('userEmail').textContent = '-';
             document.getElementById('appId').textContent = positionInfo._id || '-';
             
-            // Try multiple field variations for position name
-            const positionName = positionInfo.title || positionInfo.designation || positionInfo.name || positionInfo.positionId || 'Position';
+            // Use _id as the main identifier (contains pos_zone-head_india_east) + designation for display
+            const positionId = positionInfo._id || 'N/A';
+            const positionName = `${positionId} (${positionInfo.designation || positionInfo.post || 'Position'})`;
             document.getElementById('positionName').textContent = positionName;
             
             const locationEl = document.getElementById('positionLocation');
