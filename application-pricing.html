@@ -151,10 +151,14 @@
             <!-- Current Pricing Plans -->
             <div class="card mb-4">
                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-eye me-2"></i>What User Currently Sees</h5>
+                    <h5 class="mb-0"><i class="fas fa-eye me-2"></i>What User Currently Sees / Will See</h5>
                     <span class="badge bg-light text-dark" id="pricingSource">-</span>
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> These are the pricing plans that users will see when they apply to this position or view payment options.
+                    </div>
                     <div id="currentPlans" class="row g-3">
                         <!-- Plans will be loaded here -->
                     </div>
@@ -226,32 +230,27 @@
             document.getElementById('applicationSection').style.display = 'none';
 
             try {
-                // Fetch all positions with applications
-                const response = await fetch(`${API_BASE_URL}/positions?limit=10000`);
+                // Fetch all positions - including those WITHOUT applications
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/positions?limit=10000`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (!response.ok) throw new Error('Failed to fetch positions');
                 
                 const allPositions = await response.json();
                 
-                // Filter positions that have applications AND match keyword
+                // Search ALL positions (with or without applications)
+                // Match against designation, post, location, and applicant name (if exists)
                 const matches = allPositions.filter(p => {
-                    if (!p.applicantDetails || !p.applicantDetails.name) return false;
-                    
-                    const searchText = `${p.designation} ${p.post} ${JSON.stringify(p.location)} ${p.applicantDetails.name}`.toLowerCase();
+                    const applicantName = p.applicantDetails?.name || '';
+                    const searchText = `${p.designation} ${p.post} ${JSON.stringify(p.location)} ${applicantName}`.toLowerCase();
                     return searchText.includes(keyword);
                 });
 
                 if (matches.length === 0) {
-                    // Check if position exists but has no application
-                    const positionExists = allPositions.some(p => {
-                        const searchText = `${p.designation} ${p.post} ${JSON.stringify(p.location)}`.toLowerCase();
-                        return searchText.includes(keyword);
-                    });
-                    
-                    if (positionExists) {
-                        throw new Error(`Position "${keyword}" found but has NO APPLICATION yet. It's still available for users to apply. Only positions with applications can be edited.`);
-                    } else {
-                        throw new Error(`No positions found matching "${keyword}". Try: "India", "Manoj", "President" etc.`);
-                    }
+                    throw new Error(`No positions found matching "${keyword}". Try: "Central", "Zone Head", "India", "President" etc.`);
                 }
 
                 if (matches.length === 1) {
@@ -288,13 +287,21 @@
             
             positions.forEach((pos, i) => {
                 const location = getLocationString(pos.location);
+                const hasApplication = pos.applicantDetails?.name;
+                const statusBadge = hasApplication 
+                    ? '<span class="badge bg-success ms-2">Has Application</span>'
+                    : '<span class="badge bg-warning text-dark ms-2">Available</span>';
+                
                 html += `
                     <button class="list-group-item list-group-item-action text-start" onclick="loadPositionByIndex(${i})">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h6 class="mb-1">${pos.designation}</h6>
-                                <p class="mb-1 text-muted small">${location}</p>
-                                <small><strong>Applicant:</strong> ${pos.applicantDetails.name} (${pos.applicantDetails.phone})</small>
+                                <h6 class="mb-1">${pos.designation} ${statusBadge}</h6>
+                                <p class="mb-1 text-muted small">📍 ${location}</p>
+                                ${hasApplication 
+                                    ? `<small><strong>👤 Applicant:</strong> ${pos.applicantDetails.name} (${pos.applicantDetails.phone})</small>`
+                                    : `<small class="text-warning">⚡ Pre-configure pricing for when someone applies</small>`
+                                }
                             </div>
                             <span class="badge bg-primary">${pos.post}</span>
                         </div>
@@ -346,7 +353,12 @@
             document.getElementById('applicationSection').style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/positions/${appId}`);
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/positions/${appId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error('Position not found with that ID');
@@ -354,11 +366,8 @@
                 
                 const position = await response.json();
                 
-                // Check if position has applicant
-                if (!position.applicantDetails || !position.applicantDetails.name) {
-                    throw new Error('This position has no application yet - it is still available for users to apply');
-                }
-
+                // Load position regardless of whether it has application
+                // This allows pre-configuring pricing for available positions
                 await loadPosition(position);
 
             } catch (error) {
@@ -377,7 +386,12 @@
         // Load pricing that user sees
         async function loadPricingForPosition(positionId) {
             try {
-                const response = await fetch(`${API_BASE_URL}/positions/${positionId}/custom-pricing`);
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/positions/${positionId}/custom-pricing`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const data = await response.json();
 
                 currentPricing = data;
@@ -407,12 +421,22 @@
 
         // Display application details
         function displayApplicationDetails() {
-            document.getElementById('userName').textContent = currentApplication.name || '-';
-            document.getElementById('userPhone').textContent = currentApplication.phone || '-';
-            document.getElementById('userEmail').textContent = currentApplication.email || '-';
+            const hasApplication = currentApplication?.name;
+            
+            document.getElementById('userName').textContent = currentApplication?.name || 'No applicant yet';
+            document.getElementById('userPhone').textContent = currentApplication?.phone || '-';
+            document.getElementById('userEmail').textContent = currentApplication?.email || '-';
             document.getElementById('appId').textContent = currentPosition._id;
             document.getElementById('positionName').textContent = currentPosition.designation;
-            document.getElementById('positionLocation').textContent = getLocationString(currentPosition.location);
+            
+            const locationEl = document.getElementById('positionLocation');
+            const locationText = getLocationString(currentPosition.location);
+            if (hasApplication) {
+                locationEl.innerHTML = `${locationText} <span class="badge bg-success ms-2">Active Application</span>`;
+            } else {
+                locationEl.innerHTML = `${locationText} <span class="badge bg-warning text-dark ms-2">Available - Pre-configuring</span>`;
+            }
+            
             document.getElementById('positionId').textContent = currentPosition._id;
             document.getElementById('appStatus').textContent = currentPosition.status;
         }
@@ -569,9 +593,13 @@
                 }
 
                 // Save to backend
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/positions/${currentPosition._id}/custom-pricing`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
                         enabled: true,
                         tiers: tiers
@@ -599,8 +627,12 @@
             }
 
             try {
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/positions/${currentPosition._id}/custom-pricing`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
 
                 if (!response.ok) throw new Error('Failed to restore');
