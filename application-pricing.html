@@ -241,7 +241,17 @@
                 });
 
                 if (matches.length === 0) {
-                    throw new Error(`No positions found matching "${keyword}" with applications`);
+                    // Check if position exists but has no application
+                    const positionExists = allPositions.some(p => {
+                        const searchText = `${p.designation} ${p.post} ${JSON.stringify(p.location)}`.toLowerCase();
+                        return searchText.includes(keyword);
+                    });
+                    
+                    if (positionExists) {
+                        throw new Error(`Position "${keyword}" found but has NO APPLICATION yet. It's still available for users to apply. Only positions with applications can be edited.`);
+                    } else {
+                        throw new Error(`No positions found matching "${keyword}". Try: "India", "Manoj", "President" etc.`);
+                    }
                 }
 
                 if (matches.length === 1) {
