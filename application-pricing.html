@@ -462,6 +462,11 @@
 
         // Load position for pricing (NEW - for empty positions)
         async function loadPositionForPricing(position) {
+            console.log('💰 Loading position for pricing:', position);
+            console.log('   Position ID:', position._id);
+            console.log('   Position pricingTiers:', position.pricingTiers);
+            console.log('   Position customPricing:', position.customPricing);
+            
             // Set current position directly (no application exists yet)
             currentPosition = position;
             currentApplication = null;  // No application for this position yet
@@ -555,13 +560,25 @@
         // Load pricing that user sees
         async function loadPricingForPosition(positionId) {
             try {
+                console.log('🔍 Loading pricing for position:', positionId);
+                
                 const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/positions/${positionId}/custom-pricing`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
+                
+                console.log('   Pricing API Response:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch pricing: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('   Pricing Data:', data);
+                console.log('   Default Pricing:', data.defaultPricing);
+                console.log('   Custom Pricing:', data.customPricing);
 
                 currentPricing = data;
                 
@@ -570,9 +587,16 @@
                 if (data.customPricing && data.customPricing.enabled && data.customPricing.tiers.length > 0) {
                     activeTiers = data.customPricing.tiers;
                     source = 'Custom Pricing Active';
+                    console.log('   ✅ Using CUSTOM pricing:', activeTiers);
                 } else {
                     activeTiers = data.defaultPricing || [];
                     source = 'Default Pricing';
+                    console.log('   ✅ Using DEFAULT pricing:', activeTiers);
+                }
+
+                if (activeTiers.length === 0) {
+                    console.warn('   ⚠️ WARNING: No pricing tiers found!');
+                    console.log('   Position might not have pricingTiers configured.');
                 }
 
                 document.getElementById('pricingSource').textContent = source;
@@ -580,10 +604,12 @@
                 
                 if (data.customPricing?.enabled) {
                     document.getElementById('restoreBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('restoreBtn').style.display = 'none';
                 }
 
             } catch (error) {
-                console.error('Error loading pricing:', error);
+                console.error('❌ Error loading pricing:', error);
                 alert('Error loading pricing: ' + error.message);
             }
         }
@@ -648,10 +674,21 @@
 
         // Display current plans (what user sees)
         function displayCurrentPlans(tiers, isCustom) {
+            console.log('📊 Displaying plans:', tiers);
+            console.log('   Is Custom:', isCustom);
+            console.log('   Number of tiers:', tiers.length);
+            
             const container = document.getElementById('currentPlans');
             container.innerHTML = '';
 
+            if (!tiers || tiers.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning">⚠️ No pricing plans found for this position. The position may not have pricingTiers configured in the database.</div>';
+                return;
+            }
+
             tiers.forEach((tier, i) => {
+                console.log(`   Tier ${i}:`, tier);
+                
                 const profitPercent = tier.profitPercentage || Math.round((tier.profit / tier.pay) * 100);
                 const creditPercent = tier.creditPercentage || Math.round((tier.credit / tier.pay) * 100);
 
