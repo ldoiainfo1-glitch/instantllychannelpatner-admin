@@ -276,7 +276,7 @@
             const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
             
             if (!keyword) {
-                alert('Please enter a search term (e.g., Central, Zone Head, Maharashtra)');
+                alert('Please enter a position name (e.g., pos_zone-head_india_central) or location');
                 return;
             }
 
@@ -285,82 +285,69 @@
             document.getElementById('applicationSection').style.display = 'none';
 
             try {
-                // Fetch all applications from admin endpoints (pending + approved)
-                const token = localStorage.getItem('channelPartnerToken');
-                
-                console.log('🔍 SEARCH DEBUG:');
+                console.log('🔍 POSITION SEARCH DEBUG:');
                 console.log('  Keyword:', keyword);
-                console.log('  Fetching applications from admin endpoints...');
+                console.log('  Fetching ALL positions from dynamic-positions endpoint...');
                 
-                // Fetch both pending and approved applications
-                const [pendingRes, approvedRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/admin/applications/pending`),
-                    fetch(`${API_BASE_URL}/admin/applications/approved`)
-                ]);
+                // Fetch ALL positions (not applications!)
+                const response = await fetch(`${API_BASE_URL}/dynamic-positions?country=India`);
                 
-                console.log('  Pending Response:', pendingRes.status);
-                console.log('  Approved Response:', approvedRes.status);
+                console.log('  Positions Response:', response.status);
                 
-                if (!pendingRes.ok || !approvedRes.ok) {
-                    throw new Error('Failed to fetch applications');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch positions');
                 }
                 
-                const pendingApps = await pendingRes.json();
-                const approvedApps = await approvedRes.json();
-                const allApplications = [...pendingApps, ...approvedApps];
+                const allPositions = await response.json();
                 
-                console.log('  Total applications fetched:', allApplications.length);
-                console.log('  (Pending:', pendingApps.length, '+ Approved:', approvedApps.length, ')');
-                console.log('  First 3 applications:', allApplications.slice(0, 3).map(app => ({
-                    id: app._id,
-                    name: app.applicantInfo?.name,
-                    position: app.positionInfo?.designation,
-                    zone: app.positionInfo?.zone
+                console.log('  Total positions fetched:', allPositions.length);
+                console.log('  First 3 positions:', allPositions.slice(0, 3).map(pos => ({
+                    id: pos._id,
+                    title: pos.title,
+                    designation: pos.designation,
+                    zone: pos.location?.zone,
+                    status: pos.status
                 })));
                 
-                // Search applications by applicant name, phone, position, or location
-                const matches = allApplications.filter(app => {
-                    const applicantName = app.applicantInfo?.name || '';
-                    const applicantPhone = app.applicantInfo?.phone || '';
-                    const designation = app.positionInfo?.designation || '';
-                    const post = app.positionInfo?.post || '';
-                    const location = JSON.stringify(app.positionInfo?.location || {});
-                    const zone = app.positionInfo?.zone || '';
-                    const state = app.positionInfo?.state || '';
+                // Search positions by title, designation, or location
+                const matches = allPositions.filter(pos => {
+                    const title = pos.title || '';
+                    const designation = pos.designation || '';
+                    const post = pos.post || '';
+                    const zone = pos.location?.zone || '';
+                    const state = pos.location?.state || '';
+                    const division = pos.location?.division || '';
+                    const district = pos.location?.district || '';
                     
-                    const searchText = `${applicantName} ${applicantPhone} ${designation} ${post} ${location} ${zone} ${state}`.toLowerCase();
+                    const searchText = `${title} ${designation} ${post} ${zone} ${state} ${division} ${district}`.toLowerCase();
                     const isMatch = searchText.includes(keyword);
                     
                     if (isMatch) {
-                        console.log('  ✅ Match found:', {
-                            applicant: applicantName,
-                            position: designation,
+                        console.log('  ✅ Position Match:', {
+                            title: title,
+                            designation: designation,
                             zone: zone,
-                            searchText: searchText.substring(0, 100)
+                            status: pos.status
                         });
                     }
                     
                     return isMatch;
                 });
 
-                console.log('  Total matches found:', matches.length);
+                console.log('  Total position matches found:', matches.length);
 
                 if (matches.length === 0) {
-                    console.error('  ❌ No matches found');
-                    console.log('  Sample search texts:', allApplications.slice(0, 5).map(app => {
-                        const name = app.applicantInfo?.name || '';
-                        const pos = app.positionInfo?.designation || '';
-                        return `${name} ${pos}`.toLowerCase().substring(0, 80);
-                    }));
-                    throw new Error(`No applications found matching "${keyword}". Try: applicant name, zone, state, designation`);
+                    console.error('  ❌ No positions found');
+                    console.log('  Sample position titles:', allPositions.slice(0, 5).map(pos => pos.title?.substring(0, 80)));
+                    throw new Error(`No positions found matching "${keyword}". Try: position title, zone, state, designation (e.g., "zone head central" or "pos_zone-head")`);
                 }
 
                 if (matches.length === 1) {
                     // Only one match - load it directly
-                    await loadApplication(matches[0]);
+                    await loadPositionForPricing(matches[0]);
                 } else {
                     // Multiple matches - show selection
-                    showApplicationSelection(matches);
+                    showPositionSelection(matches);
                 }
 
             } catch (error) {
@@ -376,6 +363,44 @@
         }
 
         // Show position selection when multiple matches
+        function showPositionSelection(positions) {
+            searchResults = positions;
+            const container = document.getElementById('noResults');
+            container.style.display = 'block';
+            container.className = 'alert alert-info';
+            
+            let html = `
+                <h5><i class="fas fa-list me-2"></i>Found ${positions.length} Positions - Select One:</h5>
+                <div class="list-group mt-3">
+            `;
+            
+            positions.forEach((pos, i) => {
+                const statusBadge = pos.status === 'available' 
+                    ? '<span class="badge bg-success ms-2">Available</span>'
+                    : '<span class="badge bg-secondary ms-2">' + (pos.status || 'N/A') + '</span>';
+                
+                const zone = pos.location?.zone || '';
+                const state = pos.location?.state || '';
+                const locationText = zone || state || 'N/A';
+                
+                html += `
+                    <button class="list-group-item list-group-item-action text-start" onclick="loadPositionByIndex(${i})">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${pos.title || pos.designation} ${statusBadge}</h6>
+                                <small><strong>Location:</strong> ${locationText}</small>
+                            </div>
+                            <span class="badge bg-primary">${pos.post || 'Position'}</span>
+                        </div>
+                    </button>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Show applications selection (legacy - for ID search)
         function showApplicationSelection(applications) {
             searchResults = applications;
             const container = document.getElementById('noResults');
@@ -410,9 +435,30 @@
             container.innerHTML = html;
         }
 
+        // Load position by index from search results
+        async function loadPositionByIndex(index) {
+            await loadPositionForPricing(searchResults[index]);
+        }
+
         // Load application by index from search results
         async function loadApplicationByIndex(index) {
             await loadApplication(searchResults[index]);
+        }
+
+        // Load position for pricing (NEW - for empty positions)
+        async function loadPositionForPricing(position) {
+            // Set current position directly (no application exists yet)
+            currentPosition = position;
+            currentApplication = null;  // No application for this position yet
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('noResults').style.display = 'none';
+            
+            await loadPricingForPosition(position._id);
+            displayPositionDetails();
+            
+            document.getElementById('applicationSection').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
         }
 
         // Load an application
@@ -525,6 +571,31 @@
                 console.error('Error loading pricing:', error);
                 alert('Error loading pricing: ' + error.message);
             }
+        }
+
+        // Display position details (no application yet)
+        function displayPositionDetails() {
+            // Position object from positions API
+            const positionInfo = currentPosition || {};
+            
+            // Show position details, no applicant info
+            document.getElementById('userName').textContent = 'No applicant yet';
+            document.getElementById('userPhone').textContent = '-';
+            document.getElementById('userEmail').textContent = '-';
+            document.getElementById('appId').textContent = positionInfo._id || '-';
+            document.getElementById('positionName').textContent = positionInfo.title || positionInfo.designation || '-';
+            
+            const locationEl = document.getElementById('positionLocation');
+            const zone = positionInfo.location?.zone || '';
+            const state = positionInfo.location?.state || '';
+            const locationText = zone || state || positionInfo.location?.country || 'N/A';
+            const statusBadge = positionInfo.status === 'available' 
+                ? '<span class="badge bg-success ms-2">Available</span>'
+                : '<span class="badge bg-secondary ms-2">' + (positionInfo.status || 'N/A') + '</span>';
+            locationEl.innerHTML = `${locationText} ${statusBadge}`;
+            
+            document.getElementById('positionId').textContent = positionInfo._id || '-';
+            document.getElementById('appStatus').textContent = 'Empty Position (Pre-configure pricing)';
         }
 
         // Display application details
