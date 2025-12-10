@@ -301,25 +301,33 @@
                 const allPositions = await response.json();
                 
                 console.log('  Total positions fetched:', allPositions.length);
-                console.log('  First 3 positions:', allPositions.slice(0, 3).map(pos => ({
+                console.log('  First FULL position object:', allPositions[0]);
+                console.log('  First 3 positions summary:', allPositions.slice(0, 3).map(pos => ({
                     id: pos._id,
                     title: pos.title,
                     designation: pos.designation,
+                    post: pos.post,
                     zone: pos.location?.zone,
+                    state: pos.location?.state,
                     status: pos.status
                 })));
                 
-                // Search positions by title, designation, or location
+                // Search positions by ALL available fields
                 const matches = allPositions.filter(pos => {
+                    // Get all possible field names from the position object
                     const title = pos.title || '';
                     const designation = pos.designation || '';
                     const post = pos.post || '';
-                    const zone = pos.location?.zone || '';
-                    const state = pos.location?.state || '';
-                    const division = pos.location?.division || '';
-                    const district = pos.location?.district || '';
+                    const positionId = pos.positionId || '';
+                    const name = pos.name || '';
+                    const zone = pos.location?.zone || pos.zone || '';
+                    const state = pos.location?.state || pos.state || '';
+                    const division = pos.location?.division || pos.division || '';
+                    const district = pos.location?.district || pos.district || '';
+                    const country = pos.location?.country || pos.country || '';
                     
-                    const searchText = `${title} ${designation} ${post} ${zone} ${state} ${division} ${district}`.toLowerCase();
+                    // Create comprehensive search text
+                    const searchText = `${title} ${designation} ${post} ${positionId} ${name} ${zone} ${state} ${division} ${district} ${country}`.toLowerCase();
                     const isMatch = searchText.includes(keyword);
                     
                     if (isMatch) {
@@ -338,8 +346,9 @@
 
                 if (matches.length === 0) {
                     console.error('  ❌ No positions found');
-                    console.log('  Sample position titles:', allPositions.slice(0, 5).map(pos => pos.title?.substring(0, 80)));
-                    throw new Error(`No positions found matching "${keyword}". Try: position title, zone, state, designation (e.g., "zone head central" or "pos_zone-head")`);
+                    console.log('  Sample position objects:', allPositions.slice(0, 3));
+                    console.log('  Hint: Check the console for "First FULL position object" to see available fields');
+                    throw new Error(`No positions found matching "${keyword}". Check console for actual position structure. Try searching: zone name, state, or check available fields.`);
                 }
 
                 if (matches.length === 1) {
@@ -379,18 +388,22 @@
                     ? '<span class="badge bg-success ms-2">Available</span>'
                     : '<span class="badge bg-secondary ms-2">' + (pos.status || 'N/A') + '</span>';
                 
-                const zone = pos.location?.zone || '';
-                const state = pos.location?.state || '';
+                // Try multiple location field variations
+                const zone = pos.location?.zone || pos.zone || '';
+                const state = pos.location?.state || pos.state || '';
                 const locationText = zone || state || 'N/A';
+                
+                // Try multiple title/name field variations
+                const displayName = pos.title || pos.designation || pos.name || pos.positionId || 'Position';
                 
                 html += `
                     <button class="list-group-item list-group-item-action text-start" onclick="loadPositionByIndex(${i})">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h6 class="mb-1">${pos.title || pos.designation} ${statusBadge}</h6>
+                                <h6 class="mb-1">${displayName} ${statusBadge}</h6>
                                 <small><strong>Location:</strong> ${locationText}</small>
                             </div>
-                            <span class="badge bg-primary">${pos.post || 'Position'}</span>
+                            <span class="badge bg-primary">${pos.post || pos.designation || 'Position'}</span>
                         </div>
                     </button>
                 `;
@@ -578,17 +591,24 @@
             // Position object from positions API
             const positionInfo = currentPosition || {};
             
+            console.log('📋 Displaying position:', positionInfo);
+            
             // Show position details, no applicant info
             document.getElementById('userName').textContent = 'No applicant yet';
             document.getElementById('userPhone').textContent = '-';
             document.getElementById('userEmail').textContent = '-';
             document.getElementById('appId').textContent = positionInfo._id || '-';
-            document.getElementById('positionName').textContent = positionInfo.title || positionInfo.designation || '-';
+            
+            // Try multiple field variations for position name
+            const positionName = positionInfo.title || positionInfo.designation || positionInfo.name || positionInfo.positionId || 'Position';
+            document.getElementById('positionName').textContent = positionName;
             
             const locationEl = document.getElementById('positionLocation');
-            const zone = positionInfo.location?.zone || '';
-            const state = positionInfo.location?.state || '';
-            const locationText = zone || state || positionInfo.location?.country || 'N/A';
+            // Try multiple location field variations
+            const zone = positionInfo.location?.zone || positionInfo.zone || '';
+            const state = positionInfo.location?.state || positionInfo.state || '';
+            const country = positionInfo.location?.country || positionInfo.country || '';
+            const locationText = zone || state || country || 'N/A';
             const statusBadge = positionInfo.status === 'available' 
                 ? '<span class="badge bg-success ms-2">Available</span>'
                 : '<span class="badge bg-secondary ms-2">' + (positionInfo.status || 'N/A') + '</span>';
