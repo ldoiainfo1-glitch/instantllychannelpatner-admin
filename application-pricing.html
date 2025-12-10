@@ -237,36 +237,30 @@
                 console.log('  Token exists:', !!token);
                 console.log('  Token:', token);
                 
-                // Test 1: Try without auth
-                console.log('  Test 1: Fetching without auth...');
-                let response = await fetch(`${API_BASE_URL}/positions?limit=5`);
+                // Test 1: Fetch applications
+                console.log('  Test 1: Fetching pending applications...');
+                let response = await fetch(`${API_BASE_URL}/admin/applications/pending`);
                 console.log('    Status:', response.status);
-                let data = await response.json();
-                console.log('    Data (no auth):', data);
+                let pendingData = await response.json();
+                console.log('    Pending apps:', pendingData.length);
                 
-                // Test 2: Try with auth
-                console.log('  Test 2: Fetching with Bearer token...');
-                response = await fetch(`${API_BASE_URL}/positions?limit=5`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                // Test 2: Fetch approved applications
+                console.log('  Test 2: Fetching approved applications...');
+                response = await fetch(`${API_BASE_URL}/admin/applications/approved`);
                 console.log('    Status:', response.status);
-                data = await response.json();
-                console.log('    Data (with auth):', data);
+                let approvedData = await response.json();
+                console.log('    Approved apps:', approvedData.length);
                 
-                // Test 3: Check data structure
-                if (Array.isArray(data)) {
-                    console.log('  ✅ Response is array, length:', data.length);
-                    statusEl.textContent = `✅ Connected! Found ${data.length} positions`;
-                    statusEl.className = 'ms-2 text-success fw-bold';
-                } else if (data.positions && Array.isArray(data.positions)) {
-                    console.log('  ✅ Response has positions array, length:', data.positions.length);
-                    statusEl.textContent = `✅ Connected! Found ${data.positions.length} positions`;
+                // Test 3: Show total
+                const total = pendingData.length + approvedData.length;
+                console.log('  ✅ Total applications:', total);
+                console.log('  Sample application:', pendingData[0] || approvedData[0]);
+                
+                if (total > 0) {
+                    statusEl.textContent = `✅ Connected! Found ${total} applications (${pendingData.length} pending + ${approvedData.length} approved)`;
                     statusEl.className = 'ms-2 text-success fw-bold';
                 } else {
-                    console.log('  ⚠️ Unexpected data structure:', Object.keys(data));
-                    statusEl.textContent = '⚠️ Unexpected data structure';
+                    statusEl.textContent = '⚠️ Connected but no applications found';
                     statusEl.className = 'ms-2 text-warning fw-bold';
                 }
                 
@@ -291,53 +285,57 @@
             document.getElementById('applicationSection').style.display = 'none';
 
             try {
-                // Fetch all positions - including those WITHOUT applications
+                // Fetch all applications from admin endpoints (pending + approved)
                 const token = localStorage.getItem('channelPartnerToken');
-                const apiUrl = `${API_BASE_URL}/positions?limit=10000`;
                 
                 console.log('🔍 SEARCH DEBUG:');
                 console.log('  Keyword:', keyword);
-                console.log('  API URL:', apiUrl);
-                console.log('  Token exists:', !!token);
-                console.log('  Token preview:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+                console.log('  Fetching applications from admin endpoints...');
                 
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                // Fetch both pending and approved applications
+                const [pendingRes, approvedRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/admin/applications/pending`),
+                    fetch(`${API_BASE_URL}/admin/applications/approved`)
+                ]);
                 
-                console.log('  Response Status:', response.status, response.statusText);
-                console.log('  Response OK:', response.ok);
+                console.log('  Pending Response:', pendingRes.status);
+                console.log('  Approved Response:', approvedRes.status);
                 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('  API Error Response:', errorText);
-                    throw new Error(`Failed to fetch positions: ${response.status} ${response.statusText}`);
+                if (!pendingRes.ok || !approvedRes.ok) {
+                    throw new Error('Failed to fetch applications');
                 }
                 
-                const allPositions = await response.json();
-                console.log('  Total positions fetched:', allPositions.length);
-                console.log('  First 3 positions:', allPositions.slice(0, 3).map(p => ({
-                    id: p._id,
-                    designation: p.designation,
-                    post: p.post,
-                    zone: p.location?.zone,
-                    hasApplicant: !!p.applicantDetails?.name
+                const pendingApps = await pendingRes.json();
+                const approvedApps = await approvedRes.json();
+                const allApplications = [...pendingApps, ...approvedApps];
+                
+                console.log('  Total applications fetched:', allApplications.length);
+                console.log('  (Pending:', pendingApps.length, '+ Approved:', approvedApps.length, ')');
+                console.log('  First 3 applications:', allApplications.slice(0, 3).map(app => ({
+                    id: app._id,
+                    name: app.applicantInfo?.name,
+                    position: app.positionInfo?.designation,
+                    zone: app.positionInfo?.zone
                 })));
                 
-                // Search ALL positions (with or without applications)
-                // Match against designation, post, location, and applicant name (if exists)
-                const matches = allPositions.filter(p => {
-                    const applicantName = p.applicantDetails?.name || '';
-                    const searchText = `${p.designation} ${p.post} ${JSON.stringify(p.location)} ${applicantName}`.toLowerCase();
+                // Search applications by applicant name, phone, position, or location
+                const matches = allApplications.filter(app => {
+                    const applicantName = app.applicantInfo?.name || '';
+                    const applicantPhone = app.applicantInfo?.phone || '';
+                    const designation = app.positionInfo?.designation || '';
+                    const post = app.positionInfo?.post || '';
+                    const location = JSON.stringify(app.positionInfo?.location || {});
+                    const zone = app.positionInfo?.zone || '';
+                    const state = app.positionInfo?.state || '';
+                    
+                    const searchText = `${applicantName} ${applicantPhone} ${designation} ${post} ${location} ${zone} ${state}`.toLowerCase();
                     const isMatch = searchText.includes(keyword);
                     
                     if (isMatch) {
                         console.log('  ✅ Match found:', {
-                            designation: p.designation,
-                            post: p.post,
-                            zone: p.location?.zone,
+                            applicant: applicantName,
+                            position: designation,
+                            zone: zone,
                             searchText: searchText.substring(0, 100)
                         });
                     }
@@ -349,19 +347,20 @@
 
                 if (matches.length === 0) {
                     console.error('  ❌ No matches found');
-                    console.log('  Sample search texts from positions:', allPositions.slice(0, 5).map(p => {
-                        const applicantName = p.applicantDetails?.name || '';
-                        return `${p.designation} ${p.post} ${JSON.stringify(p.location)} ${applicantName}`.toLowerCase().substring(0, 80);
+                    console.log('  Sample search texts:', allApplications.slice(0, 5).map(app => {
+                        const name = app.applicantInfo?.name || '';
+                        const pos = app.positionInfo?.designation || '';
+                        return `${name} ${pos}`.toLowerCase().substring(0, 80);
                     }));
-                    throw new Error(`No positions found matching "${keyword}". Try: "Central", "Zone Head", "India", "President" etc.`);
+                    throw new Error(`No applications found matching "${keyword}". Try: applicant name, zone, state, designation`);
                 }
 
                 if (matches.length === 1) {
                     // Only one match - load it directly
-                    await loadPosition(matches[0]);
+                    await loadApplication(matches[0]);
                 } else {
                     // Multiple matches - show selection
-                    showPositionSelection(matches);
+                    showApplicationSelection(matches);
                 }
 
             } catch (error) {
@@ -377,36 +376,31 @@
         }
 
         // Show position selection when multiple matches
-        function showPositionSelection(positions) {
-            searchResults = positions;
+        function showApplicationSelection(applications) {
+            searchResults = applications;
             const container = document.getElementById('noResults');
             container.style.display = 'block';
             container.className = 'alert alert-info';
             
             let html = `
-                <h5><i class="fas fa-list me-2"></i>Found ${positions.length} Positions - Select One:</h5>
+                <h5><i class="fas fa-list me-2"></i>Found ${applications.length} Applications - Select One:</h5>
                 <div class="list-group mt-3">
             `;
             
-            positions.forEach((pos, i) => {
-                const location = getLocationString(pos.location);
-                const hasApplication = pos.applicantDetails?.name;
-                const statusBadge = hasApplication 
-                    ? '<span class="badge bg-success ms-2">Has Application</span>'
-                    : '<span class="badge bg-warning text-dark ms-2">Available</span>';
+            applications.forEach((app, i) => {
+                const statusBadge = app.status === 'approved' 
+                    ? '<span class="badge bg-success ms-2">Approved</span>'
+                    : '<span class="badge bg-warning text-dark ms-2">Pending</span>';
                 
                 html += `
-                    <button class="list-group-item list-group-item-action text-start" onclick="loadPositionByIndex(${i})">
+                    <button class="list-group-item list-group-item-action text-start" onclick="loadApplicationByIndex(${i})">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h6 class="mb-1">${pos.designation} ${statusBadge}</h6>
-                                <p class="mb-1 text-muted small">📍 ${location}</p>
-                                ${hasApplication 
-                                    ? `<small><strong>👤 Applicant:</strong> ${pos.applicantDetails.name} (${pos.applicantDetails.phone})</small>`
-                                    : `<small class="text-warning">⚡ Pre-configure pricing for when someone applies</small>`
-                                }
+                                <h6 class="mb-1">${app.applicantInfo?.name} ${statusBadge}</h6>
+                                <p class="mb-1 text-muted small">📞 ${app.applicantInfo?.phone}</p>
+                                <small><strong>Position:</strong> ${app.positionInfo?.designation} - ${app.positionInfo?.zone || app.positionInfo?.state}</small>
                             </div>
-                            <span class="badge bg-primary">${pos.post}</span>
+                            <span class="badge bg-primary">${app.positionInfo?.post || 'N/A'}</span>
                         </div>
                     </button>
                 `;
@@ -416,20 +410,20 @@
             container.innerHTML = html;
         }
 
-        // Load position by index from search results
-        async function loadPositionByIndex(index) {
-            await loadPosition(searchResults[index]);
+        // Load application by index from search results
+        async function loadApplicationByIndex(index) {
+            await loadApplication(searchResults[index]);
         }
 
-        // Load a position
-        async function loadPosition(position) {
-            currentPosition = position;
-            currentApplication = position.applicantDetails;
+        // Load an application
+        async function loadApplication(application) {
+            currentApplication = application;
+            currentPosition = application.positionInfo;
             
             document.getElementById('loading').style.display = 'block';
             document.getElementById('noResults').style.display = 'none';
             
-            await loadPricingForPosition(position._id);
+            await loadPricingForPosition(application._id);
             displayApplicationDetails();
             
             document.getElementById('applicationSection').style.display = 'block';
@@ -535,24 +529,27 @@
 
         // Display application details
         function displayApplicationDetails() {
-            const hasApplication = currentApplication?.name;
+            // Application object has applicantInfo and positionInfo
+            const applicantInfo = currentApplication?.applicantInfo || {};
+            const positionInfo = currentApplication?.positionInfo || currentPosition || {};
             
-            document.getElementById('userName').textContent = currentApplication?.name || 'No applicant yet';
-            document.getElementById('userPhone').textContent = currentApplication?.phone || '-';
-            document.getElementById('userEmail').textContent = currentApplication?.email || '-';
-            document.getElementById('appId').textContent = currentPosition._id;
-            document.getElementById('positionName').textContent = currentPosition.designation;
+            document.getElementById('userName').textContent = applicantInfo.name || '-';
+            document.getElementById('userPhone').textContent = applicantInfo.phone || '-';
+            document.getElementById('userEmail').textContent = applicantInfo.email || '-';
+            document.getElementById('appId').textContent = currentApplication._id;
+            document.getElementById('positionName').textContent = positionInfo.designation || '-';
             
             const locationEl = document.getElementById('positionLocation');
-            const locationText = getLocationString(currentPosition.location);
-            if (hasApplication) {
-                locationEl.innerHTML = `${locationText} <span class="badge bg-success ms-2">Active Application</span>`;
-            } else {
-                locationEl.innerHTML = `${locationText} <span class="badge bg-warning text-dark ms-2">Available - Pre-configuring</span>`;
-            }
+            const zone = positionInfo.zone || '';
+            const state = positionInfo.state || '';
+            const locationText = zone || state || positionInfo.country || 'N/A';
+            const statusBadge = currentApplication.status === 'approved' 
+                ? '<span class="badge bg-success ms-2">Approved</span>'
+                : '<span class="badge bg-warning text-dark ms-2">Pending</span>';
+            locationEl.innerHTML = `${locationText} ${statusBadge}`;
             
-            document.getElementById('positionId').textContent = currentPosition._id;
-            document.getElementById('appStatus').textContent = currentPosition.status;
+            document.getElementById('positionId').textContent = currentApplication._id;
+            document.getElementById('appStatus').textContent = currentApplication.status || '-';
         }
 
         // Display current plans (what user sees)
