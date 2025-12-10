@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Position Pricing - Instantly Channel Partner Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .pricing-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .pricing-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        .pricing-card.has-custom {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .tier-input-group {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        .tier-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        .custom-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .position-info {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <i class="fas fa-users-cog me-2"></i>Instantly Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="users.html">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="custom-pricing.html">
+                            <i class="fas fa-tags me-1"></i>Custom Pricing
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="promotions.html">
+                            <i class="fas fa-gift me-1"></i>Promotions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="credits.html">
+                            <i class="fas fa-coins me-1"></i>Credits
+                        </a>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2><i class="fas fa-tags me-2 text-primary"></i>Custom Position Pricing</h2>
+                <p class="text-muted">Customize payment plans for specific positions. When enabled, users will see custom pricing instead of default plans.</p>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Zone</label>
+                        <select class="form-select" id="filterZone" onchange="loadPositions()">
+                            <option value="">All Zones</option>
+                            <option value="Western">Western</option>
+                            <option value="Eastern">Eastern</option>
+                            <option value="Northern">Northern</option>
+                            <option value="Southern">Southern</option>
+                            <option value="Central">Central</option>
+                            <option value="North-East">North-East</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">State</label>
+                        <input type="text" class="form-control" id="filterState" placeholder="Enter state name">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Position Type</label>
+                        <select class="form-select" id="filterPost">
+                            <option value="">All Positions</option>
+                            <option value="President">India Head</option>
+                            <option value="Zone Head">Zone Head</option>
+                            <option value="State Head">State Head</option>
+                            <option value="Division Head">Division Head</option>
+                            <option value="District Head">District Head</option>
+                            <option value="Tehsil Head">Tehsil Head</option>
+                            <option value="Pincode Head">Pincode Head</option>
+                            <option value="Village Head">Village Head</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary w-100" onclick="loadPositions()">
+                                <i class="fas fa-search me-1"></i>Search
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearFilters()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="showOnlyCustom" onchange="loadPositions()">
+                            <label class="form-check-label" for="showOnlyCustom">
+                                Show only positions with custom pricing
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Positions Grid -->
+        <div id="positionsContainer" class="row g-3">
+            <!-- Will be populated dynamically -->
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading positions...</p>
+        </div>
+
+        <!-- No Results -->
+        <div id="noResults" class="text-center py-5" style="display: none;">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No positions found</h5>
+            <p class="text-muted">Try adjusting your filters</p>
+        </div>
+    </div>
+
+    <!-- Edit Pricing Modal -->
+    <div class="modal fade" id="editPricingModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Edit Custom Pricing
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Position:</strong> <span id="modalPositionInfo"></span>
+                    </div>
+
+                    <!-- Enable/Disable Custom Pricing -->
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" id="enableCustomPricing">
+                        <label class="form-check-label fw-bold" for="enableCustomPricing">
+                            Enable Custom Pricing for this position
+                        </label>
+                    </div>
+
+                    <div id="pricingTiersContainer" style="display: none;">
+                        <h6 class="mb-3">Payment Plans</h6>
+                        <p class="text-muted small">Configure up to 6 payment tiers. Commission is automatically calculated as 85% and Credits as 100%.</p>
+                        
+                        <div id="tiersInputs">
+                            <!-- Tier inputs will be generated here -->
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTier()">
+                            <i class="fas fa-plus me-1"></i>Add Another Tier
+                        </button>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div id="previewSection" class="mt-4" style="display: none;">
+                        <h6 class="mb-3">Preview</h6>
+                        <div id="previewTiers" class="row g-2">
+                            <!-- Preview cards will be shown here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="removeCustomBtn" onclick="removeCustomPricing()" style="display: none;">
+                        <i class="fas fa-trash me-1"></i>Remove Custom Pricing
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveCustomPricing()">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="config.js"></script>
+    <script>
+        let currentPositionId = null;
+        let allPositions = [];
+
+        // Check authentication
+        const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
+        if (!adminUser) {
+            window.location.href = 'index.html';
+        }
+
+        // Load positions on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPositions();
+        });
+
+        // Load positions with filters
+        async function loadPositions() {
+            const container = document.getElementById('positionsContainer');
+            const loading = document.getElementById('loadingIndicator');
+            const noResults = document.getElementById('noResults');
+            
+            container.innerHTML = '';
+            container.style.display = 'none';
+            noResults.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const zone = document.getElementById('filterZone').value;
+                const state = document.getElementById('filterState').value;
+                const post = document.getElementById('filterPost').value;
+                const showOnlyCustom = document.getElementById('showOnlyCustom').checked;
+
+                let url = `${API_BASE_URL}/positions?country=India`;
+                if (zone) url += `&zone=${encodeURIComponent(zone)}`;
+                if (state) url += `&state=${encodeURIComponent(state)}`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load positions');
+                
+                let positions = await response.json();
+
+                // Filter by post type
+                if (post) {
+                    positions = positions.filter(p => p.post === post);
+                }
+
+                // Filter by custom pricing if checkbox is checked
+                if (showOnlyCustom) {
+                    positions = positions.filter(p => p.customPricing?.enabled);
+                }
+
+                allPositions = positions;
+
+                loading.style.display = 'none';
+
+                if (positions.length === 0) {
+                    noResults.style.display = 'block';
+                    return;
+                }
+
+                container.style.display = 'flex';
+                positions.forEach(position => {
+                    container.appendChild(createPositionCard(position));
+                });
+
+            } catch (error) {
+                console.error('Error loading positions:', error);
+                loading.style.display = 'none';
+                noResults.style.display = 'block';
+                alert('Error loading positions: ' + error.message);
+            }
+        }
+
+        // Create position card
+        function createPositionCard(position) {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+
+            const hasCustom = position.customPricing?.enabled;
+            
+            // Build location string
+            let locationStr = '';
+            if (position.location.village) locationStr = position.location.village;
+            else if (position.location.pincode) locationStr = position.location.pincode;
+            else if (position.location.tehsil) locationStr = position.location.tehsil;
+            else if (position.location.district) locationStr = position.location.district;
+            else if (position.location.division) locationStr = position.location.division;
+            else if (position.location.state) locationStr = position.location.state;
+            else if (position.location.zone) locationStr = position.location.zone;
+            else locationStr = position.location.country;
+
+            col.innerHTML = `
+                <div class="card pricing-card ${hasCustom ? 'has-custom' : ''} h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">${position.designation}</h6>
+                            ${hasCustom ? '<span class="custom-badge">CUSTOM</span>' : ''}
+                        </div>
+                        <p class="position-info mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>${locationStr}
+                        </p>
+                        <p class="position-info mb-3">
+                            <i class="fas fa-briefcase me-1"></i>${position.post}
+                        </p>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted d-block mb-1">
+                                ${hasCustom ? 'Custom Plans:' : 'Default Plans:'}
+                            </small>
+                            <div class="d-flex flex-wrap gap-1">
+                                ${(hasCustom ? position.customPricing.tiers : position.pricingTiers || [])
+                                    .map(tier => `<span class="badge bg-secondary">₹${(tier.pay / 1000).toFixed(0)}K</span>`)
+                                    .join('')}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary flex-grow-1" onclick="editPricing('${position._id}')">
+                                <i class="fas fa-edit me-1"></i>Edit Pricing
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return col;
+        }
+
+        // Edit pricing
+        async function editPricing(positionId) {
+            currentPositionId = positionId;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/positions/${positionId}/custom-pricing`);
+                if (!response.ok) throw new Error('Failed to load pricing data');
+                
+                const data = await response.json();
+                
+                // Set modal title
+                let locationStr = '';
+                if (data.location.village) locationStr = data.location.village;
+                else if (data.location.pincode) locationStr = data.location.pincode;
+                else if (data.location.tehsil) locationStr = data.location.tehsil;
+                else if (data.location.district) locationStr = data.location.district;
+                else if (data.location.division) locationStr = data.location.division;
+                else if (data.location.state) locationStr = data.location.state;
+                else if (data.location.zone) locationStr = data.location.zone;
+                else locationStr = data.location.country;
+                
+                document.getElementById('modalPositionInfo').textContent = 
+                    `${data.designation} - ${locationStr}`;
+                
+                // Set custom pricing toggle
+                const enableCheckbox = document.getElementById('enableCustomPricing');
+                enableCheckbox.checked = data.hasCustomPricing;
+                
+                // Show/hide pricing tiers container
+                togglePricingContainer(data.hasCustomPricing);
+                
+                // Load tiers
+                if (data.hasCustomPricing && data.customPricing.tiers.length > 0) {
+                    renderTierInputs(data.customPricing.tiers);
+                    document.getElementById('removeCustomBtn').style.display = 'inline-block';
+                } else {
+                    // Load default tiers as template
+                    renderTierInputs(data.defaultPricing || []);
+                    document.getElementById('removeCustomBtn').style.display = 'none';
+                }
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('editPricingModal')).show();
+                
+            } catch (error) {
+                console.error('Error loading pricing data:', error);
+                alert('Error loading pricing data: ' + error.message);
+            }
+        }
+
+        // Toggle pricing container
+        document.getElementById('enableCustomPricing').addEventListener('change', function() {
+            togglePricingContainer(this.checked);
+        });
+
+        function togglePricingContainer(show) {
+            document.getElementById('pricingTiersContainer').style.display = show ? 'block' : 'none';
+            document.getElementById('previewSection').style.display = show ? 'block' : 'none';
+        }
+
+        // Render tier inputs
+        function renderTierInputs(tiers) {
+            const container = document.getElementById('tiersInputs');
+            container.innerHTML = '';
+            
+            if (tiers.length === 0) {
+                // Add 3 default tiers
+                tiers = [
+                    { pay: 90000, profit: 51000, credit: 60000 },
+                    { pay: 75000, profit: 42500, credit: 50000 },
+                    { pay: 60000, profit: 34000, credit: 40000 }
+                ];
+            }
+            
+            tiers.forEach((tier, index) => {
+                container.appendChild(createTierInput(tier, index));
+            });
+            
+            updatePreview();
+        }
+
+        // Create tier input
+        function createTierInput(tier, index) {
+            const div = document.createElement('div');
+            div.className = 'tier-input-group';
+            div.dataset.tierIndex = index;
+            
+            const profit = Math.round(tier.pay * 0.85);
+            const credit = Math.round(tier.pay * 1.0);
+            
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="tier-label">Tier ${index + 1}</span>
+                    ${index > 0 ? `<button type="button" class="btn btn-sm btn-danger" onclick="removeTier(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>` : ''}
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label small">Investment Amount (₹)</label>
+                        <input type="number" class="form-control" name="pay_${index}" value="${tier.pay}" 
+                               onchange="updateTierCalculations(${index}); updatePreview();" step="1000" min="1000">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Commission (85%) - Auto</label>
+                        <input type="number" class="form-control" name="profit_${index}" value="${profit}" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Ad Credits (100%) - Auto</label>
+                        <input type="number" class="form-control" name="credit_${index}" value="${credit}" readonly>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Update tier calculations
+        function updateTierCalculations(index) {
+            const payInput = document.querySelector(`input[name="pay_${index}"]`);
+            const profitInput = document.querySelector(`input[name="profit_${index}"]`);
+            const creditInput = document.querySelector(`input[name="credit_${index}"]`);
+            
+            const pay = parseInt(payInput.value) || 0;
+            profitInput.value = Math.round(pay * 0.85);
+            creditInput.value = Math.round(pay * 1.0);
+        }
+
+        // Add tier
+        function addTier() {
+            const container = document.getElementById('tiersInputs');
+            const currentCount = container.children.length;
+            
+            if (currentCount >= 6) {
+                alert('Maximum 6 tiers allowed');
+                return;
+            }
+            
+            const newTier = { pay: 45000, profit: 25500, credit: 30000 };
+            container.appendChild(createTierInput(newTier, currentCount));
+            updatePreview();
+        }
+
+        // Remove tier
+        function removeTier(index) {
+            const tierInputs = document.querySelectorAll('.tier-input-group');
+            if (tierInputs.length <= 1) {
+                alert('At least one tier is required');
+                return;
+            }
+            
+            tierInputs[index].remove();
+            
+            // Re-index remaining tiers
+            renderTierInputsFromCurrent();
+            updatePreview();
+        }
+
+        // Re-render tier inputs from current values
+        function renderTierInputsFromCurrent() {
+            const tiers = [];
+            document.querySelectorAll('.tier-input-group').forEach((tierDiv, index) => {
+                const pay = parseInt(document.querySelector(`input[name="pay_${index}"]`).value) || 0;
+                const profit = parseInt(document.querySelector(`input[name="profit_${index}"]`).value) || 0;
+                const credit = parseInt(document.querySelector(`input[name="credit_${index}"]`).value) || 0;
+                tiers.push({ pay, profit, credit });
+            });
+            renderTierInputs(tiers);
+        }
+
+        // Update preview
+        function updatePreview() {
+            const previewContainer = document.getElementById('previewTiers');
+            previewContainer.innerHTML = '';
+            
+            document.querySelectorAll('.tier-input-group').forEach((tierDiv, index) => {
+                const pay = parseInt(document.querySelector(`input[name="pay_${index}"]`).value) || 0;
+                const profit = parseInt(document.querySelector(`input[name="profit_${index}"]`).value) || 0;
+                const credit = parseInt(document.querySelector(`input[name="credit_${index}"]`).value) || 0;
+                
+                const col = document.createElement('div');
+                col.className = 'col-md-4';
+                col.innerHTML = `
+                    <div class="card border-primary">
+                        <div class="card-body p-2">
+                            <h6 class="text-center mb-2">₹${(pay / 1000).toFixed(0)}K</h6>
+                            <small class="d-block text-muted">Commission: ₹${(profit / 1000).toFixed(0)}K</small>
+                            <small class="d-block text-muted">Credits: ₹${(credit / 1000).toFixed(0)}K</small>
+                        </div>
+                    </div>
+                `;
+                previewContainer.appendChild(col);
+            });
+        }
+
+        // Save custom pricing
+        async function saveCustomPricing() {
+            const enabled = document.getElementById('enableCustomPricing').checked;
+            
+            if (!enabled) {
+                // Disable custom pricing
+                try {
+                    const response = await fetch(`${API_BASE_URL}/positions/${currentPositionId}/custom-pricing`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: false, tiers: [] })
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to disable custom pricing');
+                    
+                    alert('Custom pricing disabled successfully');
+                    bootstrap.Modal.getInstance(document.getElementById('editPricingModal')).hide();
+                    loadPositions();
+                    return;
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error: ' + error.message);
+                    return;
+                }
+            }
+            
+            // Collect tiers
+            const tiers = [];
+            document.querySelectorAll('.tier-input-group').forEach((tierDiv, index) => {
+                const pay = parseInt(document.querySelector(`input[name="pay_${index}"]`).value) || 0;
+                const profit = parseInt(document.querySelector(`input[name="profit_${index}"]`).value) || 0;
+                const credit = parseInt(document.querySelector(`input[name="credit_${index}"]`).value) || 0;
+                
+                if (pay > 0) {
+                    tiers.push({ pay, profit, credit });
+                }
+            });
+            
+            if (tiers.length === 0) {
+                alert('Please add at least one payment tier');
+                return;
+            }
+            
+            // Sort tiers by pay amount (descending)
+            tiers.sort((a, b) => b.pay - a.pay);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/positions/${currentPositionId}/custom-pricing`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: true, tiers })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to save custom pricing');
+                }
+                
+                alert('Custom pricing saved successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('editPricingModal')).hide();
+                loadPositions();
+                
+            } catch (error) {
+                console.error('Error saving custom pricing:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Remove custom pricing
+        async function removeCustomPricing() {
+            if (!confirm('Are you sure you want to remove custom pricing for this position? Users will see default pricing.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/positions/${currentPositionId}/custom-pricing`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Failed to remove custom pricing');
+                
+                alert('Custom pricing removed successfully');
+                bootstrap.Modal.getInstance(document.getElementById('editPricingModal')).hide();
+                loadPositions();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filterZone').value = '';
+            document.getElementById('filterState').value = '';
+            document.getElementById('filterPost').value = '';
+            document.getElementById('showOnlyCustom').checked = false;
+            loadPositions();
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('adminUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
