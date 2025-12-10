@@ -67,6 +67,15 @@
         <!-- Search Section -->
         <div class="search-section mb-4">
             <h4 class="mb-4"><i class="fas fa-search me-2"></i>Find User Application</h4>
+            
+            <!-- Debug Connection -->
+            <div class="mb-3">
+                <button class="btn btn-sm btn-outline-light" onclick="testConnection()">
+                    <i class="fas fa-plug me-1"></i>Test API Connection
+                </button>
+                <small class="ms-2 text-light" id="connectionStatus">Click to test</small>
+            </div>
+            
             <div class="alert alert-light mb-3">
                 <strong>🔍 How to find Position ID:</strong><br>
                 1. Go to Dashboard and scroll to the position row<br>
@@ -216,6 +225,58 @@
         let isEditMode = false;
         let searchResults = [];
 
+        // Test API Connection
+        async function testConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.textContent = 'Testing...';
+            
+            try {
+                const token = localStorage.getItem('channelPartnerToken');
+                console.log('🔌 CONNECTION TEST:');
+                console.log('  API_BASE_URL:', API_BASE_URL);
+                console.log('  Token exists:', !!token);
+                console.log('  Token:', token);
+                
+                // Test 1: Try without auth
+                console.log('  Test 1: Fetching without auth...');
+                let response = await fetch(`${API_BASE_URL}/positions?limit=5`);
+                console.log('    Status:', response.status);
+                let data = await response.json();
+                console.log('    Data (no auth):', data);
+                
+                // Test 2: Try with auth
+                console.log('  Test 2: Fetching with Bearer token...');
+                response = await fetch(`${API_BASE_URL}/positions?limit=5`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                console.log('    Status:', response.status);
+                data = await response.json();
+                console.log('    Data (with auth):', data);
+                
+                // Test 3: Check data structure
+                if (Array.isArray(data)) {
+                    console.log('  ✅ Response is array, length:', data.length);
+                    statusEl.textContent = `✅ Connected! Found ${data.length} positions`;
+                    statusEl.className = 'ms-2 text-success fw-bold';
+                } else if (data.positions && Array.isArray(data.positions)) {
+                    console.log('  ✅ Response has positions array, length:', data.positions.length);
+                    statusEl.textContent = `✅ Connected! Found ${data.positions.length} positions`;
+                    statusEl.className = 'ms-2 text-success fw-bold';
+                } else {
+                    console.log('  ⚠️ Unexpected data structure:', Object.keys(data));
+                    statusEl.textContent = '⚠️ Unexpected data structure';
+                    statusEl.className = 'ms-2 text-warning fw-bold';
+                }
+                
+            } catch (error) {
+                console.error('  ❌ Connection test failed:', error);
+                statusEl.textContent = `❌ Failed: ${error.message}`;
+                statusEl.className = 'ms-2 text-danger fw-bold';
+            }
+        }
+
         // Search by keyword (position name/location)
         async function searchByKeyword() {
             const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
@@ -232,24 +293,66 @@
             try {
                 // Fetch all positions - including those WITHOUT applications
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/positions?limit=10000`, {
+                const apiUrl = `${API_BASE_URL}/positions?limit=10000`;
+                
+                console.log('🔍 SEARCH DEBUG:');
+                console.log('  Keyword:', keyword);
+                console.log('  API URL:', apiUrl);
+                console.log('  Token exists:', !!token);
+                console.log('  Token preview:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+                
+                const response = await fetch(apiUrl, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                if (!response.ok) throw new Error('Failed to fetch positions');
+                
+                console.log('  Response Status:', response.status, response.statusText);
+                console.log('  Response OK:', response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('  API Error Response:', errorText);
+                    throw new Error(`Failed to fetch positions: ${response.status} ${response.statusText}`);
+                }
                 
                 const allPositions = await response.json();
+                console.log('  Total positions fetched:', allPositions.length);
+                console.log('  First 3 positions:', allPositions.slice(0, 3).map(p => ({
+                    id: p._id,
+                    designation: p.designation,
+                    post: p.post,
+                    zone: p.location?.zone,
+                    hasApplicant: !!p.applicantDetails?.name
+                })));
                 
                 // Search ALL positions (with or without applications)
                 // Match against designation, post, location, and applicant name (if exists)
                 const matches = allPositions.filter(p => {
                     const applicantName = p.applicantDetails?.name || '';
                     const searchText = `${p.designation} ${p.post} ${JSON.stringify(p.location)} ${applicantName}`.toLowerCase();
-                    return searchText.includes(keyword);
+                    const isMatch = searchText.includes(keyword);
+                    
+                    if (isMatch) {
+                        console.log('  ✅ Match found:', {
+                            designation: p.designation,
+                            post: p.post,
+                            zone: p.location?.zone,
+                            searchText: searchText.substring(0, 100)
+                        });
+                    }
+                    
+                    return isMatch;
                 });
 
+                console.log('  Total matches found:', matches.length);
+
                 if (matches.length === 0) {
+                    console.error('  ❌ No matches found');
+                    console.log('  Sample search texts from positions:', allPositions.slice(0, 5).map(p => {
+                        const applicantName = p.applicantDetails?.name || '';
+                        return `${p.designation} ${p.post} ${JSON.stringify(p.location)} ${applicantName}`.toLowerCase().substring(0, 80);
+                    }));
                     throw new Error(`No positions found matching "${keyword}". Try: "Central", "Zone Head", "India", "President" etc.`);
                 }
 
@@ -354,13 +457,24 @@
 
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/positions/${appId}`, {
+                const apiUrl = `${API_BASE_URL}/positions/${appId}`;
+                
+                console.log('🔍 ID SEARCH DEBUG:');
+                console.log('  Position ID:', appId);
+                console.log('  API URL:', apiUrl);
+                console.log('  Token exists:', !!token);
+                
+                const response = await fetch(apiUrl, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
                 
+                console.log('  Response Status:', response.status, response.statusText);
+                
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('  API Error:', errorText);
                     throw new Error('Position not found with that ID');
                 }
                 
