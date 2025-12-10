@@ -245,17 +245,24 @@
         let currentPositionId = null;
         let allPositions = [];
 
-        // Check authentication
-        const token = localStorage.getItem('channelPartnerToken');
-        if (!token) {
-            console.log('❌ No token found - redirecting to login');
-            window.location.href = 'index.html';
-        } else {
-            console.log('✅ Token found - loading custom pricing page');
-        }
+        // Check authentication immediately (synchronous check before page renders)
+        (function() {
+            const token = localStorage.getItem('channelPartnerToken');
+            console.log('🔐 Custom Pricing - Auth Check');
+            console.log('Token exists:', !!token);
+            console.log('Token length:', token ? token.length : 0);
+            
+            if (!token) {
+                console.log('❌ No token found - redirecting to login');
+                window.location.replace('index.html');
+                return;
+            }
+            console.log('✅ Token found - page will load');
+        })();
 
         // Load positions on page load
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('📄 Custom Pricing page loaded');
             loadPositions();
         });
 

@@ -52,4 +52,7 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     // Browser environment
     window.ADMIN_CONFIG = ADMIN_CONFIG;
+    // Also set API_BASE_URL for backward compatibility
+    window.API_BASE_URL = ADMIN_CONFIG.getApiBaseUrl();
+    console.log('🔧 Config loaded - API_BASE_URL:', window.API_BASE_URL);
 }
