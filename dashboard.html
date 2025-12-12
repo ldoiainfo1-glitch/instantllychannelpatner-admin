@@ -503,6 +503,19 @@
                     // Then reload pending applications
                     const pendingResponse = await fetch(`${API_BASE_URL}/admin/applications/pending`);
                     const pendingApplications = await pendingResponse.json();
+                    console.log('📥 Pending Applications API Response:', pendingApplications);
+                    if (pendingApplications.length > 0) {
+                        console.log('📥 First application sample:', pendingApplications[0]);
+                        console.log('📥 Has payment?', !!pendingApplications[0].payment);
+                        if (pendingApplications[0].payment) {
+                            console.log('📥 Payment data:', {
+                                hasScreenshot: !!pendingApplications[0].payment.paymentScreenshot,
+                                screenshotLength: pendingApplications[0].payment.paymentScreenshot ? pendingApplications[0].payment.paymentScreenshot.length : 0,
+                                amount: pendingApplications[0].payment.amount,
+                                status: pendingApplications[0].payment.status
+                            });
+                        }
+                    }
                     displayPendingApplications(pendingApplications);
                     document.getElementById('pendingCount').textContent = pendingApplications.length;
                     console.log('✅ Pending applications reloaded');
