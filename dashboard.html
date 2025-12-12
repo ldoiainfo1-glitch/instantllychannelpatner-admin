@@ -720,6 +720,9 @@
                     <button class="btn btn-warning admin-action-btn" onclick="transferPosition('${app._id}', '${app.applicantInfo.name}', '${app.positionId}')">
                         <i class="fas fa-exchange-alt me-2"></i> Transfer
                     </button>
+                    <button class="btn btn-success admin-action-btn" onclick="showGiveCreditsModal('${app._id}', '${app.applicantInfo.name}', '${app.applicantInfo.phone}')">
+                        <i class="fas fa-gift me-2"></i> Give Credits
+                    </button>
                 `;
             }
             
@@ -992,6 +995,136 @@
             } catch (error) {
                 console.error('Error fetching payment screenshot:', error);
                 showNotification('Error loading payment screenshot', 'error');
+            }
+        }
+
+        // Show Give Credits Modal
+        async function showGiveCreditsModal(applicationId, userName, userPhone) {
+            console.log('🎁 Opening Give Credits Modal:', { applicationId, userName, userPhone });
+            
+            // Get user ID from application
+            try {
+                const appResponse = await fetch(`${API_BASE_URL}/admin/applications/${applicationId}`);
+                const appData = await appResponse.json();
+                const userId = appData.application.userId;
+                
+                if (!userId) {
+                    showNotification('Error: User ID not found', 'error');
+                    return;
+                }
+                
+                // Create modal HTML
+                const modalHTML = `
+                    <div class="modal fade" id="giveCreditsModal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-gift me-2"></i>Give Credits to ${userName}
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-user me-2"></i><strong>User:</strong> ${userName}<br>
+                                        <i class="fas fa-phone me-2"></i><strong>Phone:</strong> ${userPhone}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="creditsAmount" class="form-label">
+                                            <i class="fas fa-coins me-2"></i><strong>Credits Amount</strong>
+                                        </label>
+                                        <input type="number" class="form-control form-control-lg" id="creditsAmount" 
+                                               placeholder="Enter credits (e.g., 300000)" 
+                                               min="1" required>
+                                        <small class="text-muted">Enter the number of credits to give (minimum: 1)</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="creditsDescription" class="form-label">
+                                            <i class="fas fa-comment me-2"></i><strong>Description (Optional)</strong>
+                                        </label>
+                                        <textarea class="form-control" id="creditsDescription" rows="3" 
+                                                  placeholder="Reason for giving credits..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="giveCredits('${userId}', '${userName}', '${userPhone}')">
+                                        <i class="fas fa-paper-plane me-2"></i>Give Credits
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if any
+                const existingModal = document.getElementById('giveCreditsModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('giveCreditsModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error opening give credits modal:', error);
+                showNotification('Error opening give credits modal', 'error');
+            }
+        }
+
+        // Give Credits Function
+        async function giveCredits(userId, userName, userPhone) {
+            const creditsAmount = document.getElementById('creditsAmount').value;
+            const description = document.getElementById('creditsDescription').value;
+            
+            // Validate
+            if (!creditsAmount || creditsAmount <= 0) {
+                alert('Please enter a valid credits amount (greater than 0)');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to give ${parseInt(creditsAmount).toLocaleString('en-IN')} credits to ${userName}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/give-credits`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        credits: parseInt(creditsAmount),
+                        description: description || `Admin gave ${creditsAmount} credits`
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Credits given successfully:', result);
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('giveCreditsModal'));
+                    if (modal) modal.hide();
+                    
+                    // Show success notification
+                    showNotification(`✅ Successfully gave ${parseInt(creditsAmount).toLocaleString('en-IN')} credits to ${userName}!\n\nNew balance: ${result.user.credits.toLocaleString('en-IN')} credits`, 'success');
+                    
+                    // Reload applications
+                    await loadAllApplications();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Failed to give credits', 'error');
+                }
+            } catch (error) {
+                console.error('Error giving credits:', error);
+                showNotification('Network error. Failed to give credits.', 'error');
             }
         }
 
