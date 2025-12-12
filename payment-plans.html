@@ -12,7 +12,7 @@
             min-height: 100vh;
             padding: 20px 0;
         }
-        .container { max-width: 1400px; }
+        .container { max-width: 1600px; }
         .page-header {
             background: white;
             border-radius: 16px;
@@ -20,123 +20,234 @@
             margin-bottom: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .tier-card {
+        .tier-section {
             background: white;
             border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 25px;
+            padding: 30px;
+            margin-bottom: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
         }
-        .tier-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .tier-header {
+        .tier-section-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 20px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .input-group-custom {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .input-group-custom label {
-            display: block;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-        .input-group-custom input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: border-color 0.3s;
-        }
-        .input-group-custom input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-        .input-group-custom.pay { border-left: 4px solid #28a745; }
-        .input-group-custom.profit { border-left: 4px solid #ffc107; }
-        .input-group-custom.credit { border-left: 4px solid #17a2b8; }
-        
-        .btn-save { 
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 12px 30px;
-            border-radius: 8px;
-            transition: transform 0.2s;
-        }
-        .btn-save:hover {
-            transform: scale(1.05);
-            color: white;
-        }
-        .btn-add-option {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 10px 25px;
-            border-radius: 8px;
-        }
-        .btn-remove-option {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            border: none;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 8px;
-        }
-        .option-item {
-            background: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
+        .plan-card {
+            border: 3px solid #e9ecef;
+            border-radius: 16px;
             padding: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             position: relative;
+            transition: all 0.3s;
+            background: #f8f9fa;
         }
-        .option-number {
+        .plan-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+        .plan-number {
             position: absolute;
-            top: -12px;
+            top: -15px;
             left: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .alert-info-custom {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        .investment-section {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e9ecef;
+        }
+        .investment-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #6c757d;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .investment-input {
+            font-size: 36px;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            background: transparent;
+            color: #2d3748;
+            width: 100%;
+            padding: 10px;
+        }
+        .investment-input:focus {
+            outline: none;
+        }
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .benefit-box {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+        }
+        .benefit-box.profit {
+            border-left: 4px solid #10b981;
+        }
+        .benefit-box.credits {
+            border-left: 4px solid #8b5cf6;
+        }
+        .benefit-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .benefit-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        .benefit-icon.profit {
+            background: #d1fae5;
+            color: #10b981;
+        }
+        .benefit-icon.credits {
+            background: #ede9fe;
+            color: #8b5cf6;
+        }
+        .benefit-label {
+            font-size: 11px;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .benefit-sublabel {
+            font-size: 10px;
+            color: #9ca3af;
+        }
+        .benefit-value input {
+            font-size: 24px;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            width: 100%;
+            padding: 5px;
+        }
+        .benefit-value input:focus {
+            outline: none;
+            background: #f0f9ff;
+            border-radius: 4px;
+        }
+        .visibility-section {
+            background: #e0e7ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .visibility-header {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .visibility-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .visibility-check {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .visibility-check:hover {
+            border-color: #667eea;
+            background: #f0f9ff;
+        }
+        .visibility-check input[type="checkbox"]:checked + label {
+            background: #667eea;
+            color: white;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-remove {
+            flex: 1;
+            background: #fee2e2;
+            color: #dc2626;
+            border: 2px solid #fecaca;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .btn-remove:hover {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        .btn-add-plan {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 10px;
+            transition: transform 0.2s;
+        }
+        .btn-add-plan:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+        .btn-save-all {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            font-weight: 700;
+            padding: 18px 50px;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+        .btn-save-all:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.5);
+            color: white;
         }
         .navbar {
             background: white !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
             border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -148,11 +259,8 @@
                 <span style="color: #667eea;">Payment Plans Manager</span>
             </a>
             <div class="d-flex">
-                <a href="dashboard.html" class="btn btn-outline-primary btn-sm me-2">
-                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                </a>
-                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
-                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                <button class="btn btn-outline-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
                 </button>
             </div>
         </div>
@@ -160,118 +268,108 @@
 
     <div class="container">
         <div class="page-header">
-            <h2 class="mb-3">
-                <i class="fas fa-money-bill-wave me-3" style="color: #28a745;"></i>
-                Payment Plans Configuration
+            <h2 class="mb-2">
+                <i class="fas fa-credit-card me-2 text-primary"></i>
+                Payment Plans Management
             </h2>
             <p class="text-muted mb-0">
-                Edit payment tiers for each position level. Changes will reflect immediately on the channel partner application page.
+                <i class="fas fa-info-circle me-2"></i>
+                Design your payment plans with prices, profits, and credits. Use checkboxes to control which locations see each plan.
             </p>
         </div>
 
-        <div class="alert-info-custom">
-            <h5><i class="fas fa-info-circle me-2"></i>How it works:</h5>
-            <ul class="mb-0">
-                <li><strong>Pay (₹):</strong> Amount the partner pays to join</li>
-                <li><strong>Profit (₹):</strong> Earnings potential from the position</li>
-                <li><strong>Credits:</strong> Digital credits assigned to the partner</li>
-                <li>Each position level can have multiple payment options</li>
-                <li>Click "Save All Changes" to update the channel partner application form</li>
-            </ul>
-        </div>
-
         <!-- India Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-globe me-2"></i>India Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('India')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-globe me-2"></i>India Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('India')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="india-options"></div>
+            <div class="row" id="india-plans"></div>
         </div>
 
         <!-- Zone Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Zone Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('Zone')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Zone Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Zone')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="zone-options"></div>
+            <div class="row" id="zone-plans"></div>
         </div>
 
         <!-- State Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-map me-2"></i>State Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('State')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-map me-2"></i>State Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('State')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="state-options"></div>
+            <div class="row" id="state-plans"></div>
         </div>
 
         <!-- Division Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-layer-group me-2"></i>Division Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('Division')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-layer-group me-2"></i>Division Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Division')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="division-options"></div>
+            <div class="row" id="division-plans"></div>
         </div>
 
         <!-- District Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-city me-2"></i>District Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('District')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-city me-2"></i>District Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('District')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="district-options"></div>
+            <div class="row" id="district-plans"></div>
         </div>
 
         <!-- Tehsil Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-building me-2"></i>Tehsil Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('Tehsil')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-building me-2"></i>Tehsil Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Tehsil')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="tehsil-options"></div>
+            <div class="row" id="tehsil-plans"></div>
         </div>
 
         <!-- Pincode Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-map-pin me-2"></i>Pincode Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('Pincode')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-map-pin me-2"></i>Pincode Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Pincode')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="pincode-options"></div>
+            <div class="row" id="pincode-plans"></div>
         </div>
 
         <!-- Village Level -->
-        <div class="tier-card">
-            <div class="tier-header">
-                <h4 class="mb-0"><i class="fas fa-home me-2"></i>Village Level</h4>
-                <button class="btn btn-add-option btn-sm" onclick="addOption('Village')">
-                    <i class="fas fa-plus me-1"></i>Add Option
+        <div class="tier-section">
+            <div class="tier-section-header">
+                <h4 class="mb-0"><i class="fas fa-home me-2"></i>Village Level Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Village')">
+                    <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div id="village-options"></div>
+            <div class="row" id="village-plans"></div>
         </div>
 
         <!-- Save Button -->
-        <div class="text-center mt-4 mb-5">
-            <button class="btn btn-save btn-lg" onclick="saveAllChanges()">
-                <i class="fas fa-save me-2"></i>Save All Changes
+        <div class="text-center mt-5 mb-5">
+            <button class="btn btn-save-all" onclick="saveAllPlans()">
+                <i class="fas fa-save me-2"></i>SAVE ALL CHANGES
             </button>
         </div>
     </div>
@@ -280,50 +378,49 @@
     <script src="config.js"></script>
     <script>
         const API_BASE_URL = ADMIN_CONFIG.getApiBaseUrl();
+        const allLevels = ['India', 'Zone', 'State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'];
 
-        // Current payment plans in memory
         let paymentPlans = {
-            'India': [{ pay: 90000, profit: 510000, credit: 600000 }],
-            'Zone': [{ pay: 90000, profit: 510000, credit: 600000 }],
-            'State': [{ pay: 90000, profit: 510000, credit: 600000 }],
+            'India': [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['India'] }],
+            'Zone': [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Zone'] }],
+            'State': [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['State'] }],
             'Division': [
-                { pay: 90000, profit: 510000, credit: 600000 },
-                { pay: 75000, profit: 425000, credit: 500000 }
+                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Division'] },
+                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Division'] }
             ],
             'District': [
-                { pay: 90000, profit: 510000, credit: 600000 },
-                { pay: 75000, profit: 425000, credit: 500000 },
-                { pay: 60000, profit: 340000, credit: 400000 }
+                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['District'] },
+                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['District'] },
+                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['District'] }
             ],
             'Tehsil': [
-                { pay: 90000, profit: 510000, credit: 600000 },
-                { pay: 75000, profit: 425000, credit: 500000 },
-                { pay: 60000, profit: 340000, credit: 400000 },
-                { pay: 45000, profit: 255000, credit: 300000 }
+                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Tehsil'] },
+                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Tehsil'] },
+                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Tehsil'] },
+                { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Tehsil'] }
             ],
             'Pincode': [
-                { pay: 90000, profit: 510000, credit: 600000 },
-                { pay: 75000, profit: 425000, credit: 500000 },
-                { pay: 60000, profit: 340000, credit: 400000 },
-                { pay: 45000, profit: 255000, credit: 300000 },
-                { pay: 30000, profit: 170000, credit: 200000 }
+                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Pincode'] },
+                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Pincode'] },
+                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Pincode'] },
+                { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Pincode'] },
+                { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Pincode'] }
             ],
             'Village': [
-                { pay: 90000, profit: 510000, credit: 600000 },
-                { pay: 75000, profit: 425000, credit: 500000 },
-                { pay: 60000, profit: 340000, credit: 400000 },
-                { pay: 45000, profit: 255000, credit: 300000 },
-                { pay: 30000, profit: 170000, credit: 200000 },
-                { pay: 15000, profit: 85000, credit: 100000 }
+                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Village'] },
+                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Village'] },
+                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Village'] },
+                { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Village'] },
+                { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Village'] },
+                { pay: 15000, profit: 85000, credit: 100000, visibleFor: ['Village'] }
             ]
         };
 
-        // Load payment plans on page load
+        // Load plans on page load
         document.addEventListener('DOMContentLoaded', () => {
             loadPaymentPlans();
         });
 
-        // Load payment plans from API
         async function loadPaymentPlans() {
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/payment-plans`);
@@ -335,98 +432,175 @@
             } catch (error) {
                 console.log('Using default payment plans');
             }
-            renderAllOptions();
+            renderAllPlans();
         }
 
-        // Render all options for all tiers
-        function renderAllOptions() {
-            Object.keys(paymentPlans).forEach(tier => {
-                renderOptions(tier);
-            });
+        function renderAllPlans() {
+            allLevels.forEach(level => renderPlans(level));
         }
 
-        // Render options for a specific tier
-        function renderOptions(tier) {
-            const containerId = `${tier.toLowerCase()}-options`;
+        function renderPlans(level) {
+            const containerId = `${level.toLowerCase()}-plans`;
             const container = document.getElementById(containerId);
-            const options = paymentPlans[tier] || [];
+            const plans = paymentPlans[level] || [];
 
-            container.innerHTML = options.map((option, index) => `
-                <div class="option-item">
-                    <div class="option-number">${index + 1}</div>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="input-group-custom pay">
-                                <label>
-                                    <i class="fas fa-rupee-sign me-1"></i>Payment (₹)
-                                </label>
-                                <input type="number" class="form-control" 
-                                       value="${option.pay}" 
-                                       onchange="updateOption('${tier}', ${index}, 'pay', this.value)">
+            container.innerHTML = plans.map((plan, index) => createPlanCard(level, plan, index)).join('');
+        }
+
+        function createPlanCard(level, plan, index) {
+            if (!plan.visibleFor) plan.visibleFor = [level];
+
+            const checkboxes = allLevels.map(loc => {
+                const checked = plan.visibleFor.includes(loc) ? 'checked' : '';
+                return `
+                    <label class="visibility-check">
+                        <input type="checkbox" ${checked} onchange="toggleVisibility('${level}', ${index}, '${loc}', this.checked)">
+                        <span>${loc}</span>
+                    </label>
+                `;
+            }).join('');
+
+            return `
+                <div class="col-md-6 col-lg-4">
+                    <div class="plan-card">
+                        <div class="plan-number">${index + 1}</div>
+                        
+                        <!-- Investment Amount -->
+                        <div class="investment-section">
+                            <div class="investment-label">Investment Amount</div>
+                            <input type="text" class="investment-input" 
+                                   value="₹${(plan.pay / 1000).toFixed(0)}K" 
+                                   onfocus="this.value='${plan.pay}'" 
+                                   onblur="updatePayAmount('${level}', ${index}, this)"
+                                   onchange="updatePayAmount('${level}', ${index}, this)">
+                            <small style="font-size: 11px; color: #6c757d;">One-time payment</small>
+                        </div>
+
+                        <!-- Benefits -->
+                        <div class="benefits-grid">
+                            <!-- Profit -->
+                            <div class="benefit-box profit">
+                                <div class="benefit-header">
+                                    <div class="benefit-icon profit">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="benefit-label">Commission</div>
+                                        <div class="benefit-sublabel">(85%)</div>
+                                    </div>
+                                </div>
+                                <div class="benefit-value">
+                                    <input type="text" 
+                                           value="₹${(plan.profit / 1000).toFixed(0)}K" 
+                                           onfocus="this.value='${plan.profit}'" 
+                                           onblur="updateProfitAmount('${level}', ${index}, this)"
+                                           onchange="updateProfitAmount('${level}', ${index}, this)">
+                                </div>
+                            </div>
+
+                            <!-- Credits -->
+                            <div class="benefit-box credits">
+                                <div class="benefit-header">
+                                    <div class="benefit-icon credits">
+                                        <i class="fas fa-ad"></i>
+                                    </div>
+                                    <div>
+                                        <div class="benefit-label">Ad Credits</div>
+                                        <div class="benefit-sublabel">(100%)</div>
+                                    </div>
+                                </div>
+                                <div class="benefit-value">
+                                    <input type="text" 
+                                           value="₹${(plan.credit / 1000).toFixed(0)}K" 
+                                           onfocus="this.value='${plan.credit}'" 
+                                           onblur="updateCreditAmount('${level}', ${index}, this)"
+                                           onchange="updateCreditAmount('${level}', ${index}, this)">
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="input-group-custom profit">
-                                <label>
-                                    <i class="fas fa-chart-line me-1"></i>Profit (₹)
-                                </label>
-                                <input type="number" class="form-control" 
-                                       value="${option.profit}" 
-                                       onchange="updateOption('${tier}', ${index}, 'profit', this.value)">
+
+                        <!-- Visibility Controls -->
+                        <div class="visibility-section">
+                            <div class="visibility-header">
+                                <i class="fas fa-eye me-2"></i>Visible For These Locations
+                            </div>
+                            <div class="visibility-checkboxes">
+                                ${checkboxes}
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="input-group-custom credit">
-                                <label>
-                                    <i class="fas fa-coins me-1"></i>Credits
-                                </label>
-                                <input type="number" class="form-control" 
-                                       value="${option.credit}" 
-                                       onchange="updateOption('${tier}', ${index}, 'credit', this.value)">
-                            </div>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button class="btn btn-remove-option w-100" onclick="removeOption('${tier}', ${index})">
-                                <i class="fas fa-trash me-1"></i>Remove
+
+                        <!-- Actions -->
+                        <div class="action-buttons">
+                            <button class="btn btn-remove" onclick="removePlan('${level}', ${index})">
+                                <i class="fas fa-trash me-2"></i>Remove Plan
                             </button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
         }
 
-        // Update option value
-        function updateOption(tier, index, field, value) {
-            paymentPlans[tier][index][field] = parseInt(value);
-            console.log(`Updated ${tier} option ${index + 1} - ${field}: ${value}`);
+        function updatePayAmount(level, index, input) {
+            const value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            paymentPlans[level][index].pay = value;
+            input.value = `₹${(value / 1000).toFixed(0)}K`;
+            console.log(`Updated ${level} plan ${index + 1} payment:`, value);
         }
 
-        // Add new option to tier
-        function addOption(tier) {
-            paymentPlans[tier].push({
+        function updateProfitAmount(level, index, input) {
+            const value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            paymentPlans[level][index].profit = value;
+            input.value = `₹${(value / 1000).toFixed(0)}K`;
+            console.log(`Updated ${level} plan ${index + 1} profit:`, value);
+        }
+
+        function updateCreditAmount(level, index, input) {
+            const value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            paymentPlans[level][index].credit = value;
+            input.value = `₹${(value / 1000).toFixed(0)}K`;
+            console.log(`Updated ${level} plan ${index + 1} credit:`, value);
+        }
+
+        function toggleVisibility(level, index, location, isChecked) {
+            if (!paymentPlans[level][index].visibleFor) {
+                paymentPlans[level][index].visibleFor = [];
+            }
+
+            if (isChecked) {
+                if (!paymentPlans[level][index].visibleFor.includes(location)) {
+                    paymentPlans[level][index].visibleFor.push(location);
+                }
+            } else {
+                paymentPlans[level][index].visibleFor = paymentPlans[level][index].visibleFor.filter(l => l !== location);
+            }
+
+            console.log(`${level} plan ${index + 1} visibility:`, paymentPlans[level][index].visibleFor);
+        }
+
+        function addPlan(level) {
+            paymentPlans[level].push({
                 pay: 30000,
                 profit: 170000,
-                credit: 200000
+                credit: 200000,
+                visibleFor: [level]
             });
-            renderOptions(tier);
-            showNotification(`New option added to ${tier} level`, 'success');
+            renderPlans(level);
+            showNotification(`New plan added to ${level} level`, 'success');
         }
 
-        // Remove option from tier
-        function removeOption(tier, index) {
-            if (paymentPlans[tier].length === 1) {
-                showNotification('Cannot remove the last option. Each tier must have at least one option.', 'error');
+        function removePlan(level, index) {
+            if (paymentPlans[level].length === 1) {
+                showNotification('Cannot remove the last plan. Each level must have at least one plan.', 'error');
                 return;
             }
-            if (confirm('Are you sure you want to remove this payment option?')) {
-                paymentPlans[tier].splice(index, 1);
-                renderOptions(tier);
-                showNotification('Payment option removed', 'success');
+            if (confirm('Remove this payment plan?')) {
+                paymentPlans[level].splice(index, 1);
+                renderPlans(level);
+                showNotification('Plan removed successfully', 'success');
             }
         }
 
-        // Save all changes
-        async function saveAllChanges() {
+        async function saveAllPlans() {
             if (!confirm('Save all payment plan changes? This will update the channel partner application form immediately.')) {
                 return;
             }
@@ -434,14 +608,12 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/payment-plans`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ paymentPlans })
                 });
 
                 if (response.ok) {
-                    showNotification('✅ Payment plans saved successfully! Changes are now live on the channel partner application form.', 'success');
+                    showNotification('✅ Payment plans saved successfully! Changes are now live.', 'success');
                 } else {
                     throw new Error('Failed to save');
                 }
@@ -451,7 +623,6 @@
             }
         }
 
-        // Show notification
         function showNotification(message, type = 'info') {
             const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
             const alert = document.createElement('div');
@@ -466,9 +637,8 @@
             setTimeout(() => alert.remove(), 5000);
         }
 
-        // Logout
         function logout() {
-            if (confirm('Are you sure you want to logout?')) {
+            if (confirm('Logout?')) {
                 localStorage.removeItem('channelPartnerToken');
                 window.location.href = 'index.html';
             }
