@@ -704,6 +704,19 @@
             // Extract position title from positionId
             const positionTitle = app.positionId ? app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ') : 'N/A';
             
+            // Debug payment data
+            console.log('Application:', app.applicantInfo.name);
+            console.log('Has payment?', !!app.payment);
+            console.log('Has screenshot?', !!(app.payment && app.payment.paymentScreenshot));
+            if (app.payment) {
+                console.log('Payment details:', {
+                    amount: app.payment.amount,
+                    status: app.payment.status,
+                    hasScreenshot: !!app.payment.paymentScreenshot,
+                    screenshotLength: app.payment.paymentScreenshot ? app.payment.paymentScreenshot.length : 0
+                });
+            }
+            
             return `
                 <div class="card mb-3 shadow-sm">
                     <div class="card-body">
@@ -758,11 +771,15 @@
                                     <button class="btn btn-outline-info admin-action-btn" onclick="viewUserDocuments('${app.applicantInfo.phone}')">
                                         <i class="fas fa-file-alt me-2"></i> View Documents
                                     </button>
-                                    ${app.payment && app.payment.paymentScreenshot ? `
+                                    ${(app.payment && app.payment.paymentScreenshot) ? `
                                         <button class="btn btn-outline-cyan admin-action-btn" onclick="viewPaymentScreenshot('${app._id}', '${app.applicantInfo.name}')">
                                             <i class="fas fa-receipt me-2"></i> View Payment Screenshot
                                         </button>
-                                    ` : ''}
+                                    ` : `
+                                        <button class="btn btn-outline-secondary admin-action-btn" disabled>
+                                            <i class="fas fa-receipt me-2"></i> No Payment Screenshot
+                                        </button>
+                                    `}
                                 </div>
                             </div>
                         </div>
