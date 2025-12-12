@@ -10,87 +10,89 @@
         body { 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px 0;
+            padding: 10px 0;
         }
         .container { max-width: 1600px; }
         .page-header {
             background: white;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        .page-header h2 { font-size: 18px; margin-bottom: 5px; }
+        .page-header p { font-size: 12px; margin-bottom: 0; }
         .tier-section {
             background: white;
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .tier-section-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        .tier-section-header h4 { font-size: 14px; margin: 0; }
         .plan-card {
-            border: 3px solid #e9ecef;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
             position: relative;
-            transition: all 0.3s;
+            transition: all 0.2s;
             background: #f8f9fa;
         }
         .plan-card:hover {
             border-color: #667eea;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
-            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
         .plan-number {
             position: absolute;
-            top: -15px;
-            left: 20px;
+            top: -10px;
+            left: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 18px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
         .investment-section {
             text-align: center;
-            padding: 20px;
+            padding: 8px;
             background: white;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #e9ecef;
         }
         .investment-label {
-            font-size: 12px;
+            font-size: 9px;
             text-transform: uppercase;
             color: #6c757d;
             font-weight: 600;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         .investment-input {
-            font-size: 36px;
+            font-size: 20px;
             font-weight: 700;
             text-align: center;
             border: none;
             background: transparent;
             color: #2d3748;
             width: 100%;
-            padding: 10px;
+            padding: 4px;
         }
         .investment-input:focus {
             outline: none;
@@ -98,34 +100,35 @@
         .benefits-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
         .benefit-box {
             background: white;
-            border-radius: 12px;
-            padding: 15px;
-            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            padding: 8px;
+            border: 1px solid #e9ecef;
         }
         .benefit-box.profit {
-            border-left: 4px solid #10b981;
+            border-left: 3px solid #10b981;
         }
         .benefit-box.credits {
-            border-left: 4px solid #8b5cf6;
+            border-left: 3px solid #8b5cf6;
         }
         .benefit-header {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         .benefit-icon {
-            width: 35px;
-            height: 35px;
-            border-radius: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 10px;
+            margin-right: 6px;
+            font-size: 11px;
         }
         .benefit-icon.profit {
             background: #d1fae5;
@@ -136,55 +139,57 @@
             color: #8b5cf6;
         }
         .benefit-label {
-            font-size: 11px;
+            font-size: 9px;
             color: #6c757d;
             text-transform: uppercase;
             font-weight: 600;
+            line-height: 1.2;
         }
         .benefit-sublabel {
-            font-size: 10px;
+            font-size: 8px;
             color: #9ca3af;
         }
         .benefit-value input {
-            font-size: 24px;
+            font-size: 16px;
             font-weight: 700;
             border: none;
             background: transparent;
             width: 100%;
-            padding: 5px;
+            padding: 2px;
         }
         .benefit-value input:focus {
             outline: none;
             background: #f0f9ff;
-            border-radius: 4px;
+            border-radius: 3px;
         }
         .visibility-section {
             background: #e0e7ff;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
         }
         .visibility-header {
             font-weight: 600;
             color: #667eea;
-            margin-bottom: 10px;
-            font-size: 13px;
+            margin-bottom: 6px;
+            font-size: 10px;
         }
         .visibility-checkboxes {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 5px;
         }
         .visibility-check {
             background: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            border: 2px solid #cbd5e1;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
+            font-size: 10px;
         }
         .visibility-check:hover {
             border-color: #667eea;
@@ -196,18 +201,19 @@
         }
         .action-buttons {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 6px;
+            margin-top: 8px;
         }
         .btn-remove {
             flex: 1;
             background: #fee2e2;
             color: #dc2626;
-            border: 2px solid #fecaca;
+            border: 1px solid #fecaca;
             font-weight: 600;
-            padding: 12px;
-            border-radius: 10px;
+            padding: 6px;
+            border-radius: 6px;
             transition: all 0.2s;
+            font-size: 11px;
         }
         .btn-remove:hover {
             background: #dc2626;
@@ -219,9 +225,10 @@
             color: white;
             border: none;
             font-weight: 600;
-            padding: 12px 30px;
-            border-radius: 10px;
+            padding: 6px 15px;
+            border-radius: 6px;
             transition: transform 0.2s;
+            font-size: 12px;
         }
         .btn-add-plan:hover {
             transform: scale(1.05);
@@ -232,23 +239,26 @@
             color: white;
             border: none;
             font-weight: 700;
-            padding: 18px 50px;
-            border-radius: 12px;
-            font-size: 18px;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 14px;
             transition: all 0.3s;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
         }
         .btn-save-all:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
             color: white;
         }
         .navbar {
             background: white !important;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            padding: 8px 0;
         }
+        .navbar-brand { font-size: 14px; }
+        .btn-outline-danger { font-size: 12px; padding: 6px 15px; }
     </style>
 </head>
 <body>
