@@ -190,14 +190,25 @@
             align-items: center;
             gap: 4px;
             font-size: 10px;
+            user-select: none;
         }
         .visibility-check:hover {
             border-color: #667eea;
             background: #f0f9ff;
         }
-        .visibility-check input[type="checkbox"]:checked + label {
+        .visibility-check input[type="checkbox"] {
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+        .visibility-check:has(input[type="checkbox"]:checked) {
             background: #667eea;
             color: white;
+            border-color: #667eea;
+        }
+        .visibility-check:has(input[type="checkbox"]:checked):hover {
+            background: #5568d3;
+            border-color: #5568d3;
         }
         .action-buttons {
             display: flex;
@@ -288,92 +299,15 @@
             </p>
         </div>
 
-        <!-- India Level -->
+        <!-- Single Unified Plans Section -->
         <div class="tier-section">
             <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-globe me-2"></i>India Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('India')">
+                <h4 class="mb-0"><i class="fas fa-rupee-sign me-2"></i>All Payment Plans</h4>
+                <button class="btn btn-add-plan btn-sm" onclick="addPlan()">
                     <i class="fas fa-plus me-2"></i>Add New Plan
                 </button>
             </div>
-            <div class="row" id="india-plans"></div>
-        </div>
-
-        <!-- Zone Level -->
-        <div class="tier-section">
-            <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Zone Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Zone')">
-                    <i class="fas fa-plus me-2"></i>Add New Plan
-                </button>
-            </div>
-            <div class="row" id="zone-plans"></div>
-        </div>
-
-        <!-- State Level -->
-        <div class="tier-section">
-            <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-map me-2"></i>State Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('State')">
-                    <i class="fas fa-plus me-2"></i>Add New Plan
-                </button>
-            </div>
-            <div class="row" id="state-plans"></div>
-        </div>
-
-        <!-- Division Level -->
-        <div class="tier-section">
-            <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-layer-group me-2"></i>Division Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Division')">
-                    <i class="fas fa-plus me-2"></i>Add New Plan
-                </button>
-            </div>
-            <div class="row" id="division-plans"></div>
-        </div>
-
-        <!-- District Level -->
-        <div class="tier-section">
-            <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-city me-2"></i>District Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('District')">
-                    <i class="fas fa-plus me-2"></i>Add New Plan
-                </button>
-            </div>
-            <div class="row" id="district-plans"></div>
-        </div>
-
-        <!-- Tehsil Level -->
-        <div class="tier-section">
-            <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-building me-2"></i>Tehsil Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Tehsil')">
-                    <i class="fas fa-plus me-2"></i>Add New Plan
-                </button>
-            </div>
-            <div class="row" id="tehsil-plans"></div>
-        </div>
-
-        <!-- Pincode Level -->
-        <div class="tier-section">
-            <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-map-pin me-2"></i>Pincode Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Pincode')">
-                    <i class="fas fa-plus me-2"></i>Add New Plan
-                </button>
-            </div>
-            <div class="row" id="pincode-plans"></div>
-        </div>
-
-        <!-- Village Level -->
-        <div class="tier-section">
-            <div class="tier-section-header">
-                <h4 class="mb-0"><i class="fas fa-home me-2"></i>Village Level Plans</h4>
-                <button class="btn btn-add-plan btn-sm" onclick="addPlan('Village')">
-                    <i class="fas fa-plus me-2"></i>Add New Plan
-                </button>
-            </div>
-            <div class="row" id="village-plans"></div>
+            <div class="row" id="all-plans"></div>
         </div>
 
         <!-- Save Button -->
@@ -390,41 +324,15 @@
         const API_BASE_URL = ADMIN_CONFIG.getApiBaseUrl();
         const allLevels = ['India', 'Zone', 'State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'];
 
-        let paymentPlans = {
-            'India': [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['India'] }],
-            'Zone': [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Zone'] }],
-            'State': [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['State'] }],
-            'Division': [
-                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Division'] },
-                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Division'] }
-            ],
-            'District': [
-                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['District'] },
-                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['District'] },
-                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['District'] }
-            ],
-            'Tehsil': [
-                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Tehsil'] },
-                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Tehsil'] },
-                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Tehsil'] },
-                { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Tehsil'] }
-            ],
-            'Pincode': [
-                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Pincode'] },
-                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Pincode'] },
-                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Pincode'] },
-                { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Pincode'] },
-                { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Pincode'] }
-            ],
-            'Village': [
-                { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Village'] },
-                { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Village'] },
-                { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Village'] },
-                { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Village'] },
-                { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Village'] },
-                { pay: 15000, profit: 85000, credit: 100000, visibleFor: ['Village'] }
-            ]
-        };
+        // Single unified array of payment plans with visibility control
+        let paymentPlans = [
+            { pay: 90000, profit: 510000, credit: 600000, visibleFor: allLevels },
+            { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'] },
+            { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['District', 'Tehsil', 'Pincode', 'Village'] },
+            { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Tehsil', 'Pincode', 'Village'] },
+            { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Pincode', 'Village'] },
+            { pay: 15000, profit: 85000, credit: 100000, visibleFor: ['Village'] }
+        ];
 
         // Load plans on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -436,7 +344,13 @@
                 const response = await fetch(`${API_BASE_URL}/admin/payment-plans`);
                 if (response.ok) {
                     const data = await response.json();
-                    paymentPlans = data.paymentPlans || paymentPlans;
+                    // Handle both old format (object with levels) and new format (array)
+                    if (Array.isArray(data.paymentPlans)) {
+                        paymentPlans = data.paymentPlans;
+                    } else if (data.paymentPlans) {
+                        // Convert old format to new format (remove duplicates)
+                        paymentPlans = convertOldFormatToNew(data.paymentPlans);
+                    }
                     console.log('✅ Payment plans loaded:', paymentPlans);
                 }
             } catch (error) {
@@ -445,26 +359,53 @@
             renderAllPlans();
         }
 
+        // Convert old format (object with levels) to new format (single array)
+        function convertOldFormatToNew(oldFormat) {
+            const allPlans = [];
+            const seenPlans = new Map();
+            
+            allLevels.forEach(level => {
+                if (oldFormat[level]) {
+                    oldFormat[level].forEach(plan => {
+                        const key = `${plan.pay}-${plan.profit}-${plan.credit}`;
+                        if (seenPlans.has(key)) {
+                            // Plan already exists, add this level to visibleFor
+                            const existingPlan = seenPlans.get(key);
+                            if (!existingPlan.visibleFor.includes(level)) {
+                                existingPlan.visibleFor.push(level);
+                            }
+                        } else {
+                            // New unique plan
+                            const newPlan = {
+                                pay: plan.pay,
+                                profit: plan.profit,
+                                credit: plan.credit,
+                                visibleFor: plan.visibleFor || [level]
+                            };
+                            allPlans.push(newPlan);
+                            seenPlans.set(key, newPlan);
+                        }
+                    });
+                }
+            });
+            
+            return allPlans;
+        }
+
         function renderAllPlans() {
-            allLevels.forEach(level => renderPlans(level));
+            const container = document.getElementById('all-plans');
+            if (!container) return;
+            container.innerHTML = paymentPlans.map((plan, index) => createPlanCard(plan, index)).join('');
         }
 
-        function renderPlans(level) {
-            const containerId = `${level.toLowerCase()}-plans`;
-            const container = document.getElementById(containerId);
-            const plans = paymentPlans[level] || [];
-
-            container.innerHTML = plans.map((plan, index) => createPlanCard(level, plan, index)).join('');
-        }
-
-        function createPlanCard(level, plan, index) {
-            if (!plan.visibleFor) plan.visibleFor = [level];
+        function createPlanCard(plan, index) {
+            if (!plan.visibleFor) plan.visibleFor = allLevels;
 
             const checkboxes = allLevels.map(loc => {
                 const checked = plan.visibleFor.includes(loc) ? 'checked' : '';
                 return `
                     <label class="visibility-check">
-                        <input type="checkbox" ${checked} onchange="toggleVisibility('${level}', ${index}, '${loc}', this.checked)">
+                        <input type="checkbox" ${checked} onchange="toggleVisibility(${index}, '${loc}', this.checked)">
                         <span>${loc}</span>
                     </label>
                 `;
@@ -481,8 +422,8 @@
                             <input type="text" class="investment-input" 
                                    value="₹${(plan.pay / 1000).toFixed(0)}K" 
                                    onfocus="this.value='${plan.pay}'" 
-                                   onblur="updatePayAmount('${level}', ${index}, this)"
-                                   onchange="updatePayAmount('${level}', ${index}, this)">
+                                   onblur="updatePayAmount(${index}, this)"
+                                   onchange="updatePayAmount(${index}, this)">
                             <small style="font-size: 11px; color: #6c757d;">One-time payment</small>
                         </div>
 
@@ -503,8 +444,8 @@
                                     <input type="text" 
                                            value="₹${(plan.profit / 1000).toFixed(0)}K" 
                                            onfocus="this.value='${plan.profit}'" 
-                                           onblur="updateProfitAmount('${level}', ${index}, this)"
-                                           onchange="updateProfitAmount('${level}', ${index}, this)">
+                                           onblur="updateProfitAmount(${index}, this)"
+                                           onchange="updateProfitAmount(${index}, this)">
                                 </div>
                             </div>
 
@@ -523,8 +464,8 @@
                                     <input type="text" 
                                            value="₹${(plan.credit / 1000).toFixed(0)}K" 
                                            onfocus="this.value='${plan.credit}'" 
-                                           onblur="updateCreditAmount('${level}', ${index}, this)"
-                                           onchange="updateCreditAmount('${level}', ${index}, this)">
+                                           onblur="updateCreditAmount(${index}, this)"
+                                           onchange="updateCreditAmount(${index}, this)">
                                 </div>
                             </div>
                         </div>
@@ -541,7 +482,7 @@
 
                         <!-- Actions -->
                         <div class="action-buttons">
-                            <button class="btn btn-remove" onclick="removePlan('${level}', ${index})">
+                            <button class="btn btn-remove" onclick="removePlan(${index})">
                                 <i class="fas fa-trash me-2"></i>Remove Plan
                             </button>
                         </div>
@@ -550,62 +491,62 @@
             `;
         }
 
-        function updatePayAmount(level, index, input) {
+        function updatePayAmount(index, input) {
             const value = parseInt(input.value.replace(/[^0-9]/g, ''));
-            paymentPlans[level][index].pay = value;
+            paymentPlans[index].pay = value;
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`Updated ${level} plan ${index + 1} payment:`, value);
+            console.log(`Updated plan ${index + 1} payment:`, value);
         }
 
-        function updateProfitAmount(level, index, input) {
+        function updateProfitAmount(index, input) {
             const value = parseInt(input.value.replace(/[^0-9]/g, ''));
-            paymentPlans[level][index].profit = value;
+            paymentPlans[index].profit = value;
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`Updated ${level} plan ${index + 1} profit:`, value);
+            console.log(`Updated plan ${index + 1} profit:`, value);
         }
 
-        function updateCreditAmount(level, index, input) {
+        function updateCreditAmount(index, input) {
             const value = parseInt(input.value.replace(/[^0-9]/g, ''));
-            paymentPlans[level][index].credit = value;
+            paymentPlans[index].credit = value;
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`Updated ${level} plan ${index + 1} credit:`, value);
+            console.log(`Updated plan ${index + 1} credit:`, value);
         }
 
-        function toggleVisibility(level, index, location, isChecked) {
-            if (!paymentPlans[level][index].visibleFor) {
-                paymentPlans[level][index].visibleFor = [];
+        function toggleVisibility(index, location, isChecked) {
+            if (!paymentPlans[index].visibleFor) {
+                paymentPlans[index].visibleFor = [];
             }
 
             if (isChecked) {
-                if (!paymentPlans[level][index].visibleFor.includes(location)) {
-                    paymentPlans[level][index].visibleFor.push(location);
+                if (!paymentPlans[index].visibleFor.includes(location)) {
+                    paymentPlans[index].visibleFor.push(location);
                 }
             } else {
-                paymentPlans[level][index].visibleFor = paymentPlans[level][index].visibleFor.filter(l => l !== location);
+                paymentPlans[index].visibleFor = paymentPlans[index].visibleFor.filter(l => l !== location);
             }
 
-            console.log(`${level} plan ${index + 1} visibility:`, paymentPlans[level][index].visibleFor);
+            console.log(`Plan ${index + 1} visibility:`, paymentPlans[index].visibleFor);
         }
 
-        function addPlan(level) {
-            paymentPlans[level].push({
+        function addPlan() {
+            paymentPlans.push({
                 pay: 30000,
                 profit: 170000,
                 credit: 200000,
-                visibleFor: [level]
+                visibleFor: allLevels
             });
-            renderPlans(level);
-            showNotification(`New plan added to ${level} level`, 'success');
+            renderAllPlans();
+            showNotification(`New plan added successfully`, 'success');
         }
 
-        function removePlan(level, index) {
-            if (paymentPlans[level].length === 1) {
-                showNotification('Cannot remove the last plan. Each level must have at least one plan.', 'error');
+        function removePlan(index) {
+            if (paymentPlans.length === 1) {
+                showNotification('Cannot remove the last plan. At least one plan must exist.', 'error');
                 return;
             }
             if (confirm('Remove this payment plan?')) {
-                paymentPlans[level].splice(index, 1);
-                renderPlans(level);
+                paymentPlans.splice(index, 1);
+                renderAllPlans();
                 showNotification('Plan removed successfully', 'success');
             }
         }
