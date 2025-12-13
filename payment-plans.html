@@ -547,7 +547,7 @@
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
-                <img src="/Instantlly Logo.jpg" alt="Instantlly Logo" height="50" class="me-3" style="border-radius: 8px;">
+                <img src="images/instantlly-logo.jpg" alt="Instantlly Logo" height="50" class="me-3" style="border-radius: 8px;" onerror="this.style.display='none'">
                 <div>
                     <div style="font-size: 1.5rem; font-weight: 700; color: #111827;">Instantly Dashboard</div>
                     <div class="subtitle-text d-none d-sm-block">Manage applications and system statistics</div>
@@ -741,10 +741,10 @@
                         <div class="investment-section">
                             <div class="investment-label">Investment Amount</div>
                             <input type="text" class="investment-input" 
+                                   data-value="${plan.pay}"
                                    value="₹${(plan.pay / 1000).toFixed(0)}K" 
-                                   onfocus="this.value='${plan.pay}'" 
-                                   onblur="updatePayAmount(${index}, this)"
-                                   onchange="updatePayAmount(${index}, this)">
+                                   onfocus="handleFocus(this)" 
+                                   onblur="updatePayAmount(${index}, this)">
                             <small style="font-size: 11px; color: #6c757d;">One-time payment</small>
                         </div>
 
@@ -763,10 +763,10 @@
                                 </div>
                                 <div class="benefit-value">
                                     <input type="text" 
+                                           data-value="${plan.profit}"
                                            value="₹${(plan.profit / 1000).toFixed(0)}K" 
-                                           onfocus="this.value='${plan.profit}'" 
-                                           onblur="updateProfitAmount(${index}, this)"
-                                           onchange="updateProfitAmount(${index}, this)">
+                                           onfocus="handleFocus(this)" 
+                                           onblur="updateProfitAmount(${index}, this)">
                                 </div>
                             </div>
 
@@ -783,10 +783,10 @@
                                 </div>
                                 <div class="benefit-value">
                                     <input type="text" 
+                                           data-value="${plan.credit}"
                                            value="₹${(plan.credit / 1000).toFixed(0)}K" 
-                                           onfocus="this.value='${plan.credit}'" 
-                                           onblur="updateCreditAmount(${index}, this)"
-                                           onchange="updateCreditAmount(${index}, this)">
+                                           onfocus="handleFocus(this)" 
+                                           onblur="updateCreditAmount(${index}, this)">
                                 </div>
                             </div>
                         </div>
@@ -812,25 +812,43 @@
             `;
         }
 
+        function handleFocus(input) {
+            const rawValue = input.getAttribute('data-value');
+            input.value = rawValue;
+            input.select();
+        }
+
         function updatePayAmount(index, input) {
-            const value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            let value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            if (isNaN(value) || value === 0) {
+                value = parseInt(input.getAttribute('data-value'));
+            }
             paymentPlans[index].pay = value;
+            input.setAttribute('data-value', value);
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`Updated plan ${index + 1} payment:`, value);
+            console.log(`✅ Updated plan ${index + 1} payment:`, value);
         }
 
         function updateProfitAmount(index, input) {
-            const value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            let value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            if (isNaN(value) || value === 0) {
+                value = parseInt(input.getAttribute('data-value'));
+            }
             paymentPlans[index].profit = value;
+            input.setAttribute('data-value', value);
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`Updated plan ${index + 1} profit:`, value);
+            console.log(`✅ Updated plan ${index + 1} profit:`, value);
         }
 
         function updateCreditAmount(index, input) {
-            const value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            let value = parseInt(input.value.replace(/[^0-9]/g, ''));
+            if (isNaN(value) || value === 0) {
+                value = parseInt(input.getAttribute('data-value'));
+            }
             paymentPlans[index].credit = value;
+            input.setAttribute('data-value', value);
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`Updated plan ${index + 1} credit:`, value);
+            console.log(`✅ Updated plan ${index + 1} credit:`, value);
         }
 
         function toggleVisibility(index, location, isChecked) {
