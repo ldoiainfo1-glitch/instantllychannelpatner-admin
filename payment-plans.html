@@ -758,7 +758,7 @@
                                     </div>
                                     <div>
                                         <div class="benefit-label">Commission</div>
-                                        <div class="benefit-sublabel">(85%)</div>
+                                        <div class="benefit-sublabel">(Credits - Investment)</div>
                                     </div>
                                 </div>
                                 <div class="benefit-value">
@@ -819,13 +819,34 @@
             input.select();
         }
 
-        function parserupee symbol, commas, and any non-numeric characters
+        function parseAmount(inputValue) {
+            // Remove rupee symbol, commas, and any non-numeric characters
             let number = parseInt(inputValue.replace(/[^0-9]/g, ''));
             return isNaN(number) ? 0 : number;
         }
 
         function formatAmount(amount) {
             return `₹${amount.toLocaleString('en-IN')}`;
+        }
+
+        function calculateCommission(index) {
+            const investment = paymentPlans[index].pay;
+            const credits = paymentPlans[index].credit;
+            const commission = credits - investment;
+            
+            paymentPlans[index].profit = commission;
+            
+            // Update commission display
+            const cards = document.querySelectorAll('.plan-card');
+            if (cards[index]) {
+                const commissionInput = cards[index].querySelector('.benefit-box.profit input');
+                if (commissionInput) {
+                    commissionInput.value = formatAmount(commission);
+                    commissionInput.setAttribute('data-value', commission);
+                }
+            }
+            
+            return commission;
         }
 
         function updatePayAmount(index, input) {
@@ -847,21 +868,13 @@
             input.setAttribute('data-value', value);
             input.value = formatAmount(value);
             
-            // Auto-calculate commission (85% of investment)
-            const commission = Math.round(value * 0.85);
-            paymentPlans[index].profit = commission;
-            
-            // Update the commission input field
-            const card = input.closest('.plan-card');
-            const commissionInput = card.querySelector('.benefit-box.profit input');
-            if (commissionInput) {
-                commissionInput.value = formatAmount(commission);
-                commissionInput.setAttribute('data-value', commission);
-            }
+            // Auto-calculate commission (Credits - Investment)
+            const commission = calculateCommission(index);
             
             console.log(`✅ Updated plan ${index + 1}:`);
             console.log(`   Investment: ${formatAmount(value)}`);
-            console.log(`   Commission (85%): ${formatAmount(commission)}`);
+            console.log(`   Ad Credits: ${formatAmount(paymentPlans[index].credit)}`);
+            console.log(`   Commission: ${formatAmount(commission)} (Credits - Investment)`);
         }
 
         function updateCreditAmount(index, input) {
@@ -879,8 +892,14 @@
             paymentPlans[index].credit = value;
             input.setAttribute('data-value', value);
             input.value = formatAmount(value);
-            console.log(`✅ Updated plan ${index + 1} credits: ${formatAmount(value)}
-            console.log(`✅ Updated plan ${index + 1} credit: ₹${value} (${value/1000}K)`);
+            
+            // Auto-calculate commission (Credits - Investment)
+            const commission = calculateCommission(index);
+            
+            console.log(`✅ Updated plan ${index + 1}:`);
+            console.log(`   Investment: ${formatAmount(paymentPlans[index].pay)}`);
+            console.log(`   Ad Credits: ${formatAmount(value)}`);
+            console.log(`   Commission: ${formatAmount(commission)} (Credits - Investment)`);
         }
 
         function toggleVisibility(index, location, isChecked) {
@@ -900,20 +919,21 @@
         }
 
         function addPlan() {
+            const investment = 30000;
+            const credits = 200000;
+            const commission = credits - investment; // Auto-calculate (Credits - Investment)
             paymentPlans.push({
-                pay: 30000,
-                profit: 170000,
-                credit: 200000,
+                pay: investment,
+                profit: commission,
+                credit: credits,
                 visibleFor: allLevels
             });
             renderAllPlans();
             showNotification(`New plan added successfully`, 'success');
         }
-const investment = 30000;
-            const commission = Math.round(investment * 0.85); // Auto-calculate 85%
-            paymentPlans.push({
-                pay: investment,
-                profit: commissionength === 1) {
+
+        function removePlan(index) {
+            if (paymentPlans.length === 1) {
                 showNotification('Cannot remove the last plan. At least one plan must exist.', 'error');
                 return;
             }
