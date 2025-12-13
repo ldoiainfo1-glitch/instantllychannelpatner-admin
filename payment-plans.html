@@ -742,7 +742,7 @@
                             <div class="investment-label">Investment Amount</div>
                             <input type="text" class="investment-input" 
                                    data-value="${plan.pay}"
-                                   value="₹${(plan.pay / 1000).toFixed(0)}K" 
+                                   value="₹${plan.pay.toLocaleString('en-IN')}" 
                                    onfocus="handleFocus(this)" 
                                    onblur="updatePayAmount(${index}, this)">
                             <small style="font-size: 11px; color: #6c757d;">One-time payment</small>
@@ -764,9 +764,10 @@
                                 <div class="benefit-value">
                                     <input type="text" 
                                            data-value="${plan.profit}"
-                                           value="₹${(plan.profit / 1000).toFixed(0)}K" 
-                                           onfocus="handleFocus(this)" 
-                                           onblur="updateProfitAmount(${index}, this)">
+                                           value="₹${plan.profit.toLocaleString('en-IN')}" 
+                                           readonly
+                                           style="background: #f3f4f6; cursor: not-allowed;"
+                                           title="Auto-calculated as 85% of Investment Amount">
                                 </div>
                             </div>
 
@@ -784,7 +785,7 @@
                                 <div class="benefit-value">
                                     <input type="text" 
                                            data-value="${plan.credit}"
-                                           value="₹${(plan.credit / 1000).toFixed(0)}K" 
+                                           value="₹${plan.credit.toLocaleString('en-IN')}" 
                                            onfocus="handleFocus(this)" 
                                            onblur="updateCreditAmount(${index}, this)">
                                 </div>
@@ -818,21 +819,13 @@
             input.select();
         }
 
-        function parseAmount(inputValue) {
-            // Remove all non-numeric characters except K
-            let cleanValue = inputValue.trim().toUpperCase();
-            
-            // Check if input has K suffix (e.g., "90K", "₹90K")
-            if (cleanValue.includes('K')) {
-                let numericPart = cleanValue.replace(/[^0-9]/g, '');
-                let number = parseInt(numericPart);
-                // If they typed in K format, multiply by 1000
-                return isNaN(number) ? 0 : number * 1000;
-            } else {
-                // Plain number (e.g., "90000")
-                let number = parseInt(cleanValue.replace(/[^0-9]/g, ''));
-                return isNaN(number) ? 0 : number;
-            }
+        function parserupee symbol, commas, and any non-numeric characters
+            let number = parseInt(inputValue.replace(/[^0-9]/g, ''));
+            return isNaN(number) ? 0 : number;
+        }
+
+        function formatAmount(amount) {
+            return `₹${amount.toLocaleString('en-IN')}`;
         }
 
         function updatePayAmount(index, input) {
@@ -845,32 +838,30 @@
             
             // Ensure value is valid
             if (isNaN(value) || value === 0) {
-                alert('Please enter a valid amount (e.g., 90000 or 90K)');
+                alert('Please enter a valid amount (e.g., 90000)');
                 value = parseInt(input.getAttribute('data-value'));
             }
             
+            // Update investment amount
             paymentPlans[index].pay = value;
             input.setAttribute('data-value', value);
-            input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`✅ Updated plan ${index + 1} payment: ₹${value} (${value/1000}K)`);
-        }
-
-        function updateProfitAmount(index, input) {
-            let value = parseAmount(input.value);
+            input.value = formatAmount(value);
             
-            if (value === 0) {
-                value = parseInt(input.getAttribute('data-value'));
+            // Auto-calculate commission (85% of investment)
+            const commission = Math.round(value * 0.85);
+            paymentPlans[index].profit = commission;
+            
+            // Update the commission input field
+            const card = input.closest('.plan-card');
+            const commissionInput = card.querySelector('.benefit-box.profit input');
+            if (commissionInput) {
+                commissionInput.value = formatAmount(commission);
+                commissionInput.setAttribute('data-value', commission);
             }
             
-            if (isNaN(value) || value === 0) {
-                alert('Please enter a valid amount (e.g., 510000 or 510K)');
-                value = parseInt(input.getAttribute('data-value'));
-            }
-            
-            paymentPlans[index].profit = value;
-            input.setAttribute('data-value', value);
-            input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`✅ Updated plan ${index + 1} profit: ₹${value} (${value/1000}K)`);
+            console.log(`✅ Updated plan ${index + 1}:`);
+            console.log(`   Investment: ${formatAmount(value)}`);
+            console.log(`   Commission (85%): ${formatAmount(commission)}`);
         }
 
         function updateCreditAmount(index, input) {
@@ -881,13 +872,14 @@
             }
             
             if (isNaN(value) || value === 0) {
-                alert('Please enter a valid amount (e.g., 600000 or 600K)');
+                alert('Please enter a valid amount (e.g., 600000)');
                 value = parseInt(input.getAttribute('data-value'));
             }
             
             paymentPlans[index].credit = value;
             input.setAttribute('data-value', value);
-            input.value = `₹${(value / 1000).toFixed(0)}K`;
+            input.value = formatAmount(value);
+            console.log(`✅ Updated plan ${index + 1} credits: ${formatAmount(value)}
             console.log(`✅ Updated plan ${index + 1} credit: ₹${value} (${value/1000}K)`);
         }
 
@@ -917,9 +909,11 @@
             renderAllPlans();
             showNotification(`New plan added successfully`, 'success');
         }
-
-        function removePlan(index) {
-            if (paymentPlans.length === 1) {
+const investment = 30000;
+            const commission = Math.round(investment * 0.85); // Auto-calculate 85%
+            paymentPlans.push({
+                pay: investment,
+                profit: commissionength === 1) {
                 showNotification('Cannot remove the last plan. At least one plan must exist.', 'error');
                 return;
             }
