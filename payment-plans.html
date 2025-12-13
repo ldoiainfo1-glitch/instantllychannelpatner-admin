@@ -547,7 +547,7 @@
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
-                <img src="images/instantlly-logo.jpg" alt="Instantlly Logo" height="50" class="me-3" style="border-radius: 8px;" onerror="this.style.display='none'">
+                <img src="Instantlly%20Logo.jpg" alt="Instantlly Logo" height="50" class="me-3" style="border-radius: 8px;" onerror="this.style.display='none'">
                 <div>
                     <div style="font-size: 1.5rem; font-weight: 700; color: #111827;">Instantly Dashboard</div>
                     <div class="subtitle-text d-none d-sm-block">Manage applications and system statistics</div>
@@ -818,37 +818,77 @@
             input.select();
         }
 
+        function parseAmount(inputValue) {
+            // Remove all non-numeric characters except K
+            let cleanValue = inputValue.trim().toUpperCase();
+            
+            // Check if input has K suffix (e.g., "90K", "₹90K")
+            if (cleanValue.includes('K')) {
+                let numericPart = cleanValue.replace(/[^0-9]/g, '');
+                let number = parseInt(numericPart);
+                // If they typed in K format, multiply by 1000
+                return isNaN(number) ? 0 : number * 1000;
+            } else {
+                // Plain number (e.g., "90000")
+                let number = parseInt(cleanValue.replace(/[^0-9]/g, ''));
+                return isNaN(number) ? 0 : number;
+            }
+        }
+
         function updatePayAmount(index, input) {
-            let value = parseInt(input.value.replace(/[^0-9]/g, ''));
-            if (isNaN(value) || value === 0) {
+            let value = parseAmount(input.value);
+            
+            // Fallback to stored value if parse failed
+            if (value === 0) {
                 value = parseInt(input.getAttribute('data-value'));
             }
+            
+            // Ensure value is valid
+            if (isNaN(value) || value === 0) {
+                alert('Please enter a valid amount (e.g., 90000 or 90K)');
+                value = parseInt(input.getAttribute('data-value'));
+            }
+            
             paymentPlans[index].pay = value;
             input.setAttribute('data-value', value);
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`✅ Updated plan ${index + 1} payment:`, value);
+            console.log(`✅ Updated plan ${index + 1} payment: ₹${value} (${value/1000}K)`);
         }
 
         function updateProfitAmount(index, input) {
-            let value = parseInt(input.value.replace(/[^0-9]/g, ''));
-            if (isNaN(value) || value === 0) {
+            let value = parseAmount(input.value);
+            
+            if (value === 0) {
                 value = parseInt(input.getAttribute('data-value'));
             }
+            
+            if (isNaN(value) || value === 0) {
+                alert('Please enter a valid amount (e.g., 510000 or 510K)');
+                value = parseInt(input.getAttribute('data-value'));
+            }
+            
             paymentPlans[index].profit = value;
             input.setAttribute('data-value', value);
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`✅ Updated plan ${index + 1} profit:`, value);
+            console.log(`✅ Updated plan ${index + 1} profit: ₹${value} (${value/1000}K)`);
         }
 
         function updateCreditAmount(index, input) {
-            let value = parseInt(input.value.replace(/[^0-9]/g, ''));
-            if (isNaN(value) || value === 0) {
+            let value = parseAmount(input.value);
+            
+            if (value === 0) {
                 value = parseInt(input.getAttribute('data-value'));
             }
+            
+            if (isNaN(value) || value === 0) {
+                alert('Please enter a valid amount (e.g., 600000 or 600K)');
+                value = parseInt(input.getAttribute('data-value'));
+            }
+            
             paymentPlans[index].credit = value;
             input.setAttribute('data-value', value);
             input.value = `₹${(value / 1000).toFixed(0)}K`;
-            console.log(`✅ Updated plan ${index + 1} credit:`, value);
+            console.log(`✅ Updated plan ${index + 1} credit: ₹${value} (${value/1000}K)`);
         }
 
         function toggleVisibility(index, location, isChecked) {
