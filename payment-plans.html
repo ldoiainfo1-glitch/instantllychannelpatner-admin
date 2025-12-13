@@ -3,71 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Plans Management - Admin</title>
+    <title>Payment Plans Management - Instantly Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="css/style.css" rel="stylesheet">
     <style>
-        body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 10px 0;
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --dark-color: #1f2937;
+            --light-bg: #f9fafb;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .container { max-width: 1600px; }
+
+        body {
+            background: var(--light-bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #374151;
+            padding-top: 80px;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #111827 !important;
+        }
+
+        .navbar-brand:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link {
+            color: #6b7280 !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
+            transition: all 0.2s;
+            margin: 0 0.25rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+            background: #f3f4f6;
+        }
+
+        .nav-link.active {
+            color: var(--primary-color) !important;
+            background: #eff6ff;
+        }
+
+        .subtitle-text {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+
+        .container { 
+            max-width: 1400px; 
+        }
+
         .page-header {
             background: white;
-            border-radius: 8px;
-            padding: 12px 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--primary-color);
         }
-        .page-header h2 { font-size: 18px; margin-bottom: 5px; }
-        .page-header p { font-size: 12px; margin-bottom: 0; }
+
+        .page-header h2 { 
+            font-size: 1.875rem; 
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+
+        .page-header p { 
+            font-size: 1rem; 
+            margin-bottom: 0;
+            color: #6b7280;
+        }
         .tier-section {
             background: white;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s;
         }
+
+        .tier-section:hover {
+            box-shadow: var(--card-shadow-hover);
+        }
+
         .tier-section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
-            margin-bottom: 12px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-        .tier-section-header h4 { font-size: 14px; margin: 0; }
+
+        .tier-section-header h4 { 
+            font-size: 1.25rem; 
+            margin: 0;
+            font-weight: 600;
+        }
+
         .plan-card {
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
             position: relative;
-            transition: all 0.2s;
-            background: #f8f9fa;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: var(--card-shadow);
         }
+
         .plan-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border-color: var(--primary-color);
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-4px);
         }
+
         .plan-number {
             position: absolute;
-            top: -10px;
-            left: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            top: -12px;
+            left: 15px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         .investment-section {
             text-align: center;
@@ -268,21 +363,247 @@
             margin-bottom: 10px;
             padding: 8px 0;
         }
-        .navbar-brand { font-size: 14px; }
-        .btn-outline-danger { font-size: 12px; padding: 6px 15px; }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .plan-card {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            body {
+                padding-top: 70px;
+            }
+
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .page-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .tier-section {
+                padding: 1rem;
+            }
+
+            .tier-section-header h4 {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 60px;
+            }
+
+            .navbar-brand div div:first-child {
+                font-size: 1.2rem !important;
+            }
+
+            .page-header {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .page-header h2 {
+                font-size: 1.25rem;
+            }
+
+            .page-header p {
+                font-size: 0.875rem;
+            }
+
+            .tier-section {
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .tier-section-header {
+                padding: 0.75rem 1rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .plan-card {
+                padding: 0.875rem;
+            }
+
+            .benefits-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .visibility-checkboxes {
+                gap: 6px;
+            }
+
+            .visibility-check {
+                font-size: 0.75rem;
+                padding: 5px 8px;
+            }
+
+            .btn-save-all {
+                width: 100%;
+                margin: 0 1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+
+            .page-header {
+                padding: 0.75rem;
+                border-radius: 12px;
+            }
+
+            .page-header h2 {
+                font-size: 1.1rem;
+            }
+
+            .page-header p {
+                font-size: 0.75rem;
+            }
+
+            .tier-section {
+                border-radius: 12px;
+                padding: 0.5rem;
+            }
+
+            .tier-section-header {
+                padding: 0.625rem;
+                border-radius: 8px;
+            }
+
+            .tier-section-header h4 {
+                font-size: 1rem;
+            }
+
+            .plan-card {
+                padding: 0.75rem;
+                border-radius: 10px;
+            }
+
+            .plan-number {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+                top: -10px;
+                left: 10px;
+            }
+
+            .investment-label {
+                font-size: 0.75rem;
+            }
+
+            .investment-input {
+                font-size: 1.25rem !important;
+            }
+
+            .benefit-label {
+                font-size: 0.625rem;
+            }
+
+            .benefit-value input {
+                font-size: 0.875rem;
+            }
+
+            .visibility-header {
+                font-size: 0.75rem;
+            }
+
+            .visibility-check {
+                font-size: 0.625rem;
+                padding: 4px 6px;
+            }
+
+            .visibility-check input[type="checkbox"] {
+                width: 12px;
+                height: 12px;
+            }
+
+            .btn-remove {
+                font-size: 0.75rem;
+                padding: 8px;
+            }
+
+            .btn-add-plan {
+                font-size: 0.875rem;
+                padding: 8px 12px;
+            }
+
+            .btn-save-all {
+                padding: 10px 20px;
+                font-size: 0.875rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="dashboard.html">
-                <i class="fas fa-dollar-sign me-2 text-primary"></i>
-                <span style="color: #667eea;">Payment Plans Manager</span>
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <img src="/Instantlly Logo.jpg" alt="Instantlly Logo" height="50" class="me-3" style="border-radius: 8px;">
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #111827;">Instantly Dashboard</div>
+                    <div class="subtitle-text d-none d-sm-block">Manage applications and system statistics</div>
+                </div>
             </a>
-            <div class="d-flex">
-                <button class="btn btn-outline-danger" onclick="logout()">
-                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                </button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ads.html">
+                            <i class="fas fa-bullhorn me-1"></i>Ads Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="users.html">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="credits.html">
+                            <i class="fas fa-coins me-1"></i>Credits
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="promotions.html">
+                            <i class="fas fa-bullhorn me-1"></i>Promotions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="payment-plans.html">
+                            <i class="fas fa-dollar-sign me-1"></i>Payment Plans
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="locations.html">
+                            <i class="fas fa-map-marker-alt me-1"></i>Locations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="refreshBtn">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-danger btn-sm ms-2" onclick="logout()" style="color: white;">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
@@ -594,6 +915,17 @@
                 window.location.href = 'index.html';
             }
         }
+
+        // Refresh button handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    location.reload();
+                });
+            }
+        });
     </script>
 </body>
 </html>

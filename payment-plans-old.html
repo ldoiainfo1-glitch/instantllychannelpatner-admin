@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Plans Management - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .container { max-width: 1400px; }
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .tier-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .tier-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .tier-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .input-group-custom {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .input-group-custom label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .input-group-custom input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: border-color 0.3s;
+        }
+        .input-group-custom input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        .input-group-custom.pay { border-left: 4px solid #28a745; }
+        .input-group-custom.profit { border-left: 4px solid #ffc107; }
+        .input-group-custom.credit { border-left: 4px solid #17a2b8; }
+        
+        .btn-save { 
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        .btn-save:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+        .btn-add-option {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 10px 25px;
+            border-radius: 8px;
+        }
+        .btn-remove-option {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+        .option-item {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .option-number {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .alert-info-custom {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .navbar {
+            background: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="fas fa-dollar-sign me-2 text-primary"></i>
+                <span style="color: #667eea;">Payment Plans Manager</span>
+            </a>
+            <div class="d-flex">
+                <a href="dashboard.html" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h2 class="mb-3">
+                <i class="fas fa-money-bill-wave me-3" style="color: #28a745;"></i>
+                Payment Plans Configuration
+            </h2>
+            <p class="text-muted mb-0">
+                Edit payment tiers for each position level. Changes will reflect immediately on the channel partner application page.
+            </p>
+        </div>
+
+        <div class="alert-info-custom">
+            <h5><i class="fas fa-info-circle me-2"></i>How it works:</h5>
+            <ul class="mb-0">
+                <li><strong>Pay (₹):</strong> Amount the partner pays to join</li>
+                <li><strong>Profit (₹):</strong> Earnings potential from the position</li>
+                <li><strong>Credits:</strong> Digital credits assigned to the partner</li>
+                <li>Each position level can have multiple payment options</li>
+                <li>Click "Save All Changes" to update the channel partner application form</li>
+            </ul>
+        </div>
+
+        <!-- India Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-globe me-2"></i>India Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('India')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="india-options"></div>
+        </div>
+
+        <!-- Zone Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Zone Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('Zone')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="zone-options"></div>
+        </div>
+
+        <!-- State Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-map me-2"></i>State Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('State')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="state-options"></div>
+        </div>
+
+        <!-- Division Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-layer-group me-2"></i>Division Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('Division')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="division-options"></div>
+        </div>
+
+        <!-- District Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-city me-2"></i>District Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('District')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="district-options"></div>
+        </div>
+
+        <!-- Tehsil Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-building me-2"></i>Tehsil Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('Tehsil')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="tehsil-options"></div>
+        </div>
+
+        <!-- Pincode Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-map-pin me-2"></i>Pincode Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('Pincode')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="pincode-options"></div>
+        </div>
+
+        <!-- Village Level -->
+        <div class="tier-card">
+            <div class="tier-header">
+                <h4 class="mb-0"><i class="fas fa-home me-2"></i>Village Level</h4>
+                <button class="btn btn-add-option btn-sm" onclick="addOption('Village')">
+                    <i class="fas fa-plus me-1"></i>Add Option
+                </button>
+            </div>
+            <div id="village-options"></div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="text-center mt-4 mb-5">
+            <button class="btn btn-save btn-lg" onclick="saveAllChanges()">
+                <i class="fas fa-save me-2"></i>Save All Changes
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="config.js"></script>
+    <script>
+        const API_BASE_URL = ADMIN_CONFIG.getApiBaseUrl();
+
+        // Current payment plans in memory
+        let paymentPlans = {
+            'India': [{ pay: 90000, profit: 510000, credit: 600000 }],
+            'Zone': [{ pay: 90000, profit: 510000, credit: 600000 }],
+            'State': [{ pay: 90000, profit: 510000, credit: 600000 }],
+            'Division': [
+                { pay: 90000, profit: 510000, credit: 600000 },
+                { pay: 75000, profit: 425000, credit: 500000 }
+            ],
+            'District': [
+                { pay: 90000, profit: 510000, credit: 600000 },
+                { pay: 75000, profit: 425000, credit: 500000 },
+                { pay: 60000, profit: 340000, credit: 400000 }
+            ],
+            'Tehsil': [
+                { pay: 90000, profit: 510000, credit: 600000 },
+                { pay: 75000, profit: 425000, credit: 500000 },
+                { pay: 60000, profit: 340000, credit: 400000 },
+                { pay: 45000, profit: 255000, credit: 300000 }
+            ],
+            'Pincode': [
+                { pay: 90000, profit: 510000, credit: 600000 },
+                { pay: 75000, profit: 425000, credit: 500000 },
+                { pay: 60000, profit: 340000, credit: 400000 },
+                { pay: 45000, profit: 255000, credit: 300000 },
+                { pay: 30000, profit: 170000, credit: 200000 }
+            ],
+            'Village': [
+                { pay: 90000, profit: 510000, credit: 600000 },
+                { pay: 75000, profit: 425000, credit: 500000 },
+                { pay: 60000, profit: 340000, credit: 400000 },
+                { pay: 45000, profit: 255000, credit: 300000 },
+                { pay: 30000, profit: 170000, credit: 200000 },
+                { pay: 15000, profit: 85000, credit: 100000 }
+            ]
+        };
+
+        // Load payment plans on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPaymentPlans();
+        });
+
+        // Load payment plans from API
+        async function loadPaymentPlans() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/payment-plans`);
+                if (response.ok) {
+                    const data = await response.json();
+                    paymentPlans = data.paymentPlans || paymentPlans;
+                    console.log('✅ Payment plans loaded:', paymentPlans);
+                }
+            } catch (error) {
+                console.log('Using default payment plans');
+            }
+            renderAllOptions();
+        }
+
+        // Render all options for all tiers
+        function renderAllOptions() {
+            Object.keys(paymentPlans).forEach(tier => {
+                renderOptions(tier);
+            });
+        }
+
+        // All position levels for visibility checkboxes
+        const allLevels = ['India', 'Zone', 'State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'];
+
+        // Render options for a specific tier
+        function renderOptions(tier) {
+            const containerId = `${tier.toLowerCase()}-options`;
+            const container = document.getElementById(containerId);
+            const options = paymentPlans[tier] || [];
+
+            container.innerHTML = options.map((option, index) => {
+                // Ensure visibleFor array exists and has default value
+                if (!option.visibleFor) {
+                    option.visibleFor = [tier]; // Default: visible only for own tier
+                }
+
+                // Generate checkboxes for location visibility
+                const checkboxesHTML = allLevels.map(level => {
+                    const checked = option.visibleFor.includes(level) ? 'checked' : '';
+                    return `
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="${tier}-${index}-${level}" 
+                                   value="${level}"
+                                   ${checked}
+                                   onchange="updateVisibility('${tier}', ${index}, '${level}', this.checked)">
+                            <label class="form-check-label" for="${tier}-${index}-${level}" style="font-size: 12px;">
+                                ${level}
+                            </label>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="option-item">
+                        <div class="option-number">${index + 1}</div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="input-group-custom pay">
+                                    <label>
+                                        <i class="fas fa-rupee-sign me-1"></i>Payment (₹)
+                                    </label>
+                                    <input type="number" class="form-control" 
+                                           value="${option.pay}" 
+                                           onchange="updateOption('${tier}', ${index}, 'pay', this.value)">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group-custom profit">
+                                    <label>
+                                        <i class="fas fa-chart-line me-1"></i>Profit (₹)
+                                    </label>
+                                    <input type="number" class="form-control" 
+                                           value="${option.profit}" 
+                                           onchange="updateOption('${tier}', ${index}, 'profit', this.value)">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="input-group-custom credit">
+                                    <label>
+                                        <i class="fas fa-coins me-1"></i>Credits
+                                    </label>
+                                    <input type="number" class="form-control" 
+                                           value="${option.credit}" 
+                                           onchange="updateOption('${tier}', ${index}, 'credit', this.value)">
+                                </div>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-remove-option w-100" onclick="removeOption('${tier}', ${index})">
+                                    <i class="fas fa-trash me-1"></i>Remove
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label class="fw-bold mb-2" style="font-size: 13px; color: #667eea;">
+                                    <i class="fas fa-eye me-1"></i>Visible For These Locations:
+                                </label>
+                                <div class="border rounded p-3" style="background: white;">
+                                    ${checkboxesHTML}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update visibility for a location
+        function updateVisibility(tier, index, level, isChecked) {
+            if (!paymentPlans[tier][index].visibleFor) {
+                paymentPlans[tier][index].visibleFor = [];
+            }
+
+            if (isChecked) {
+                // Add to visibleFor if not already present
+                if (!paymentPlans[tier][index].visibleFor.includes(level)) {
+                    paymentPlans[tier][index].visibleFor.push(level);
+                }
+            } else {
+                // Remove from visibleFor
+                paymentPlans[tier][index].visibleFor = paymentPlans[tier][index].visibleFor.filter(l => l !== level);
+            }
+
+            console.log(`Updated ${tier} option ${index + 1} visibility:`, paymentPlans[tier][index].visibleFor);
+        }
+
+        // Update option value
+        function updateOption(tier, index, field, value) {
+            paymentPlans[tier][index][field] = parseInt(value);
+            console.log(`Updated ${tier} option ${index + 1} - ${field}: ${value}`);
+        }
+
+        // Add new option to tier
+        function addOption(tier) {
+            paymentPlans[tier].push({
+                pay: 30000,
+                profit: 170000,
+                credit: 200000,
+                visibleFor: [tier] // Default: visible only for own tier
+            });
+            renderOptions(tier);
+            showNotification(`New option added to ${tier} level`, 'success');
+        }
+
+        // Remove option from tier
+        function removeOption(tier, index) {
+            if (paymentPlans[tier].length === 1) {
+                showNotification('Cannot remove the last option. Each tier must have at least one option.', 'error');
+                return;
+            }
+            if (confirm('Are you sure you want to remove this payment option?')) {
+                paymentPlans[tier].splice(index, 1);
+                renderOptions(tier);
+                showNotification('Payment option removed', 'success');
+            }
+        }
+
+        // Save all changes
+        async function saveAllChanges() {
+            if (!confirm('Save all payment plan changes? This will update the channel partner application form immediately.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/payment-plans`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ paymentPlans })
+                });
+
+                if (response.ok) {
+                    showNotification('✅ Payment plans saved successfully! Changes are now live on the channel partner application form.', 'success');
+                } else {
+                    throw new Error('Failed to save');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('❌ Failed to save payment plans. Please try again.', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+            const alert = document.createElement('div');
+            alert.className = `alert ${alertClass} position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alert.style.zIndex = '9999';
+            alert.style.minWidth = '400px';
+            alert.innerHTML = `
+                <strong>${message}</strong>
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('channelPartnerToken');
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
