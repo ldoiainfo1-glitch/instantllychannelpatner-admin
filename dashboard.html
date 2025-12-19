@@ -807,23 +807,31 @@
                                 </div>
                             </div>
                             <div class="col-md-4 text-end">
-                                <div class="d-grid gap-2">
-                                    ${actionButtons}
-                                    <button class="btn btn-outline-info admin-action-btn" onclick="viewUserDocuments('${app.applicantInfo.phone}')">
-                                        <i class="fas fa-file-alt me-2"></i> View Documents
-                                    </button>
-                                    ${(app.payment && app.payment.paymentScreenshot) ? `
-                                        <button class="btn btn-outline-cyan admin-action-btn" onclick="viewPaymentScreenshot('${app._id}', '${app.applicantInfo.name}')">
-                                            <i class="fas fa-receipt me-2"></i> View Payment Screenshot
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        ${actionButtons}
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-info admin-action-btn w-100" onclick="viewUserDocuments('${app.applicantInfo.phone}')">
+                                            <i class="fas fa-file-alt me-1"></i> Documents
                                         </button>
-                                    ` : `
-                                        <button class="btn btn-outline-secondary admin-action-btn" disabled>
-                                            <i class="fas fa-receipt me-2"></i> No Payment Screenshot
+                                    </div>
+                                    <div class="col-6">
+                                        ${(app.payment && app.payment.paymentScreenshot) ? `
+                                            <button class="btn btn-outline-cyan admin-action-btn w-100" onclick="viewPaymentScreenshot('${app._id}', '${app.applicantInfo.name}')">
+                                                <i class="fas fa-receipt me-1"></i> Payment
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-outline-secondary admin-action-btn w-100" disabled>
+                                                <i class="fas fa-receipt me-1"></i> Payment
+                                            </button>
+                                        `}
+                                    </div>
+                                    <div class="col-12">
+                                        <button class="btn btn-outline-success admin-action-btn w-100" onclick="showCommissionModal('${app._id}', '${app.positionId}', '${app.applicantInfo.name}')">
+                                            <i class="fas fa-percentage me-2"></i> Distribute Commission
                                         </button>
-                                    `}
-                                    <button class="btn btn-outline-success admin-action-btn" onclick="showCommissionModal('${app._id}', '${app.positionId}', '${app.applicantInfo.name}')">
-                                        <i class="fas fa-percentage me-2"></i> Distribute Commission
-                                    </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
