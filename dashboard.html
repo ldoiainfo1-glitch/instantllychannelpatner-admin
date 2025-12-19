@@ -821,6 +821,9 @@
                                             <i class="fas fa-receipt me-2"></i> No Payment Screenshot
                                         </button>
                                     `}
+                                    <button class="btn btn-outline-success admin-action-btn" onclick="showCommissionModal('${app._id}', '${app.positionId}', '${app.applicantInfo.name}')">
+                                        <i class="fas fa-percentage me-2"></i> Distribute Commission
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1460,6 +1463,287 @@ Examples:
             } catch (error) {
                 console.error('Error transferring:', error);
                 showNotification('Error transferring position', 'error');
+            }
+        }
+
+        // Show Commission Distribution Modal
+        function showCommissionModal(applicationId, positionId, applicantName) {
+            // Parse position hierarchy from positionId
+            const hierarchy = parsePositionHierarchy(positionId);
+            
+            const modalHTML = `
+                <div class="modal fade" id="commissionModal" tabindex="-1" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-percentage me-2"></i>Distribute Commission
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-info mb-4">
+                                    <strong>Applicant:</strong> ${applicantName}<br>
+                                    <strong>Position:</strong> ${hierarchy.positionLevel}<br>
+                                    <strong>Location:</strong> ${hierarchy.locationPath}
+                                </div>
+
+                                <!-- Total Amount Input -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Total Commission Amount (₹)</label>
+                                    <input type="number" class="form-control form-control-lg" id="totalCommissionAmount" 
+                                           placeholder="Enter amount to distribute" min="0" step="1"
+                                           onkeyup="calculateCommissions()">
+                                </div>
+
+                                <!-- Commission Distribution Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Level</th>
+                                                <th>Location</th>
+                                                <th>Percentage (%)</th>
+                                                <th>Amount (₹)</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="commissionTableBody">
+                                            ${createCommissionRows(hierarchy)}
+                                        </tbody>
+                                        <tfoot class="table-light">
+                                            <tr>
+                                                <th colspan="2">Total</th>
+                                                <th id="totalPercentage">0.00%</th>
+                                                <th id="totalAmount">₹0</th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Note:</strong> Only approved positions will receive commission. 
+                                    Percentages can be edited. Total must equal 100% or less.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-success" onclick="distributeCommission('${applicationId}', '${positionId}')">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Commission
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('commissionModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('commissionModal'));
+            modal.show();
+        }
+
+        // Parse position hierarchy from positionId
+        function parsePositionHierarchy(positionId) {
+            // positionId format: pos_president_india or pos_zone-head_india_west-zone etc.
+            const parts = positionId.replace('pos_', '').split('_');
+            
+            const hierarchy = {
+                positionLevel: parts[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                country: 'India',
+                zone: null,
+                state: null,
+                division: null,
+                district: null,
+                tehsil: null,
+                pincode: null,
+                village: null,
+                locationPath: ''
+            };
+            
+            // Parse location parts
+            for (let i = 1; i < parts.length; i++) {
+                const part = parts[i];
+                if (part.includes('zone')) hierarchy.zone = part.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                else if (i === 2 && !part.includes('zone')) hierarchy.state = part.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                else if (i === 3) hierarchy.division = part.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                else if (i === 4) hierarchy.district = part.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                else if (i === 5) hierarchy.tehsil = part.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                else if (i === 6) hierarchy.pincode = part;
+                else if (i === 7) hierarchy.village = part.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+            
+            // Build location path
+            const pathParts = [];
+            if (hierarchy.village) pathParts.push(hierarchy.village);
+            if (hierarchy.pincode) pathParts.push(hierarchy.pincode);
+            if (hierarchy.tehsil) pathParts.push(hierarchy.tehsil);
+            if (hierarchy.district) pathParts.push(hierarchy.district);
+            if (hierarchy.division) pathParts.push(hierarchy.division);
+            if (hierarchy.state) pathParts.push(hierarchy.state);
+            if (hierarchy.zone) pathParts.push(hierarchy.zone);
+            pathParts.push(hierarchy.country);
+            
+            hierarchy.locationPath = pathParts.join(' → ');
+            
+            return hierarchy;
+        }
+
+        // Create commission distribution rows
+        function createCommissionRows(hierarchy) {
+            const levels = [
+                { name: 'Country', key: 'country', percentage: 0.15, location: hierarchy.country },
+                { name: 'Zone', key: 'zone', percentage: 0.30, location: hierarchy.zone },
+                { name: 'State', key: 'state', percentage: 0.60, location: hierarchy.state },
+                { name: 'Division', key: 'division', percentage: 1.25, location: hierarchy.division },
+                { name: 'District', key: 'district', percentage: 2.5, location: hierarchy.district },
+                { name: 'Tehsil', key: 'tehsil', percentage: 5, location: hierarchy.tehsil },
+                { name: 'Pincode', key: 'pincode', percentage: 10, location: hierarchy.pincode },
+                { name: 'Village', key: 'village', percentage: 20, location: hierarchy.village }
+            ];
+            
+            let rows = '';
+            levels.forEach((level, index) => {
+                const isEligible = level.location && level.location !== null && level.location !== 'undefined';
+                const statusBadge = isEligible ? 
+                    '<span class="badge bg-success">Eligible</span>' : 
+                    '<span class="badge bg-secondary">N/A</span>';
+                
+                rows += `
+                    <tr class="${!isEligible ? 'table-secondary' : ''}">
+                        <td><strong>${level.name} Level</strong></td>
+                        <td>${level.location || 'N/A'}</td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm commission-percentage" 
+                                   id="percent_${index}" data-level="${level.name}" 
+                                   value="${level.percentage}" min="0" max="100" step="0.01"
+                                   ${!isEligible ? 'disabled' : ''}
+                                   onkeyup="calculateCommissions()">
+                        </td>
+                        <td>
+                            <strong id="amount_${index}" class="text-success">₹0</strong>
+                        </td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            });
+            
+            return rows;
+        }
+
+        // Calculate commissions based on total amount and percentages
+        function calculateCommissions() {
+            const totalAmount = parseFloat(document.getElementById('totalCommissionAmount').value) || 0;
+            const percentageInputs = document.querySelectorAll('.commission-percentage:not([disabled])');
+            
+            let totalPercentage = 0;
+            let totalDistributed = 0;
+            
+            percentageInputs.forEach((input, index) => {
+                const percentage = parseFloat(input.value) || 0;
+                const amount = (totalAmount * percentage) / 100;
+                
+                totalPercentage += percentage;
+                totalDistributed += amount;
+                
+                // Update amount display
+                const amountElement = document.getElementById(`amount_${input.id.split('_')[1]}`);
+                if (amountElement) {
+                    amountElement.textContent = `₹${amount.toFixed(2)}`;
+                }
+            });
+            
+            // Update totals
+            document.getElementById('totalPercentage').textContent = `${totalPercentage.toFixed(2)}%`;
+            document.getElementById('totalAmount').textContent = `₹${totalDistributed.toFixed(2)}`;
+            
+            // Validate total percentage
+            if (totalPercentage > 100) {
+                document.getElementById('totalPercentage').classList.add('text-danger');
+                document.getElementById('totalPercentage').classList.remove('text-success');
+            } else {
+                document.getElementById('totalPercentage').classList.add('text-success');
+                document.getElementById('totalPercentage').classList.remove('text-danger');
+            }
+        }
+
+        // Distribute commission to all eligible positions
+        async function distributeCommission(applicationId, positionId) {
+            const totalAmount = parseFloat(document.getElementById('totalCommissionAmount').value) || 0;
+            
+            if (totalAmount <= 0) {
+                alert('Please enter a valid commission amount');
+                return;
+            }
+            
+            // Collect distribution data
+            const percentageInputs = document.querySelectorAll('.commission-percentage:not([disabled])');
+            let totalPercentage = 0;
+            const distributions = [];
+            
+            percentageInputs.forEach(input => {
+                const percentage = parseFloat(input.value) || 0;
+                totalPercentage += percentage;
+                
+                if (percentage > 0) {
+                    const amount = (totalAmount * percentage) / 100;
+                    distributions.push({
+                        level: input.dataset.level,
+                        percentage: percentage,
+                        amount: amount
+                    });
+                }
+            });
+            
+            if (totalPercentage > 100) {
+                alert('Total percentage cannot exceed 100%');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to distribute ₹${totalAmount.toFixed(2)} commission?\n\nTotal: ${totalPercentage.toFixed(2)}% = ₹${distributions.reduce((sum, d) => sum + d.amount, 0).toFixed(2)}`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/applications/${applicationId}/distribute-commission`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        positionId: positionId,
+                        totalAmount: totalAmount,
+                        distributions: distributions
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(`Commission distributed successfully!\n\nTotal: ₹${totalAmount}\nRecipients: ${result.distributedTo || distributions.length}`, 'success');
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('commissionModal'));
+                    modal.hide();
+                    
+                    // Reload applications
+                    await loadAllApplications();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.message || 'Failed to distribute commission', 'error');
+                }
+            } catch (error) {
+                console.error('Error distributing commission:', error);
+                showNotification('Error distributing commission: ' + error.message, 'error');
             }
         }
     </script>
