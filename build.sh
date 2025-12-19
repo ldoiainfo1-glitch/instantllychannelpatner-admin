@@ -23,6 +23,10 @@ cp -r css public/ 2>/dev/null || true
 echo "  Copying images directory..."
 cp -r images public/ 2>/dev/null || true
 
+# Copy logo to root of public folder for easy access
+echo "  Copying logo..."
+cp logo.jpg public/logo.jpg 2>/dev/null || true
+
 # Copy any other necessary files
 echo "  Copying additional files..."
 cp *.csv public/ 2>/dev/null || true
