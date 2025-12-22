@@ -930,9 +930,17 @@
 
         // View user documents
         async function viewPaymentScreenshot(applicationId, applicantName) {
+            // Show loading indicator
+            const loadingNotif = showNotification('💳 Loading payment details...', 'info');
+            
             try {
                 // Fetch application data
                 const response = await fetch(`${API_BASE_URL}/admin/applications/${applicationId}`);
+                
+                // Hide loading notification
+                setTimeout(() => {
+                    if (loadingNotif) loadingNotif.remove();
+                }, 500);
                 
                 if (!response.ok) {
                     showNotification('Application not found', 'error');
@@ -1211,9 +1219,17 @@
         }
 
         async function viewUserDocuments(phone) {
+            // Show loading indicator
+            const loadingNotif = showNotification('📄 Loading documents...', 'info');
+            
             try {
                 // Fetch user by phone number
                 const response = await fetch(`${API_BASE_URL}/admin/user-documents/${phone}`);
+                
+                // Hide loading notification
+                setTimeout(() => {
+                    if (loadingNotif) loadingNotif.remove();
+                }, 500);
                 
                 if (!response.ok) {
                     showNotification('User not found or no documents uploaded', 'error');
