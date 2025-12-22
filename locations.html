@@ -224,21 +224,26 @@
                                 <input type="text" class="form-control" id="district" required placeholder="e.g., Mumbai">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Tehsil *</label>
-                                <input type="text" class="form-control" id="tehsil" required placeholder="e.g., Andheri">
+                                <label class="form-label">Tehsil <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="tehsil" placeholder="e.g., Andheri">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Pincode *</label>
-                                <input type="text" class="form-control" id="pincode" required placeholder="e.g., 400001" pattern="\d{6}">
+                                <label class="form-label">Pincode <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="pincode" placeholder="e.g., 400001" pattern="\d{6}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Village *</label>
-                                <input type="text" class="form-control" id="village" required placeholder="e.g., Andheri West">
+                                <label class="form-label">Village <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="village" placeholder="e.g., Andheri West">
                             </div>
                         </div>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
                             <strong>Tip:</strong> Make sure to use consistent naming (e.g., always use "Konkan" not "konkan" or "KONKAN")
+                            <br>
+                            <small class="text-muted mt-2 d-block">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                You can add locations at any level - just fill in the fields you have. Leave Tehsil, Pincode, and Village empty if you only want to add district-level data.
+                            </small>
                         </div>
                     </form>
                 </div>
