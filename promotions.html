@@ -353,6 +353,9 @@
         function createLanguageCards() {
             const container = document.getElementById('languageUploads');
             
+            // IMPORTANT: Clear existing cards first to prevent duplication
+            container.innerHTML = '';
+            
             languages.forEach(lang => {
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-lg-4';
