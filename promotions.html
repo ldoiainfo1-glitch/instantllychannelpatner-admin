@@ -443,22 +443,42 @@
                     formData.append('image', file);
                     formData.append('uploadedBy', 'admin');
                     
+                    console.log(`📤 Uploading ${langCode}:`, {
+                        date: date,
+                        language: langCode,
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileType: file.type
+                    });
+                    
                     try {
                         const response = await fetch(`${API_BASE_URL}/promotions/upload`, {
                             method: 'POST',
                             body: formData
                         });
                         
+                        const responseData = await response.json();
+                        console.log(`📥 Response for ${langCode}:`, responseData);
+                        
                         if (response.ok) {
                             successCount++;
-                            console.log(`✅ Uploaded ${langCode}`);
+                            console.log(`✅ Uploaded ${langCode} successfully`);
                         } else {
                             failCount++;
-                            console.error(`❌ Failed to upload ${langCode}`);
+                            console.error(`❌ Failed to upload ${langCode}:`, {
+                                status: response.status,
+                                statusText: response.statusText,
+                                error: responseData
+                            });
                         }
                     } catch (error) {
                         failCount++;
                         console.error(`❌ Error uploading ${langCode}:`, error);
+                        console.error(`❌ Error details:`, {
+                            name: error.name,
+                            message: error.message,
+                            stack: error.stack
+                        });
                     }
                 }
                 
@@ -475,6 +495,11 @@
                 }
             } catch (error) {
                 console.error('Error uploading promotions:', error);
+                console.error('Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
                 alert('Error uploading promotions. Please try again.');
             } finally {
                 btn.disabled = false;
