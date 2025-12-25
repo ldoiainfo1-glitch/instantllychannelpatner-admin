@@ -217,7 +217,7 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <!-- Date Selection -->
+                        <!-- Date and Description Selection -->
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <label for="promotionDate" class="form-label fw-bold">
@@ -225,6 +225,13 @@
                                 </label>
                                 <input type="date" class="form-control" id="promotionDate" required>
                                 <small class="text-muted">Choose the date for this promotion</small>
+                            </div>
+                            <div class="col-md-8">
+                                <label for="promotionAbout" class="form-label fw-bold">
+                                    <i class="fas fa-info-circle me-2"></i>About (Description)
+                                </label>
+                                <textarea class="form-control" id="promotionAbout" rows="3" placeholder="Enter description about this promotion..."></textarea>
+                                <small class="text-muted">This description will be shown on the main promotion page</small>
                             </div>
                         </div>
 
@@ -264,6 +271,7 @@
                                 <thead>
                                     <tr>
                                         <th class="px-3 py-3" style="background-color: #2c3e50; color: white;">Date</th>
+                                        <th class="px-3 py-3" style="background-color: #2c3e50; color: white;">About</th>
                                         <th class="px-3 py-3" style="background-color: #2c3e50; color: white;">Hindi</th>
                                         <th class="px-3 py-3" style="background-color: #2c3e50; color: white;">English</th>
                                         <th class="px-3 py-3" style="background-color: #2c3e50; color: white;">Marathi</th>
@@ -281,7 +289,7 @@
                                 </thead>
                                 <tbody id="existingPromotionsTable">
                                     <tr>
-                                        <td colspan="14" class="text-center text-muted py-4">
+                                        <td colspan="15" class="text-center text-muted py-4">
                                             <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
                                             <p>Loading promotions...</p>
                                         </td>
@@ -419,6 +427,7 @@
         // Upload all promotions
         async function uploadAllPromotions() {
             const date = document.getElementById('promotionDate').value;
+            const about = document.getElementById('promotionAbout').value;
             
             if (!date) {
                 alert('Please select a date');
@@ -445,13 +454,15 @@
                     formData.append('language', langCode);
                     formData.append('image', file);
                     formData.append('uploadedBy', 'admin');
+                    formData.append('about', about);
                     
                     console.log(`📤 Uploading ${langCode}:`, {
                         date: date,
                         language: langCode,
                         fileName: file.name,
                         fileSize: file.size,
-                        fileType: file.type
+                        fileType: file.type,
+                        about: about
                     });
                     
                     try {
@@ -541,7 +552,7 @@
             if (promotions.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="14" class="text-center text-muted py-4">
+                        <td colspan="15" class="text-center text-muted py-4">
                             <i class="fas fa-info-circle fa-2x mb-2"></i>
                             <p>No promotions uploaded yet</p>
                         </td>
@@ -557,7 +568,10 @@
                 const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
                 
                 const row = document.createElement('tr');
-                let rowHTML = `<td><strong>${formattedDate}</strong></td>`;
+                let rowHTML = `
+                    <td><strong>${formattedDate}</strong></td>
+                    <td><span class="text-muted small">${promo.about || '-'}</span></td>
+                `;
                 
                 // Add language status
                 languages.forEach(lang => {
