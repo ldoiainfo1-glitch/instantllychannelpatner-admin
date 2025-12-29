@@ -1057,15 +1057,52 @@
                                         <i class="fas fa-user me-2"></i><strong>User:</strong> ${userName}<br>
                                         <i class="fas fa-phone me-2"></i><strong>Phone:</strong> ${userPhone}
                                     </div>
+                                    
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>New Credit System:</strong><br>
+                                        <small>Amount Paid = Cash Credits (used first)<br>
+                                        Remaining = Extra Credits (used after cash is finished)</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="amountPaid" class="form-label">
+                                            <i class="fas fa-rupee-sign me-2"></i><strong>Amount Paid (₹)</strong>
+                                        </label>
+                                        <input type="number" class="form-control form-control-lg" id="amountPaid" 
+                                               placeholder="Enter amount paid (e.g., 25000)" 
+                                               min="0" required>
+                                        <small class="text-muted">This will be added to Cash Credits table</small>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <label for="creditsAmount" class="form-label">
-                                            <i class="fas fa-coins me-2"></i><strong>Credits Amount</strong>
+                                            <i class="fas fa-coins me-2"></i><strong>Total Credits to Give</strong>
                                         </label>
                                         <input type="number" class="form-control form-control-lg" id="creditsAmount" 
-                                               placeholder="Enter credits (e.g., 300000)" 
+                                               placeholder="Enter total credits (e.g., 200000)" 
                                                min="1" required>
-                                        <small class="text-muted">Enter the number of credits to give (minimum: 1)</small>
+                                        <small class="text-muted">Total credits = Amount Paid + Bonus Credits</small>
                                     </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="mb-2"><i class="fas fa-calculator me-2"></i>Credit Breakdown:</h6>
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Cash Credits:</small><br>
+                                                        <strong id="cashCreditsPreview">0</strong>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Extra Credits:</small><br>
+                                                        <strong id="extraCreditsPreview" class="text-success">0</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-3">
                                         <label for="creditsDescription" class="form-label">
                                             <i class="fas fa-comment me-2"></i><strong>Description (Optional)</strong>
@@ -1096,6 +1133,24 @@
                 // Add modal to body
                 document.body.insertAdjacentHTML('beforeend', modalHTML);
                 
+                // Add event listeners for real-time calculation
+                setTimeout(() => {
+                    const amountPaidInput = document.getElementById('amountPaid');
+                    const creditsAmountInput = document.getElementById('creditsAmount');
+                    
+                    function updateBreakdown() {
+                        const amountPaid = parseInt(amountPaidInput.value) || 0;
+                        const totalCredits = parseInt(creditsAmountInput.value) || 0;
+                        const extraCredits = Math.max(0, totalCredits - amountPaid);
+                        
+                        document.getElementById('cashCreditsPreview').textContent = amountPaid.toLocaleString('en-IN');
+                        document.getElementById('extraCreditsPreview').textContent = extraCredits.toLocaleString('en-IN');
+                    }
+                    
+                    amountPaidInput.addEventListener('input', updateBreakdown);
+                    creditsAmountInput.addEventListener('input', updateBreakdown);
+                }, 100);
+                
                 // Show modal
                 const modal = new bootstrap.Modal(document.getElementById('giveCreditsModal'));
                 modal.show();
@@ -1108,16 +1163,35 @@
 
         // Give Credits Function
         async function giveCredits(userId, userName, userPhone) {
-            const creditsAmount = document.getElementById('creditsAmount').value;
+            const amountPaid = parseInt(document.getElementById('amountPaid').value) || 0;
+            const creditsAmount = parseInt(document.getElementById('creditsAmount').value) || 0;
             const description = document.getElementById('creditsDescription').value;
             
             // Validate
             if (!creditsAmount || creditsAmount <= 0) {
-                alert('Please enter a valid credits amount (greater than 0)');
+                alert('Please enter a valid total credits amount (greater than 0)');
                 return;
             }
             
-            if (!confirm(`Are you sure you want to give ${parseInt(creditsAmount).toLocaleString('en-IN')} credits to ${userName}?`)) {
+            if (amountPaid < 0) {
+                alert('Amount paid cannot be negative');
+                return;
+            }
+            
+            if (creditsAmount < amountPaid) {
+                alert('Total credits must be greater than or equal to amount paid');
+                return;
+            }
+            
+            const extraCredits = creditsAmount - amountPaid;
+            
+            if (!confirm(`Confirm Credit Distribution:\n\n` +
+                        `User: ${userName}\n` +
+                        `Amount Paid: ₹${amountPaid.toLocaleString('en-IN')}\n` +
+                        `Total Credits: ${creditsAmount.toLocaleString('en-IN')}\n\n` +
+                        `Cash Credits: ${amountPaid.toLocaleString('en-IN')}\n` +
+                        `Extra Credits: ${extraCredits.toLocaleString('en-IN')}\n\n` +
+                        `Continue?`)) {
                 return;
             }
             
@@ -1128,8 +1202,9 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        credits: parseInt(creditsAmount),
-                        description: description || `Admin gave ${creditsAmount} credits`
+                        amountPaid: amountPaid,
+                        creditsToGive: creditsAmount,
+                        description: description || `Admin gave ${creditsAmount.toLocaleString('en-IN')} credits (₹${amountPaid.toLocaleString('en-IN')} paid + ${extraCredits.toLocaleString('en-IN')} bonus)`
                     })
                 });
                 
@@ -1141,8 +1216,14 @@
                     const modal = bootstrap.Modal.getInstance(document.getElementById('giveCreditsModal'));
                     if (modal) modal.hide();
                     
-                    // Show success notification
-                    showNotification(`✅ Successfully gave ${parseInt(creditsAmount).toLocaleString('en-IN')} credits to ${userName}!\n\nNew balance: ${result.user.credits.toLocaleString('en-IN')} credits`, 'success');
+                    // Show success notification with breakdown
+                    showNotification(
+                        `✅ Successfully gave ${creditsAmount.toLocaleString('en-IN')} credits to ${userName}!\n\n` +
+                        `💵 Cash Credits: ${amountPaid.toLocaleString('en-IN')}\n` +
+                        `🎁 Extra Credits: ${extraCredits.toLocaleString('en-IN')}\n` +
+                        `💰 Total Balance: ${result.user.credits.toLocaleString('en-IN')} credits`,
+                        'success'
+                    );
                     
                     // Reload applications
                     await loadAllApplications();
