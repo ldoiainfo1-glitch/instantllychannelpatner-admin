@@ -412,6 +412,17 @@
                         <div class="tab-content" id="applicationTabContent">
                             <!-- Pending Tab -->
                             <div class="tab-pane fade show active p-4" id="pending-content" role="tabpanel">
+                                <!-- Search Box for Pending -->
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="pendingSearch" 
+                                               placeholder="Search by name, phone, position, or location..." 
+                                               oninput="filterApplications('pending')">
+                                    </div>
+                                </div>
                                 <div id="pendingApplicationsList">
                                     <div class="text-center py-5">
                                         <div class="spinner-border text-primary" role="status">
@@ -424,6 +435,17 @@
                             
                             <!-- Approved Tab -->
                             <div class="tab-pane fade p-4" id="approved-content" role="tabpanel">
+                                <!-- Search Box for Approved -->
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="approvedSearch" 
+                                               placeholder="Search by name, phone, position, or location..." 
+                                               oninput="filterApplications('approved')">
+                                    </div>
+                                </div>
                                 <div id="approvedApplicationsList">
                                     <div class="text-center py-5">
                                         <div class="spinner-border text-success" role="status">
@@ -436,6 +458,17 @@
                             
                             <!-- Rejected Tab -->
                             <div class="tab-pane fade p-4" id="rejected-content" role="tabpanel">
+                                <!-- Search Box for Rejected -->
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="rejectedSearch" 
+                                               placeholder="Search by name, phone, position, or location..." 
+                                               oninput="filterApplications('rejected')">
+                                    </div>
+                                </div>
                                 <div id="rejectedApplicationsList">
                                     <div class="text-center py-5">
                                         <div class="spinner-border text-danger" role="status">
@@ -460,6 +493,11 @@
         // Use admin configuration for API base URL
         const API_BASE_URL = ADMIN_CONFIG.getApiBaseUrl();
         let isAdmin = false;
+
+        // Store all applications for filtering
+        let allPendingApplications = [];
+        let allApprovedApplications = [];
+        let allRejectedApplications = [];
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -640,6 +678,7 @@
         }
 
         function displayPendingApplications(applications) {
+            allPendingApplications = applications; // Store for filtering
             const container = document.getElementById('pendingApplicationsList');
             
             if (applications.length === 0) {
@@ -657,6 +696,7 @@
         }
 
         function displayApprovedApplications(applications) {
+            allApprovedApplications = applications; // Store for filtering
             const container = document.getElementById('approvedApplicationsList');
             
             if (applications.length === 0) {
@@ -674,6 +714,7 @@
         }
 
         function displayRejectedApplications(applications) {
+            allRejectedApplications = applications; // Store for filtering
             const container = document.getElementById('rejectedApplicationsList');
             
             if (applications.length === 0) {
@@ -688,6 +729,55 @@
             }
             
             container.innerHTML = applications.map(app => createApplicationCard(app, 'rejected')).join('');
+        }
+
+        // Filter applications based on search input
+        function filterApplications(type) {
+            const searchInput = document.getElementById(`${type}Search`);
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            let applicationsToFilter = [];
+            let displayFunction = null;
+            
+            // Determine which applications to filter
+            switch(type) {
+                case 'pending':
+                    applicationsToFilter = allPendingApplications;
+                    displayFunction = displayPendingApplications;
+                    break;
+                case 'approved':
+                    applicationsToFilter = allApprovedApplications;
+                    displayFunction = displayApprovedApplications;
+                    break;
+                case 'rejected':
+                    applicationsToFilter = allRejectedApplications;
+                    displayFunction = displayRejectedApplications;
+                    break;
+            }
+            
+            // If search is empty, show all applications
+            if (!searchTerm) {
+                displayFunction(applicationsToFilter);
+                return;
+            }
+            
+            // Filter applications based on search term
+            const filteredApplications = applicationsToFilter.filter(app => {
+                const name = (app.applicantInfo?.name || '').toLowerCase();
+                const phone = (app.applicantInfo?.phone || '').toLowerCase();
+                const position = (app.positionId || '').toLowerCase().replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' ');
+                const district = (app.applicantInfo?.district || '').toLowerCase();
+                const state = (app.applicantInfo?.state || '').toLowerCase();
+                
+                return name.includes(searchTerm) || 
+                       phone.includes(searchTerm) || 
+                       position.includes(searchTerm) ||
+                       district.includes(searchTerm) ||
+                       state.includes(searchTerm);
+            });
+            
+            // Display filtered results
+            displayFunction(filteredApplications);
         }
 
         function createApplicationCard(app, status) {
