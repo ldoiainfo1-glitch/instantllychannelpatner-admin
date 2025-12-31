@@ -15,6 +15,10 @@ cp *.html public/ 2>/dev/null || true
 echo "  Copying JS files..."
 cp *.js public/ 2>/dev/null || true
 
+# Copy JS directory
+echo "  Copying JS directory..."
+cp -r js public/ 2>/dev/null || true
+
 # Copy CSS directory
 echo "  Copying CSS directory..."
 cp -r css public/ 2>/dev/null || true
