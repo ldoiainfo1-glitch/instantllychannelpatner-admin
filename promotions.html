@@ -147,6 +147,164 @@
         .upload-btn small {
             font-size: 0.7rem;
         }
+        
+        /* Edit and Preview Buttons */
+        .language-status-cell {
+            position: relative;
+        }
+        
+        .language-actions {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .btn-edit-image, .btn-preview-image {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .btn-edit-image {
+            background: #f59e0b;
+            color: white;
+            border: none;
+        }
+        
+        .btn-edit-image:hover {
+            background: #d97706;
+            transform: scale(1.05);
+        }
+        
+        .btn-preview-image {
+            background: #3b82f6;
+            color: white;
+            border: none;
+        }
+        
+        .btn-preview-image:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+        
+        /* Image Preview Modal */
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+            animation: fadeIn 0.3s;
+        }
+        
+        .image-preview-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .image-preview-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            animation: zoomIn 0.3s;
+        }
+        
+        .image-preview-content img {
+            width: 100%;
+            height: auto;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .image-preview-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .image-preview-close:hover,
+        .image-preview-close:focus {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .image-preview-info {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.8); }
+            to { transform: scale(1); }
+        }
+        
+        /* Edit Image Modal */
+        .edit-image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9998;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .edit-image-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .edit-image-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -204,6 +362,48 @@
             </div>
         </div>
     </nav>
+
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="image-preview-modal" onclick="closeImagePreview(event)">
+        <div class="image-preview-content">
+            <span class="image-preview-close" onclick="closeImagePreview(event)">&times;</span>
+            <img id="previewModalImage" src="" alt="Preview">
+            <div class="image-preview-info">
+                <strong id="previewModalTitle"></strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Image Modal -->
+    <div id="editImageModal" class="edit-image-modal">
+        <div class="edit-image-modal-content">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Edit <span id="editLanguageName"></span> Image
+                </h5>
+                <button type="button" class="btn-close" onclick="closeEditModal()"></button>
+            </div>
+            <div class="mb-3">
+                <p class="text-muted mb-2">Date: <strong id="editPromotionDate"></strong></p>
+                <p class="text-muted">Language: <strong id="editPromotionLanguage"></strong></p>
+            </div>
+            <div class="mb-3">
+                <label for="editImageInput" class="form-label">Select new image:</label>
+                <input type="file" class="form-control" id="editImageInput" accept="image/*">
+                <small class="text-muted">PNG, JPG (Max 10MB)</small>
+            </div>
+            <div id="editImagePreview" class="text-center mb-3" style="display: none;">
+                <img id="editPreviewImg" src="" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-secondary flex-fill" onclick="closeEditModal()">Cancel</button>
+                <button type="button" class="btn btn-primary flex-fill" id="saveEditBtn" onclick="saveEditedImage()" disabled>
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div class="container-fluid mb-5" style="margin-top: 80px;">
         <!-- Upload Section -->
@@ -566,6 +766,7 @@
             promotions.forEach(promo => {
                 const date = new Date(promo.date);
                 const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+                const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
                 
                 const row = document.createElement('tr');
                 let rowHTML = `
@@ -573,14 +774,30 @@
                     <td><span class="text-muted small">${promo.about || '-'}</span></td>
                 `;
                 
-                // Add language status
+                // Add language status with edit and preview buttons
                 languages.forEach(lang => {
                     const isAvailable = promo.languages[lang.code]?.available;
                     rowHTML += `
-                        <td class="text-center">
+                        <td class="text-center language-status-cell">
                             ${isAvailable ? 
-                                `<i class="fas fa-check-circle text-success" title="Uploaded"></i>` : 
-                                `<i class="fas fa-times-circle text-muted" title="Not uploaded"></i>`
+                                `<div class="language-actions">
+                                    <button class="btn btn-sm btn-preview-image" 
+                                            onclick="previewImage('${dateString}', '${lang.code}', '${lang.name}')"
+                                            title="Preview ${lang.name} image">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-edit-image" 
+                                            onclick="editImage('${dateString}', '${lang.code}', '${lang.name}', '${promo.about || ''}')"
+                                            title="Edit ${lang.name} image">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>` : 
+                                `<button class="btn btn-sm btn-secondary" 
+                                        onclick="editImage('${dateString}', '${lang.code}', '${lang.name}', '${promo.about || ''}')"
+                                        title="Upload ${lang.name} image"
+                                        style="font-size: 0.7rem; padding: 4px 8px;">
+                                    <i class="fas fa-upload"></i>
+                                </button>`
                             }
                         </td>
                     `;
@@ -589,7 +806,7 @@
                 // Actions
                 rowHTML += `
                     <td>
-                        <button class="btn btn-sm btn-danger" onclick="deletePromotion('${promo._id}')">
+                        <button class="btn btn-sm btn-danger" onclick="deletePromotion('${dateString}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -601,13 +818,13 @@
         }
         
         // Delete promotion
-        async function deletePromotion(promotionId) {
-            if (!confirm('Are you sure you want to delete this promotion?')) {
+        async function deletePromotion(dateString) {
+            if (!confirm('Are you sure you want to delete this promotion? This will remove all language versions for this date.')) {
                 return;
             }
             
             try {
-                const response = await fetch(`${API_BASE_URL}/promotions/${promotionId}`, {
+                const response = await fetch(`${API_BASE_URL}/promotions/${dateString}`, {
                     method: 'DELETE'
                 });
                 
@@ -624,6 +841,155 @@
                 alert('Error deleting promotion. Please try again.');
             }
         }
+        
+        // Preview image in modal
+        function previewImage(dateString, languageCode, languageName) {
+            const modal = document.getElementById('imagePreviewModal');
+            const img = document.getElementById('previewModalImage');
+            const title = document.getElementById('previewModalTitle');
+            
+            // Set image source
+            img.src = `${API_BASE_URL}/promotions/image/${dateString}/${languageCode}`;
+            title.textContent = `${languageName} - ${dateString}`;
+            
+            // Show modal
+            modal.classList.add('show');
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close image preview modal
+        function closeImagePreview(event) {
+            const modal = document.getElementById('imagePreviewModal');
+            const content = document.querySelector('.image-preview-content');
+            
+            // Only close if clicking outside the image
+            if (event.target === modal || event.target.classList.contains('image-preview-close')) {
+                modal.classList.remove('show');
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // Edit image - open edit modal
+        let currentEditData = null;
+        
+        function editImage(dateString, languageCode, languageName, about) {
+            currentEditData = {
+                date: dateString,
+                language: languageCode,
+                languageName: languageName,
+                about: about
+            };
+            
+            // Set modal content
+            document.getElementById('editLanguageName').textContent = languageName;
+            document.getElementById('editPromotionDate').textContent = dateString;
+            document.getElementById('editPromotionLanguage').textContent = languageName;
+            
+            // Reset input
+            document.getElementById('editImageInput').value = '';
+            document.getElementById('editImagePreview').style.display = 'none';
+            document.getElementById('saveEditBtn').disabled = true;
+            
+            // Show modal
+            document.getElementById('editImageModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editImageModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            currentEditData = null;
+        }
+        
+        // Handle file selection in edit modal
+        document.getElementById('editImageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (!file) {
+                document.getElementById('editImagePreview').style.display = 'none';
+                document.getElementById('saveEditBtn').disabled = true;
+                return;
+            }
+            
+            // Validate file size
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                event.target.value = '';
+                document.getElementById('saveEditBtn').disabled = true;
+                return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editPreviewImg').src = e.target.result;
+                document.getElementById('editImagePreview').style.display = 'block';
+                document.getElementById('saveEditBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Save edited image
+        async function saveEditedImage() {
+            if (!currentEditData) return;
+            
+            const fileInput = document.getElementById('editImageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image');
+                return;
+            }
+            
+            const saveBtn = document.getElementById('saveEditBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+            
+            try {
+                // Create form data
+                const formData = new FormData();
+                formData.append('date', currentEditData.date);
+                formData.append('language', currentEditData.language);
+                formData.append('image', file);
+                formData.append('uploadedBy', 'admin');
+                formData.append('about', currentEditData.about);
+                
+                console.log(`📤 Updating ${currentEditData.language} for ${currentEditData.date}`);
+                
+                // Upload to server
+                const response = await fetch(`${API_BASE_URL}/promotions/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ ${currentEditData.languageName} image updated successfully!`);
+                    closeEditModal();
+                    loadExistingPromotions();
+                } else {
+                    throw new Error(data.message || 'Failed to update image');
+                }
+            } catch (error) {
+                console.error('Error updating image:', error);
+                alert('Error updating image. Please try again.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
+            }
+        }
+        
+        // Close modals on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImagePreview({ target: document.getElementById('imagePreviewModal') });
+                closeEditModal();
+            }
+        });
     </script>
 </body>
 </html>
