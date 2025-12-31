@@ -8,7 +8,14 @@
     "build": "bash build.sh",
     "start": "npx serve ."
   },
-  "keywords": ["admin", "channel-partner", "instantlly"],
+  "keywords": [
+    "admin",
+    "channel-partner",
+    "instantlly"
+  ],
   "author": "InstantllyCards",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^9.1.1"
+  }
 }

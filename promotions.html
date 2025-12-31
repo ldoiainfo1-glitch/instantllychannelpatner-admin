@@ -565,6 +565,9 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Performance Utilities -->
+    <script src="js/performance.js"></script>
+    
     <script>
         const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
         const languages = [
@@ -700,14 +703,18 @@
             
             const btn = document.getElementById('uploadAllBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+            
+            const totalFiles = uploadedFiles.size;
+            let successCount = 0;
+            let failCount = 0;
+            let currentFile = 0;
             
             try {
-                let successCount = 0;
-                let failCount = 0;
-                
-                // Upload each language separately
+                // Upload each language separately with progress
                 for (const [langCode, file] of uploadedFiles) {
+                    currentFile++;
+                    btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Uploading ${currentFile}/${totalFiles}...`;
+                    
                     const formData = new FormData();
                     formData.append('date', date);
                     formData.append('language', langCode);
@@ -715,14 +722,7 @@
                     formData.append('uploadedBy', 'admin');
                     formData.append('about', about);
                     
-                    console.log(`📤 Uploading ${langCode}:`, {
-                        date: date,
-                        language: langCode,
-                        fileName: file.name,
-                        fileSize: file.size,
-                        fileType: file.type,
-                        about: about
-                    });
+                    console.log(`📤 Uploading ${langCode} (${currentFile}/${totalFiles})`);
                     
                     try {
                         const response = await fetch(`${API_BASE_URL}/promotions/upload`, {
@@ -731,33 +731,26 @@
                         });
                         
                         const responseData = await response.json();
-                        console.log(`📥 Response for ${langCode}:`, responseData);
                         
                         if (response.ok) {
                             successCount++;
                             console.log(`✅ Uploaded ${langCode} successfully`);
                         } else {
                             failCount++;
-                            console.error(`❌ Failed to upload ${langCode}:`, {
-                                status: response.status,
-                                statusText: response.statusText,
-                                error: responseData
-                            });
+                            console.error(`❌ Failed to upload ${langCode}:`, responseData);
                         }
                     } catch (error) {
                         failCount++;
                         console.error(`❌ Error uploading ${langCode}:`, error);
-                        console.error(`❌ Error details:`, {
-                            name: error.name,
-                            message: error.message,
-                            stack: error.stack
-                        });
                     }
                 }
                 
                 // Show results
                 if (successCount > 0) {
                     alert(`Successfully uploaded ${successCount} promotion(s)!${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+                    
+                    // Clear cache for promotions
+                    apiCache.clear('promotions');
                     
                     // Reset form
                     uploadedFiles.clear();
@@ -768,11 +761,6 @@
                 }
             } catch (error) {
                 console.error('Error uploading promotions:', error);
-                console.error('Error details:', {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack
-                });
                 alert('Error uploading promotions. Please try again.');
             } finally {
                 btn.disabled = false;
@@ -780,11 +768,25 @@
             }
         }
         
-        // Load existing promotions
+        // Load existing promotions with caching
         async function loadExistingPromotions() {
+            const tbody = document.getElementById('existingPromotionsTable');
+            
+            // Show loading state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="15" class="text-center text-muted py-4">
+                        <div class="spinner-border text-primary mb-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading promotions...</p>
+                    </td>
+                </tr>
+            `;
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/promotions/admin/all`);
-                const data = await response.json();
+                // Use cached fetch with 5-minute TTL
+                const data = await cachedFetch(`${API_BASE_URL}/promotions/admin/all`, {}, 300000);
                 
                 if (data.success && data.promotions) {
                     displayExistingPromotions(data.promotions);
@@ -793,11 +795,14 @@
                 }
             } catch (error) {
                 console.error('Error loading promotions:', error);
-                document.getElementById('existingPromotionsTable').innerHTML = `
+                tbody.innerHTML = `
                     <tr>
-                        <td colspan="14" class="text-center text-danger py-4">
+                        <td colspan="15" class="text-center text-danger py-4">
                             <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                             <p>Error loading promotions</p>
+                            <button class="btn btn-sm btn-primary mt-2" onclick="loadExistingPromotions()">
+                                <i class="fas fa-redo me-1"></i> Retry
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -891,6 +896,10 @@
                 
                 if (data.success) {
                     alert('Promotion deleted successfully');
+                    
+                    // Clear cache for promotions
+                    apiCache.clear('promotions');
+                    
                     loadExistingPromotions();
                 } else {
                     throw new Error(data.message || 'Failed to delete promotion');
@@ -1054,6 +1063,10 @@
                 
                 if (data.success) {
                     alert(`✅ ${currentEditData.languageName} image updated successfully!`);
+                    
+                    // Clear cache for promotions
+                    apiCache.clear('promotions');
+                    
                     closeEditModal();
                     loadExistingPromotions();
                 } else {
