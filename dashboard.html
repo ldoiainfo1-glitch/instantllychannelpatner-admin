@@ -1548,6 +1548,11 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing...';
             
             try {
+                const token = localStorage.getItem('channelPartnerToken');
+                if (!token) {
+                    throw new Error('Not authenticated');
+                }
+                
                 const response = await fetch(`${API_BASE_URL}/admin/sync-position-ids`, {
                     method: 'POST',
                     headers: {
