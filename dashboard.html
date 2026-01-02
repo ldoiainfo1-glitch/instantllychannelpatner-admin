@@ -324,6 +324,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <button class="btn btn-info btn-sm ms-2" id="syncPositionIdsBtn" style="color: white;">
+                            <i class="fas fa-database me-1"></i>Sync IDs
+                        </button>
+                    </li>
+                    <li class="nav-item">
                         <button class="btn btn-danger btn-sm ms-2" id="logoutBtn" style="color: white;">
                             <i class="fas fa-sign-out-alt me-1"></i>Logout
                         </button>
@@ -1527,6 +1532,51 @@
             e.preventDefault();
             loadAdminData();
             showNotification('Data refreshed', 'info');
+        });
+
+        // Sync Position IDs button
+        document.getElementById('syncPositionIdsBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (!confirm('This will sync all Position IDs to match approved Application IDs. Continue?')) {
+                return;
+            }
+            
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/sync-position-ids`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const { stats } = data;
+                    showNotification(
+                        `✅ Sync Complete!\n\nUpdated: ${stats.updated}\nSkipped: ${stats.skipped}\nErrors: ${stats.errors}`,
+                        'success'
+                    );
+                    
+                    // Refresh data
+                    await loadAdminData();
+                } else {
+                    throw new Error(data.error || 'Sync failed');
+                }
+            } catch (error) {
+                console.error('Error syncing position IDs:', error);
+                showNotification('❌ Error: ' + error.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
         });
 
         // Logout button
