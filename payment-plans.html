@@ -852,15 +852,10 @@
         function updatePayAmount(index, input) {
             let value = parseAmount(input.value);
             
-            // Fallback to stored value if parse failed
-            if (value === 0) {
-                value = parseInt(input.getAttribute('data-value'));
-            }
-            
-            // Ensure value is valid
-            if (isNaN(value) || value === 0) {
-                alert('Please enter a valid amount (e.g., 90000)');
-                value = parseInt(input.getAttribute('data-value'));
+            // Ensure value is valid (allow zero)
+            if (isNaN(value) || value < 0) {
+                alert('Please enter a valid amount (0 or greater)');
+                value = parseInt(input.getAttribute('data-value')) || 0;
             }
             
             // Update investment amount
@@ -880,13 +875,10 @@
         function updateCreditAmount(index, input) {
             let value = parseAmount(input.value);
             
-            if (value === 0) {
-                value = parseInt(input.getAttribute('data-value'));
-            }
-            
-            if (isNaN(value) || value === 0) {
-                alert('Please enter a valid amount (e.g., 600000)');
-                value = parseInt(input.getAttribute('data-value'));
+            // Ensure value is valid (allow zero)
+            if (isNaN(value) || value < 0) {
+                alert('Please enter a valid amount (0 or greater)');
+                value = parseInt(input.getAttribute('data-value')) || 0;
             }
             
             paymentPlans[index].credit = value;
