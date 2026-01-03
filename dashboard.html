@@ -804,6 +804,9 @@
                                 <th>Email</th>
                                 <th>Plan</th>
                                 <th>Credits</th>
+                                <th>Cash Given</th>
+                                <th>Credits Given</th>
+                                <th>Commission Get</th>
                                 <th>Position</th>
                                 <th>Applied</th>
                                 <th style="width: 280px;">Actions</th>
@@ -817,6 +820,14 @@
                 const photoUrl = app.applicantInfo.photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
                 const plan = app.payment && app.payment.selectedTier ? `₹${app.payment.selectedTier.pay ? app.payment.selectedTier.pay.toLocaleString('en-IN') : 'N/A'}` : 'N/A';
                 const credits = app.payment && app.payment.selectedTier ? (app.payment.selectedTier.credit ? app.payment.selectedTier.credit.toLocaleString('en-IN') : 'N/A') : 'N/A';
+                
+                // Calculate Cash Given and Credits Given from payment
+                const cashGiven = app.cashCreditsGiven || (app.payment && app.payment.selectedTier ? (app.payment.selectedTier.pay || 0) : 0);
+                const creditsGiven = app.extraCreditsGiven || (app.payment && app.payment.selectedTier ? (app.payment.selectedTier.credit || 0) : 0);
+                
+                // Calculate Commission
+                const totalCommission = app.commissionsEarned || 0;
+                const commissionCount = app.commissionsDetails ? app.commissionsDetails.length : 0;
                 
                 let actionButtons = '';
                 if (status === 'pending') {
@@ -876,6 +887,16 @@
                         <td><small>${app.applicantInfo.email || '-'}</small></td>
                         <td>${plan}</td>
                         <td>${credits}</td>
+                        <td><span class="badge bg-success">${cashGiven.toLocaleString('en-IN')}</span></td>
+                        <td><span class="badge bg-info text-white">${creditsGiven.toLocaleString('en-IN')}</span></td>
+                        <td>
+                            ${totalCommission > 0 ? `
+                                <button class="btn btn-sm btn-warning" onclick="showCommissionDetails('${app._id}', '${app.applicantInfo.name}')" title="View Commission Details">
+                                    ₹${totalCommission.toLocaleString('en-IN')}
+                                    ${commissionCount > 0 ? `<span class="badge bg-danger ms-1">${commissionCount}</span>` : ''}
+                                </button>
+                            ` : '<span class="text-muted">₹0</span>'}
+                        </td>
                         <td><small>${positionTitle}</small></td>
                         <td><small>${new Date(app.appliedDate).toLocaleDateString()}</small></td>
                         <td style="white-space: nowrap;">
@@ -2103,6 +2124,111 @@ Examples:
             } catch (error) {
                 console.error('Error distributing commission:', error);
                 showNotification('Error distributing commission: ' + error.message, 'error');
+            }
+        }
+
+        // Show commission details modal
+        async function showCommissionDetails(applicationId, userName) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/applications/${applicationId}`);
+                
+                if (!response.ok) {
+                    showNotification('Failed to load commission details', 'error');
+                    return;
+                }
+                
+                const application = await response.json();
+                const commissionsDetails = application.commissionsDetails || [];
+                const totalCommission = application.commissionsEarned || 0;
+                
+                let detailsHTML = '';
+                if (commissionsDetails.length === 0) {
+                    detailsHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>No commissions received yet
+                        </div>
+                    `;
+                } else {
+                    detailsHTML = `
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>From User</th>
+                                        <th>Position</th>
+                                        <th>Level</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    commissionsDetails.forEach(comm => {
+                        const date = new Date(comm.date || comm.distributedAt).toLocaleDateString();
+                        const fromUser = comm.fromUserName || comm.fromUser || 'Unknown';
+                        const position = comm.positionId ? comm.positionId.replace('pos_', '').replace(/-/g, ' ') : 'N/A';
+                        
+                        detailsHTML += `
+                            <tr>
+                                <td><strong>${fromUser}</strong></td>
+                                <td><small>${position}</small></td>
+                                <td><span class="badge bg-primary">${comm.level}</span></td>
+                                <td><span class="badge bg-success">₹${(comm.amount || 0).toLocaleString('en-IN')}</span></td>
+                                <td><small>${date}</small></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    detailsHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="alert alert-success">
+                            <strong>Total Commission Earned:</strong> ₹${totalCommission.toLocaleString('en-IN')}
+                        </div>
+                    `;
+                }
+                
+                const modalHTML = `
+                    <div class="modal fade" id="commissionDetailsModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-percentage me-2"></i>Commission Details - ${userName}
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ${detailsHTML}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fas fa-times me-2"></i>Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if any
+                const existingModal = document.getElementById('commissionDetailsModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('commissionDetailsModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error loading commission details:', error);
+                showNotification('Error loading commission details: ' + error.message, 'error');
             }
         }
     </script>
