@@ -858,6 +858,12 @@
                                             title="Edit ${lang.name} image">
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="deleteLanguagePromotion('${dateString}', '${lang.code}', '${lang.name}')"
+                                            title="Delete ${lang.name} image"
+                                            style="background-color: #dc3545; border-color: #dc3545; color: white;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>` : 
                                 `<button class="btn btn-sm btn-secondary" 
                                         onclick="editImage('${dateString}', '${lang.code}', '${lang.name}', '${promo.about || ''}')"
@@ -910,6 +916,35 @@
             } catch (error) {
                 console.error('Error deleting promotion:', error);
                 alert('Error deleting promotion. Please try again.');
+            }
+        }
+        
+        // Delete individual language promotion
+        async function deleteLanguagePromotion(dateString, languageCode, languageName) {
+            if (!confirm(`Are you sure you want to delete the ${languageName} promotion for ${dateString}?\n\nThis will only delete the ${languageName} version, not other languages.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/promotions/${dateString}/${languageCode}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`${languageName} promotion deleted successfully!`);
+                    
+                    // Clear cache for promotions
+                    apiCache.clear('promotions');
+                    
+                    loadExistingPromotions();
+                } else {
+                    throw new Error(data.message || `Failed to delete ${languageName} promotion`);
+                }
+            } catch (error) {
+                console.error(`Error deleting ${languageName} promotion:`, error);
+                alert(`Error deleting ${languageName} promotion. Please try again.`);
             }
         }
         
