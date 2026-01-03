@@ -3,29 +3,19 @@
   "outputDirectory": "public",
   "headers": [
     {
-      "source": "/css/(.*)",
+      "source": "/api/(.*)",
       "headers": [
         {
-          "key": "Content-Type",
-          "value": "text/css; charset=utf-8"
-        }
-      ]
-    },
-    {
-      "source": "/js/(.*).js",
-      "headers": [
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
         {
-          "key": "Content-Type",
-          "value": "application/javascript; charset=utf-8"
-        }
-      ]
-    },
-    {
-      "source": "/(.*).js",
-      "headers": [
+          "key": "Pragma",
+          "value": "no-cache"
+        },
         {
-          "key": "Content-Type",
-          "value": "application/javascript; charset=utf-8"
+          "key": "Expires",
+          "value": "0"
         }
       ]
     },
@@ -35,6 +25,57 @@
         {
           "key": "Content-Type",
           "value": "text/html; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/css/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/css; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/js/(.*).js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     },
@@ -52,6 +93,10 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }
