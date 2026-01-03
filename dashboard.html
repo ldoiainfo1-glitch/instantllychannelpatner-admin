@@ -701,7 +701,7 @@
                 return;
             }
             
-            container.innerHTML = applications.map(app => createApplicationCard(app, 'pending')).join('');
+            container.innerHTML = createApplicationsTable(applications, 'pending');
         }
 
         function displayApprovedApplications(applications) {
@@ -719,7 +719,7 @@
                 return;
             }
             
-            container.innerHTML = applications.map(app => createApplicationCard(app, 'approved')).join('');
+            container.innerHTML = createApplicationsTable(applications, 'approved');
         }
 
         function displayRejectedApplications(applications) {
@@ -737,7 +737,7 @@
                 return;
             }
             
-            container.innerHTML = applications.map(app => createApplicationCard(app, 'rejected')).join('');
+            container.innerHTML = createApplicationsTable(applications, 'rejected');
         }
 
         // Filter applications based on search input
@@ -787,6 +787,111 @@
             
             // Display filtered results
             displayFunction(filteredApplications);
+        }
+
+        function createApplicationsTable(applications, status) {
+            const statusBadgeClass = status === 'pending' ? 'bg-warning text-dark' :
+                                    status === 'approved' ? 'bg-success' : 'bg-danger';
+            
+            let tableHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">Photo</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Credits</th>
+                                <th>Position</th>
+                                <th>Applied</th>
+                                <th style="width: 280px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            applications.forEach(app => {
+                const positionTitle = app.positionId ? app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ') : 'N/A';
+                const photoUrl = app.applicantInfo.photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
+                const plan = app.payment && app.payment.selectedTier ? `₹${app.payment.selectedTier.pay ? app.payment.selectedTier.pay.toLocaleString('en-IN') : 'N/A'}` : 'N/A';
+                const credits = app.payment && app.payment.selectedTier ? (app.payment.selectedTier.credit ? app.payment.selectedTier.credit.toLocaleString('en-IN') : 'N/A') : 'N/A';
+                
+                let actionButtons = '';
+                if (status === 'pending') {
+                    actionButtons = `
+                        <button class="btn btn-success btn-sm me-1 mb-1" onclick="approveApplication('${app._id}')" title="Approve">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm me-1 mb-1" onclick="rejectApplication('${app._id}')" title="Reject">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                } else if (status === 'approved') {
+                    actionButtons = `
+                        <button class="btn btn-primary btn-sm me-1 mb-1" onclick="editApplication('${app._id}', '${app.applicantInfo.name}', '${app.applicantInfo.phone}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-warning btn-sm me-1 mb-1" onclick="transferPosition('${app._id}', '${app.applicantInfo.name}', '${app.positionId}')" title="Transfer">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        <button class="btn btn-success btn-sm me-1 mb-1" onclick="showGiveCreditsModal('${app._id}', '${app.applicantInfo.name}', '${app.applicantInfo.phone}')" title="Give Credits">
+                            <i class="fas fa-gift"></i>
+                        </button>
+                    `;
+                }
+                
+                actionButtons += `
+                    <button class="btn btn-info btn-sm me-1 mb-1" onclick="viewUserDocuments('${app.applicantInfo.phone}')" title="Documents">
+                        <i class="fas fa-file-alt"></i>
+                    </button>
+                    ${(app.payment && app.payment.paymentScreenshot) ? `
+                        <button class="btn btn-cyan btn-sm me-1 mb-1" onclick="viewPaymentScreenshot('${app._id}', '${app.applicantInfo.name}')" title="Payment" style="background-color: #17a2b8; border-color: #17a2b8; color: white;">
+                            <i class="fas fa-receipt"></i>
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-secondary btn-sm me-1 mb-1" onclick="showCommissionModal('${app._id}', '${app.positionId}', '${app.applicantInfo.name}')" title="Distribute Commission">
+                        <i class="fas fa-percentage"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm mb-1" onclick="deleteApplication('${app._id}', '${app.applicantInfo.name}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                tableHTML += `
+                    <tr>
+                        <td>
+                            <img src="${window.CacheBuster ? window.CacheBuster.addCacheBuster(photoUrl) : photoUrl}" 
+                                 alt="${app.applicantInfo.name}" 
+                                 class="rounded"
+                                 style="width: 50px; height: 50px; object-fit: cover;"
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4='">
+                        </td>
+                        <td>
+                            <strong class="text-primary">${app.applicantInfo.name}</strong>
+                            <br><span class="badge ${statusBadgeClass}">${status.toUpperCase()}</span>
+                        </td>
+                        <td>${app.applicantInfo.phone}</td>
+                        <td><small>${app.applicantInfo.email || '-'}</small></td>
+                        <td>${plan}</td>
+                        <td>${credits}</td>
+                        <td><small>${positionTitle}</small></td>
+                        <td><small>${new Date(app.appliedDate).toLocaleDateString()}</small></td>
+                        <td style="white-space: nowrap;">
+                            ${actionButtons}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            return tableHTML;
         }
 
         function createApplicationCard(app, status) {
