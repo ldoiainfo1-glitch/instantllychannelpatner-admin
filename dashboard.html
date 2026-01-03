@@ -821,9 +821,10 @@
                 const plan = app.payment && app.payment.selectedTier ? `₹${app.payment.selectedTier.pay ? app.payment.selectedTier.pay.toLocaleString('en-IN') : 'N/A'}` : 'N/A';
                 const credits = app.payment && app.payment.selectedTier ? (app.payment.selectedTier.credit ? app.payment.selectedTier.credit.toLocaleString('en-IN') : 'N/A') : 'N/A';
                 
-                // Calculate Cash Given and Credits Given from payment
-                const cashGiven = app.cashCreditsGiven || (app.payment && app.payment.selectedTier ? (app.payment.selectedTier.pay || 0) : 0);
-                const creditsGiven = app.extraCreditsGiven || (app.payment && app.payment.selectedTier ? (app.payment.selectedTier.credit || 0) : 0);
+                // Get actual cash and credits given via admin (not payment tier defaults)
+                // These will be populated when admin uses "Give Credits" feature
+                const cashGiven = app.cashCreditsGiven || app.applicantInfo?.cashCredits || 0;
+                const creditsGiven = app.extraCreditsGiven || app.applicantInfo?.extraCredits || 0;
                 
                 // Calculate Commission
                 const totalCommission = app.commissionsEarned || 0;
@@ -887,8 +888,12 @@
                         <td><small>${app.applicantInfo.email || '-'}</small></td>
                         <td>${plan}</td>
                         <td>${credits}</td>
-                        <td><span class="badge bg-success">${cashGiven.toLocaleString('en-IN')}</span></td>
-                        <td><span class="badge bg-info text-white">${creditsGiven.toLocaleString('en-IN')}</span></td>
+                        <td>
+                            ${cashGiven > 0 ? `<span class="badge bg-success">₹${cashGiven.toLocaleString('en-IN')}</span>` : '<span class="text-muted">-</span>'}
+                        </td>
+                        <td>
+                            ${creditsGiven > 0 ? `<span class="badge bg-info text-white">${creditsGiven.toLocaleString('en-IN')}</span>` : '<span class="text-muted">-</span>'}
+                        </td>
                         <td>
                             ${totalCommission > 0 ? `
                                 <button class="btn btn-sm btn-warning" onclick="showCommissionDetails('${app._id}', '${app.applicantInfo.name}')" title="View Commission Details">
