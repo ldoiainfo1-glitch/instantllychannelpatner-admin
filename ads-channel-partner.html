@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Advertisements - Instantly Cards</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .container {
+            margin-top: 100px;
+            margin-bottom: 40px;
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 2rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            border: none;
+            padding: 1rem 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #667eea;
+            border-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #667eea;
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e9ecef;
+            padding: 1.5rem;
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background-color: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background-color: #f0f2ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background-color: #e8ebff;
+            border-color: #5568d3;
+            transform: scale(1.01);
+        }
+
+        .image-preview-container {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .image-preview {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .image-preview .remove-image:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .image-preview .image-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.3rem;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .table {
+            background-color: white;
+        }
+
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .ad-image {
+            max-width: 80px;
+            max-height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .ad-image:hover {
+            transform: scale(1.5);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .modal-header {
+            border-bottom: none;
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            border-top: none;
+            padding: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="profile.html">
+                <img src="img/logo.png" alt="Logo" height="40" class="me-2" onerror="this.style.display='none'">
+                <span>Instantly Cards</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="profile.html">
+                            <i class="fas fa-user-circle me-1"></i>Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="ads.html">
+                            <i class="fas fa-bullhorn me-1"></i>My Ads
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm ms-2" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h2 class="mb-4">
+            <i class="fas fa-bullhorn me-2 text-primary"></i>My Advertisements
+        </h2>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#myAdsTab">
+                    <i class="fas fa-list me-2"></i>My Ads
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#createTab">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Ad
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- My Ads Tab -->
+            <div class="tab-pane fade" id="myAdsTab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-ad me-2"></i>All My Advertisements
+                        </h5>
+                        <button class="btn btn-primary btn-sm" onclick="loadMyAds()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Sr</th>
+                                        <th>Images</th>
+                                        <th>Title</th>
+                                        <th>Phone</th>
+                                        <th>Schedule</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adsTableBody">
+                                    <tr>
+                                        <td colspan="7">
+                                            <div class="empty-state">
+                                                <i class="fas fa-spinner fa-spin"></i>
+                                                <p>Loading your advertisements...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Ad Tab -->
+            <div class="tab-pane fade show active" id="createTab">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0 text-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Create New Advertisement
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="adUploadForm">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">
+                                        Advertisement Title <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="adTitle" 
+                                           placeholder="e.g., Summer Sale 2024" required>
+                                </div>
+
+                                <!-- Media Type Selection -->
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-photo-video me-1"></i>Media Type <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="mediaType" id="mediaImage" value="image" checked>
+                                        <label class="btn btn-outline-primary" for="mediaImage">
+                                            <i class="fas fa-image me-2"></i>Image
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="mediaType" id="mediaVideo" value="video">
+                                        <label class="btn btn-outline-primary" for="mediaVideo">
+                                            <i class="fas fa-video me-2"></i>Video
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Select whether your advertisement is an image or video</small>
+                                </div>
+
+                                <div class="col-12 mb-4" id="bottomBannerSection">
+                                    <label class="form-label">
+                                        <i class="fas fa-mobile-alt me-1"></i>Bottom Banner Image (Required)
+                                    </label>
+                                    <p class="text-muted small mb-2">
+                                        This image appears in the bottom carousel. Recommended size: <strong>624 × 174 pixels</strong>
+                                    </p>
+                                    <div class="upload-area" id="bottomBannerArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                        <h5>Drag & Drop Bottom Banner Here</h5>
+                                        <p class="text-muted mb-3">or click to browse</p>
+                                        <input type="file" id="bottomBannerInput" accept="image/*" hidden>
+                                        <button type="button" class="btn btn-primary" 
+                                                onclick="document.getElementById('bottomBannerInput').click()">
+                                            <i class="fas fa-folder-open me-2"></i>Choose File
+                                        </button>
+                                    </div>
+                                    <div id="bottomBannerPreview"></div>
+                                </div>
+
+                                <div class="col-12 mb-4" id="fullscreenSection">
+                                    <label class="form-label" id="fullscreenLabel">
+                                        <i class="fas fa-expand me-1"></i>Fullscreen Image (Optional)
+                                    </label>
+                                    <p class="text-muted small mb-2" id="fullscreenHint">
+                                        This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong>
+                                    </p>
+                                    <div class="alert alert-warning py-2 px-3 d-flex align-items-center" style="font-size: 0.9rem;" id="fullscreenInfo">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        If not provided, users will see Call/Message/Cancel buttons when they tap the banner.
+                                    </div>
+                                    <div class="upload-area" id="fullscreenArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                        <h5 id="fullscreenTitle">Drag & Drop Fullscreen Image Here</h5>
+                                        <p class="text-muted mb-3">or click to browse</p>
+                                        <input type="file" id="fullscreenInput" accept="image/*,video/*" hidden>
+                                        <button type="button" class="btn btn-primary" 
+                                                onclick="document.getElementById('fullscreenInput').click()">
+                                            <i class="fas fa-folder-open me-2"></i>Choose File
+                                        </button>
+                                    </div>
+                                    <div id="fullscreenPreview"></div>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-phone me-1"></i>Phone Number (for Call/Message buttons) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="tel" class="form-control" id="phoneNumber" 
+                                           placeholder="+919876543210" required>
+                                    <small class="text-muted">Used for Call/Message buttons in the mobile app</small>
+                                </div>
+
+                                <!-- Duration Selection -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-calendar-alt me-1"></i>Advertisement Duration <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="adDuration" required onchange="updatePrice()">
+                                        <option value="">Select duration...</option>
+                                        <option value="1">1 Month</option>
+                                        <option value="2">2 Months</option>
+                                        <option value="3">3 Months</option>
+                                        <option value="4">4 Months</option>
+                                        <option value="5">5 Months</option>
+                                        <option value="6">6 Months</option>
+                                        <option value="12">12 Months (1 Year)</option>
+                                    </select>
+                                    <small class="text-muted">Select how long you want your ad to run</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-coins me-1"></i>Total Cost <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control bg-light" id="adCost" value="₹0 (0 credits)" readonly>
+                                    <small class="text-muted">₹1200 per month (1200 credits)</small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="startDate" required onchange="updateEndDate()">
+                                    <small class="text-muted">Your ad will start on this date</small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>End Date:</strong> <span id="endDateDisplay">Select start date and duration</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="btn btn-success btn-lg px-5">
+                                        <i class="fas fa-paper-plane me-2"></i>Upload Advertisement
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-lg px-4 ms-2" onclick="clearForm()">
+                                        <i class="fas fa-times me-2"></i>Clear Form
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Reason Modal -->
+    <div class="modal fade" id="rejectionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-circle me-2"></i>Rejection Reason
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="rejectionReasonText"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Advertisement Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid" alt="Advertisement">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const BACKEND_URL = 'https://instantlly-cards-backend.onrender.com';
+        const API_BASE_URL = `${BACKEND_URL}/api`;
+
+        let myAds = [];
+        let bottomBannerFile = null;
+        let fullscreenFile = null;
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Ads page initializing...');
+            checkAuth();
+            loadMyAds();
+            setupUploadAreas();
+            setupFormSubmit();
+            
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').min = today;
+            console.log('📅 Minimum start date set to:', today);
+
+            // Add event listeners for media type radio buttons
+            document.querySelectorAll('input[name="mediaType"]').forEach(radio => {
+                radio.addEventListener('change', updateMediaType);
+                console.log('🔘 Media type listener added for:', radio.value);
+            });
+
+            // Initialize media type sections
+            updateMediaType();
+            console.log('✅ Ads page initialization complete');
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'profile.html';
+                return;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = 'profile.html';
+        }
+
+        function setupUploadAreas() {
+            // Bottom Banner Setup
+            setupUploadArea(
+                'bottomBannerArea',
+                'bottomBannerInput',
+                'bottomBannerPreview',
+                (file) => { bottomBannerFile = file; },
+                'Bottom Banner'
+            );
+
+            // Fullscreen Setup
+            setupUploadArea(
+                'fullscreenArea',
+                'fullscreenInput',
+                'fullscreenPreview',
+                (file) => { fullscreenFile = file; },
+                'Fullscreen'
+            );
+        }
+
+        function setupUploadArea(areaId, inputId, previewId, setFileCallback, label) {
+            console.log('📁 Setting up upload area:', label);
+            const area = document.getElementById(areaId);
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+
+            area.addEventListener('click', () => {
+                console.log('🖱️ Upload area clicked:', label);
+                input.click();
+            });
+
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    setFileCallback(file);
+                    displayPreview(file, preview, label, () => {
+                        setFileCallback(null);
+                    });
+                }
+            });
+
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('📎 File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+                    setFileCallback(file);
+                    displayPreview(file, preview, label, () => {
+                        console.log('🗑️ File removed:', label);
+                        setFileCallback(null);
+                        input.value = '';
+                    });
+                }
+            });
+        }
+
+        function displayPreview(file, previewElement, label, onRemove) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewElement.innerHTML = `
+                    <div class="image-preview-container">
+                        <div class="image-preview">
+                            <img src="${e.target.result}" alt="${label}">
+                            <div class="image-label">${label}</div>
+                            <button type="button" class="remove-image" onclick="event.stopPropagation(); this.parentElement.parentElement.remove(); (${onRemove})()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Price calculation based on duration
+        function updatePrice() {
+            console.log('💰 updatePrice() called');
+            const durationSelect = document.getElementById('adDuration');
+            const costInput = document.getElementById('adCost');
+            const duration = parseInt(durationSelect.value) || 0;
+            console.log('📊 Selected duration:', duration, 'months');
+            
+            if (duration > 0) {
+                const totalCost = duration * 1200;
+                console.log('💵 Calculated cost:', totalCost, 'rupees/credits');
+                costInput.value = `₹${totalCost.toLocaleString()} (${totalCost.toLocaleString()} credits)`;
+                console.log('✅ Cost field updated:', costInput.value);
+                // Update end date when duration changes
+                updateEndDate();
+            } else {
+                console.log('⚠️ No duration selected, resetting cost');
+                costInput.value = '₹0 (0 credits)';
+                document.getElementById('endDateDisplay').textContent = 'Select start date and duration';
+            }
+        }
+
+        // Auto-calculate end date based on start date + duration
+        function updateEndDate() {
+            console.log('📅 updateEndDate() called');
+            const startDateInput = document.getElementById('startDate');
+            const durationSelect = document.getElementById('adDuration');
+            const endDateDisplay = document.getElementById('endDateDisplay');
+            
+            const startDate = startDateInput.value;
+            const duration = parseInt(durationSelect.value) || 0;
+            console.log('📆 Start date:', startDate);
+            console.log('📊 Duration:', duration, 'months');
+            
+            if (startDate && duration > 0) {
+                const start = new Date(startDate);
+                const end = new Date(start);
+                end.setMonth(end.getMonth() + duration);
+                console.log('🎯 Calculated end date:', end.toISOString());
+                
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const endDateFormatted = end.toLocaleDateString('en-IN', options);
+                console.log('✅ Formatted end date:', endDateFormatted);
+                
+                endDateDisplay.innerHTML = `<strong>${endDateFormatted}</strong> <span class="text-muted">(${duration} month${duration > 1 ? 's' : ''} from start date)</span>`;
+            } else {
+                console.log('⚠️ Missing start date or duration');
+                endDateDisplay.textContent = 'Select start date and duration';
+            }
+        }
+
+        // Update media type sections based on selection
+        function updateMediaType() {
+            console.log('🎬 updateMediaType() called');
+            const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
+            console.log('📺 Selected media type:', mediaType);
+            
+            const fullscreenInput = document.getElementById('fullscreenInput');
+            const fullscreenLabel = document.getElementById('fullscreenLabel');
+            const fullscreenHint = document.getElementById('fullscreenHint');
+            const fullscreenTitle = document.getElementById('fullscreenTitle');
+            
+            if (mediaType === 'video') {
+                console.log('🎥 Switching to video mode');
+                fullscreenInput.accept = 'video/*';
+                fullscreenLabel.innerHTML = '<i class="fas fa-video me-1"></i>Fullscreen Video (Optional)';
+                fullscreenHint.innerHTML = 'This video appears when user taps the bottom banner. Recommended size: <strong>MP4 format, max 50MB</strong>';
+                fullscreenTitle.textContent = 'Drag & Drop Fullscreen Video Here';
+                console.log('✅ Video mode applied');
+            } else {
+                console.log('🖼️ Switching to image mode');
+                fullscreenInput.accept = 'image/*';
+                fullscreenLabel.innerHTML = '<i class="fas fa-expand me-1"></i>Fullscreen Image (Optional)';
+                fullscreenHint.innerHTML = 'This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong>';
+                fullscreenTitle.textContent = 'Drag & Drop Fullscreen Image Here';
+                console.log('✅ Image mode applied');
+            }
+        }
+
+        function setupFormSubmit() {
+            const form = document.getElementById('adUploadForm');
+            console.log('📝 Form submit handler attached');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('🚀 Form submission started');
+
+                if (!bottomBannerFile) {
+                    console.error('❌ No bottom banner file selected');
+                    alert('Please select at least the bottom banner image (required)');
+                    return;
+                }
+                console.log('✅ Bottom banner file present:', bottomBannerFile?.name);
+
+                // Validate duration selection
+                const duration = parseInt(document.getElementById('adDuration').value);
+                console.log('📊 Duration value:', duration);
+                if (!duration || duration < 1) {
+                    console.error('❌ Invalid duration');
+                    alert('Please select advertisement duration');
+                    return;
+                }
+
+                // Calculate end date
+                const startDate = new Date(document.getElementById('startDate').value);
+                const endDate = new Date(startDate);
+                endDate.setMonth(endDate.getMonth() + duration);
+                console.log('📅 Calculated dates - Start:', startDate, 'End:', endDate);
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalHTML = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+
+                const formData = new FormData();
+                const title = document.getElementById('adTitle').value;
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const startDateValue = document.getElementById('startDate').value;
+                const endDateValue = endDate.toISOString().split('T')[0];
+                const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
+                const cost = duration * 1200;
+                
+                console.log('📋 Form data to submit:');
+                console.log('  - Title:', title);
+                console.log('  - Phone:', phoneNumber);
+                console.log('  - Start Date:', startDateValue);
+                console.log('  - End Date:', endDateValue);
+                console.log('  - Duration:', duration, 'months');
+                console.log('  - Media Type:', mediaType);
+                console.log('  - Cost:', cost, 'credits');
+                console.log('  - Bottom Banner:', bottomBannerFile?.name);
+                console.log('  - Fullscreen:', fullscreenFile?.name || 'None');
+                
+                formData.append('title', title);
+                formData.append('phoneNumber', phoneNumber);
+                formData.append('startDate', startDateValue);
+                formData.append('endDate', endDateValue); // Auto-calculated end date
+                formData.append('duration', duration); // Add duration field
+                formData.append('mediaType', mediaType); // Add media type
+                formData.append('cost', cost); // Add cost field
+
+                if (bottomBannerFile) {
+                    formData.append('images', bottomBannerFile);
+                }
+                if (fullscreenFile) {
+                    formData.append('images', fullscreenFile);
+                }
+
+                const token = localStorage.getItem('authToken');
+                console.log('🔑 Auth token present:', !!token);
+
+                try {
+                    console.log('📤 Sending POST request to:', `${API_BASE_URL}/channel-partner/ads`);
+                    const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    console.log('📥 Response status:', response.status, response.statusText);
+
+                    const data = await response.json();
+                    console.log('📦 Response data:', data);
+
+                    if (response.ok) {
+                        console.log('✅ Advertisement uploaded successfully!');
+                        alert('Advertisement uploaded successfully! Awaiting admin approval.');
+                        clearForm();
+                        loadMyAds();
+                        // Switch to My Ads tab
+                        document.querySelector('[data-bs-target="#myAdsTab"]').click();
+                    } else {
+                        console.error('❌ Upload failed:', data.message);
+                        alert(`Error: ${data.message || 'Failed to upload advertisement'}`);
+                    }
+                } catch (error) {
+                    console.error('💥 Upload error:', error);
+                    console.error('Error details:', error.message, error.stack);
+                    alert('Failed to upload advertisement. Please try again.');
+                } finally {
+                    console.log('🔄 Resetting submit button');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                }
+            });
+        }
+
+        function clearForm() {
+            console.log('🧹 Clearing form...');
+            document.getElementById('adUploadForm').reset();
+            document.getElementById('bottomBannerPreview').innerHTML = '';
+            document.getElementById('fullscreenPreview').innerHTML = '';
+            bottomBannerFile = null;
+            fullscreenFile = null;
+            console.log('🗑️ File references cleared');
+            
+            // Reset calculated fields
+            document.getElementById('adCost').value = '₹0 (0 credits)';
+            document.getElementById('endDateDisplay').textContent = 'Select start date and duration';
+            console.log('💰 Calculated fields reset');
+            
+            // Reset to default media type
+            document.getElementById('mediaImage').checked = true;
+            updateMediaType();
+            console.log('✅ Form cleared successfully');
+        }
+
+        async function loadMyAds() {
+            const token = localStorage.getItem('authToken');
+            const tableBody = document.getElementById('adsTableBody');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    myAds = data.ads || [];
+                    
+                    if (myAds.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>No advertisements yet. Create your first ad!</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        renderAdsTable();
+                    }
+                } else {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                    <p>Error loading advertisements</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Load error:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                <p>Network error. Please try again.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderAdsTable() {
+            const tableBody = document.getElementById('adsTableBody');
+            
+            tableBody.innerHTML = myAds.map((ad, index) => {
+                const statusClass = ad.status === 'approved' ? 'status-approved' : 
+                                   ad.status === 'rejected' ? 'status-rejected' : 'status-pending';
+                const statusIcon = ad.status === 'approved' ? 'check-circle' : 
+                                  ad.status === 'rejected' ? 'times-circle' : 'clock';
+
+                const startDate = new Date(ad.startDate).toLocaleDateString();
+                const endDate = new Date(ad.endDate).toLocaleDateString();
+
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                ${ad.bottomImageId || ad.bottomImageGridFS ? `
+                                    <div>
+                                        <small class="text-muted d-block">Bottom</small>
+                                        <img src="${BACKEND_URL}/api/ads/image/${ad.id}/bottom" 
+                                            class="ad-image" 
+                                            onclick="showImageModal('${ad.id}', 'bottom')" 
+                                            title="Bottom Banner"
+                                            style="height: 50px; width: auto; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                                    </div>
+                                ` : ''}
+                                ${ad.fullscreenImageId || ad.fullscreenImageGridFS ? `
+                                    <div>
+                                        <small class="text-muted d-block">Fullscreen</small>
+                                        <img src="${BACKEND_URL}/api/ads/image/${ad.id}/fullscreen" 
+                                            class="ad-image" 
+                                            onclick="showImageModal('${ad.id}', 'fullscreen')" 
+                                            title="Fullscreen"
+                                            style="height: 50px; width: auto; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </td>
+                        <td><strong>${ad.title}</strong></td>
+                        <td>${ad.phoneNumber}</td>
+                        <td>
+                            <small>
+                                <i class="fas fa-calendar-plus me-1 text-success"></i>${startDate}<br>
+                                <i class="fas fa-calendar-minus me-1 text-danger"></i>${endDate}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                <i class="fas fa-${statusIcon}"></i>${ad.status.toUpperCase()}
+                            </span>
+                            ${ad.status === 'rejected' ? `
+                                <button class="btn btn-link text-danger p-0 d-block mt-1 text-decoration-none" 
+                                        onclick="showRejectionReason('${(ad.rejectionReason || 'No reason provided').replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-info-circle me-1"></i>View Reason
+                                </button>
+                            ` : ''}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                ${ad.status === 'pending' ? `
+                                    <button class="btn btn-danger btn-sm" onclick="deleteAd('${ad.id}')">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                ` : `
+                                    <span class="text-muted">
+                                        <i class="fas fa-lock me-1"></i>Locked
+                                    </span>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showImageModal(adId, type) {
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = `${BACKEND_URL}/api/ads/image/${adId}/${type}`;
+            new bootstrap.Modal(document.getElementById('imageModal')).show();
+        }
+
+        function showRejectionReason(reason) {
+            document.getElementById('rejectionReasonText').textContent = reason;
+            new bootstrap.Modal(document.getElementById('rejectionModal')).show();
+        }
+
+        async function deleteAd(adId) {
+            if (!confirm('Are you sure you want to delete this advertisement?')) {
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/channel-partner/ads/${adId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Advertisement deleted successfully');
+                    loadMyAds();
+                } else {
+                    alert(`Error: ${data.message || 'Failed to delete advertisement'}`);
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Failed to delete advertisement. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
