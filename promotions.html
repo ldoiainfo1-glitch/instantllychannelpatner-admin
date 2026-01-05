@@ -613,8 +613,8 @@
             // Create language upload cards
             createLanguageCards();
             
-            // Load existing promotions
-            loadExistingPromotions();
+            // CRITICAL: Always load fresh data on page load (fixes Windows cache issue)
+            loadExistingPromotions(true);
             
             // Listen for date changes to reset uploads
             document.getElementById('promotionDate').addEventListener('change', () => {
@@ -807,7 +807,8 @@
                 }
                 
                 if (data.success && data.promotions) {
-                    displayExistingPromotions(data.promotions);
+                    // Pass timestamp to force image cache busting
+                    displayExistingPromotions(data.promotions, Date.now());
                 } else {
                     throw new Error('Failed to load promotions');
                 }
@@ -827,9 +828,11 @@
             }
         }
         
-        // Display existing promotions
-        function displayExistingPromotions(promotions) {
+        // Display existing promotions with timestamp for cache busting
+        function displayExistingPromotions(promotions, cacheTimestamp) {
             const tbody = document.getElementById('existingPromotionsTable');
+            // Use provided timestamp or generate new one for Windows browser cache busting
+            const timestamp = cacheTimestamp || Date.now();
             
             if (promotions.length === 0) {
                 tbody.innerHTML = `
