@@ -518,11 +518,15 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-semibold" style="color: #111827;">
                             <i class="fas fa-list me-2"></i>
                             Existing Promotions
                         </h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="loadExistingPromotions(true)" title="Refresh to see latest updates">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -752,13 +756,16 @@
                 if (successCount > 0) {
                     alert(`Successfully uploaded ${successCount} promotion(s)!${failCount > 0 ? ` (${failCount} failed)` : ''}`);
                     
-                    // Clear cache for promotions
+                    // IMPORTANT: Clear ALL caches to show fresh data immediately
                     apiCache.clear('promotions');
+                    localStorage.removeItem('promotions_cache'); // Clear any stored cache
                     
                     // Reset form
                     uploadedFiles.clear();
                     createLanguageCards();
-                    loadExistingPromotions();
+                    
+                    // Force fresh load (bypass cache completely)
+                    loadExistingPromotions(true);
                 } else {
                     alert('Failed to upload promotions. Please try again.');
                 }
@@ -771,8 +778,8 @@
             }
         }
         
-        // Load existing promotions with caching
-        async function loadExistingPromotions() {
+        // Load existing promotions with optional cache bypass
+        async function loadExistingPromotions(bypassCache = false) {
             const tbody = document.getElementById('existingPromotionsTable');
             
             // Show loading state
@@ -788,8 +795,16 @@
             `;
             
             try {
-                // Use cached fetch with 5-minute TTL
-                const data = await cachedFetch(`${API_BASE_URL}/promotions/admin/all`, {}, 300000);
+                let data;
+                if (bypassCache) {
+                    // FORCE fresh fetch from server (no cache)
+                    const response = await fetch(`${API_BASE_URL}/promotions/admin/all?_t=${Date.now()}`);
+                    data = await response.json();
+                    console.log('🔄 Loaded fresh data (cache bypassed)');
+                } else {
+                    // Use cached fetch with 5-minute TTL
+                    data = await cachedFetch(`${API_BASE_URL}/promotions/admin/all`, {}, 300000);
+                }
                 
                 if (data.success && data.promotions) {
                     displayExistingPromotions(data.promotions);
@@ -908,8 +923,10 @@
                     
                     // Clear cache for promotions
                     apiCache.clear('promotions');
+                    localStorage.removeItem('promotions_cache');
                     
-                    loadExistingPromotions();
+                    // Force fresh load (bypass cache)
+                    loadExistingPromotions(true);
                 } else {
                     throw new Error(data.message || 'Failed to delete promotion');
                 }
@@ -937,8 +954,10 @@
                     
                     // Clear cache for promotions
                     apiCache.clear('promotions');
+                    localStorage.removeItem('promotions_cache');
                     
-                    loadExistingPromotions();
+                    // Force fresh load (bypass cache)
+                    loadExistingPromotions(true);
                 } else {
                     throw new Error(data.message || `Failed to delete ${languageName} promotion`);
                 }
@@ -969,10 +988,12 @@
             modal.classList.add('show');
             document.body.style.overflow = 'hidden';
             
-            // Create new image to handle loading
+            // CRITICAL: Always add timestamp to bypass ALL caches (browser + server)
             const imageUrl = `${API_BASE_URL}/promotions/image/${dateString}/${languageCode}`;
-            const imageSrc = window.CacheBuster ? window.CacheBuster.addCacheBuster(imageUrl) : imageUrl;
+            const imageSrc = `${imageUrl}?t=${Date.now()}`;
             const tempImg = new Image();
+            
+            console.log(`\ud83d\udd04 Loading image with cache bypass: ${imageSrc}`);
             
             tempImg.onload = function() {
                 // Image loaded successfully
@@ -1105,9 +1126,12 @@
                     
                     // Clear cache for promotions
                     apiCache.clear('promotions');
+                    localStorage.removeItem('promotions_cache');
                     
                     closeEditModal();
-                    loadExistingPromotions();
+                    
+                    // Force fresh load (bypass cache) to show new image immediately
+                    loadExistingPromotions(true);
                 } else {
                     throw new Error(data.message || 'Failed to update image');
                 }
