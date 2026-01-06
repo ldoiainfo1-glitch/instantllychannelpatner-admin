@@ -2256,6 +2256,13 @@ Examples:
         async function fetchReferralCountsForApplications(applications) {
             console.log('🔄 Fetching referral counts for', applications.length, 'applications');
             
+            // Get auth token
+            const token = localStorage.getItem('channelPartnerToken');
+            if (!token) {
+                console.error('❌ No auth token found');
+                return;
+            }
+            
             for (const app of applications) {
                 const phone = app.applicantInfo.phone;
                 const name = app.applicantInfo.name;
@@ -2264,43 +2271,79 @@ Examples:
                 console.log(`📞 Processing ${name} (${phone}) - Cell ID: referrer-${cleanPhone}`);
                 
                 try {
-                    const response = await fetch(`${API_BASE_URL}/applications?introducedBy=${phone}&status=approved`, {
+                    // Try with original phone format first
+                    let response = await fetch(`${API_BASE_URL}/applications?introducedBy=${encodeURIComponent(phone)}&status=approved`, {
                         headers: {
-                            'Authorization': `Bearer ${authToken}`
+                            'Authorization': `Bearer ${token}`
                         }
                     });
 
+                    let referredApps = [];
                     if (response.ok) {
-                        const referredApps = await response.json();
-                        const count = Array.isArray(referredApps) ? referredApps.length : 0;
-                        
-                        console.log(`✅ ${name} has ${count} referrals`);
-                        
-                        const cell = document.getElementById(`referrer-${cleanPhone}`);
-                        if (cell) {
-                            if (count > 0) {
-                                cell.innerHTML = `
-                                    <a href="#" onclick="showReferredPeopleAdmin('${phone}', '${name}'); return false;" 
-                                       class="btn btn-sm btn-primary" 
-                                       title="View referred people">
-                                        <i class="fas fa-users me-1"></i>${count}
-                                    </a>
-                                `;
-                            } else {
-                                cell.innerHTML = '<span class="text-muted">0</span>';
-                            }
-                        } else {
-                            console.error(`❌ Cell not found for ${name}: referrer-${cleanPhone}`);
+                        referredApps = await response.json();
+                        if (!Array.isArray(referredApps)) {
+                            referredApps = [];
                         }
                     } else {
-                        console.error(`❌ API error for ${name}:`, response.status);
-                        const cell = document.getElementById(`referrer-${cleanPhone}`);
-                        if (cell) cell.innerHTML = '<span class="text-muted">0</span>';
+                        console.warn(`⚠️ API returned ${response.status} for ${name}, trying alternate format...`);
+                        
+                        // Try with +91 prefix if not present
+                        const altPhone = phone.startsWith('+91') ? phone.substring(3) : `+91${phone}`;
+                        response = await fetch(`${API_BASE_URL}/applications?introducedBy=${encodeURIComponent(altPhone)}&status=approved`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            referredApps = await response.json();
+                            if (!Array.isArray(referredApps)) {
+                                referredApps = [];
+                            }
+                        }
+                    }
+                    
+                    const count = referredApps.length;
+                    console.log(`✅ ${name} has ${count} referrals`);
+                    
+                    const cell = document.getElementById(`referrer-${cleanPhone}`);
+                    if (cell) {
+                        if (count > 0) {
+                            cell.innerHTML = `
+                                <a href="#" onclick="showReferredPeopleAdmin('${phone.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}'); return false;" 
+                                   class="btn btn-sm btn-primary" 
+                                   title="View ${count} referred ${count === 1 ? 'person' : 'people'}">
+                                    <i class="fas fa-users me-1"></i>${count}
+                                </a>
+                            `;
+                        } else {
+                            cell.innerHTML = '<span class="text-muted">0</span>';
+                        }
+                    } else {
+                        console.error(`❌ Cell not found for ${name}: referrer-${cleanPhone}`);
+                        // Try to find the cell again with a slight delay
+                        setTimeout(() => {
+                            const retryCell = document.getElementById(`referrer-${cleanPhone}`);
+                            if (retryCell) {
+                                console.log(`✅ Found cell on retry for ${name}`);
+                                if (count > 0) {
+                                    retryCell.innerHTML = `
+                                        <a href="#" onclick="showReferredPeopleAdmin('${phone.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}'); return false;" 
+                                           class="btn btn-sm btn-primary" 
+                                           title="View ${count} referred ${count === 1 ? 'person' : 'people'}">
+                                            <i class="fas fa-users me-1"></i>${count}
+                                        </a>
+                                    `;
+                                } else {
+                                    retryCell.innerHTML = '<span class="text-muted">0</span>';
+                                }
+                            }
+                        }, 500);
                     }
                 } catch (error) {
                     console.error(`❌ Error fetching referral count for ${name}:`, error);
                     const cell = document.getElementById(`referrer-${cleanPhone}`);
-                    if (cell) cell.innerHTML = '<span class="text-muted">-</span>';
+                    if (cell) cell.innerHTML = '<span class="text-muted">0</span>';
                 }
             }
             
@@ -2311,13 +2354,21 @@ Examples:
         async function showReferredPeopleAdmin(referrerPhone, referrerName) {
             console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})`);
             
+            // Get auth token
+            const token = localStorage.getItem('channelPartnerToken');
+            if (!token) {
+                console.error('❌ No auth token found');
+                alert('Authentication error. Please login again.');
+                return;
+            }
+            
             try {
                 const url = `${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`;
                 console.log(`🌐 API URL:`, url);
                 
                 const response = await fetch(url, {
                     headers: {
-                        'Authorization': `Bearer ${authToken}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
