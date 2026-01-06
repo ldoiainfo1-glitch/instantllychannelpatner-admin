@@ -702,6 +702,9 @@
             }
             
             container.innerHTML = createApplicationsTable(applications, 'pending');
+            
+            // Fetch referral counts for all applications asynchronously
+            fetchReferralCountsForApplications(applications);
         }
 
         function displayApprovedApplications(applications) {
@@ -741,6 +744,9 @@
             }
             
             container.innerHTML = createApplicationsTable(applications, 'rejected');
+            
+            // Fetch referral counts for all applications asynchronously
+            fetchReferralCountsForApplications(applications);
         }
 
         // Filter applications based on search input
@@ -2248,10 +2254,14 @@ Examples:
 
         // Fetch referral counts for all applications
         async function fetchReferralCountsForApplications(applications) {
+            console.log('🔄 Fetching referral counts for', applications.length, 'applications');
+            
             for (const app of applications) {
                 const phone = app.applicantInfo.phone;
                 const name = app.applicantInfo.name;
                 const cleanPhone = phone.replace(/\D/g, '');
+                
+                console.log(`📞 Processing ${name} (${phone}) - Cell ID: referrer-${cleanPhone}`);
                 
                 try {
                     const response = await fetch(`${API_BASE_URL}/applications?introducedBy=${phone}&status=approved`, {
@@ -2263,6 +2273,8 @@ Examples:
                     if (response.ok) {
                         const referredApps = await response.json();
                         const count = Array.isArray(referredApps) ? referredApps.length : 0;
+                        
+                        console.log(`✅ ${name} has ${count} referrals`);
                         
                         const cell = document.getElementById(`referrer-${cleanPhone}`);
                         if (cell) {
@@ -2277,17 +2289,22 @@ Examples:
                             } else {
                                 cell.innerHTML = '<span class="text-muted">0</span>';
                             }
+                        } else {
+                            console.error(`❌ Cell not found for ${name}: referrer-${cleanPhone}`);
                         }
                     } else {
+                        console.error(`❌ API error for ${name}:`, response.status);
                         const cell = document.getElementById(`referrer-${cleanPhone}`);
                         if (cell) cell.innerHTML = '<span class="text-muted">0</span>';
                     }
                 } catch (error) {
-                    console.error(`Error fetching referral count for ${name}:`, error);
+                    console.error(`❌ Error fetching referral count for ${name}:`, error);
                     const cell = document.getElementById(`referrer-${cleanPhone}`);
                     if (cell) cell.innerHTML = '<span class="text-muted">-</span>';
                 }
             }
+            
+            console.log('✅ Finished fetching all referral counts');
         }
 
         // Show referred people modal for admin
