@@ -1858,11 +1858,12 @@ Examples:
                     displayApprovedApplications(approvedApplications);
                 } else {
                     const error = await response.json();
-                    showNotification(error.message || 'Failed to transfer', 'error');
+                    console.error('❌ Transfer failed:', error);
+                    showNotification(`Transfer failed: ${error.message || error.error || 'Unknown error'}\n\nDetails: ${error.details || ''}`, 'error');
                 }
             } catch (error) {
-                console.error('Error transferring:', error);
-                showNotification('Error transferring position', 'error');
+                console.error('❌ Error transferring:', error);
+                showNotification(`Error transferring position: ${error.message}`, 'error');
             }
         }
 
