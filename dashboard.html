@@ -2320,25 +2320,8 @@ Examples:
                             cell.innerHTML = '<span class="text-muted">0</span>';
                         }
                     } else {
-                        console.error(`❌ Cell not found for ${name}: referrer-${cleanPhone}`);
-                        // Try to find the cell again with a slight delay
-                        setTimeout(() => {
-                            const retryCell = document.getElementById(`referrer-${cleanPhone}`);
-                            if (retryCell) {
-                                console.log(`✅ Found cell on retry for ${name}`);
-                                if (count > 0) {
-                                    retryCell.innerHTML = `
-                                        <a href="#" onclick="showReferredPeopleAdmin('${phone.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}'); return false;" 
-                                           class="btn btn-sm btn-primary" 
-                                           title="View ${count} referred ${count === 1 ? 'person' : 'people'}">
-                                            <i class="fas fa-users me-1"></i>${count}
-                                        </a>
-                                    `;
-                                } else {
-                                    retryCell.innerHTML = '<span class="text-muted">0</span>';
-                                }
-                            }
-                        }, 500);
+                        // Cell not in current view (pagination/filtering) - skip silently
+                        console.log(`ℹ️ Cell not in current view: referrer-${cleanPhone}`);
                     }
                 } catch (error) {
                     console.error(`❌ Error fetching referral count for ${name}:`, error);
