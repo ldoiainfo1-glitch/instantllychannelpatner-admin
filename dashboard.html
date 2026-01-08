@@ -756,28 +756,45 @@
             
             let applicationsToFilter = [];
             let displayFunction = null;
+            let containerId = '';
             
             // Determine which applications to filter
             switch(type) {
                 case 'pending':
                     applicationsToFilter = allPendingApplications;
                     displayFunction = displayPendingApplications;
+                    containerId = 'pendingApplicationsList';
                     break;
                 case 'approved':
                     applicationsToFilter = allApprovedApplications;
                     displayFunction = displayApprovedApplications;
+                    containerId = 'approvedApplicationsList';
                     break;
                 case 'rejected':
                     applicationsToFilter = allRejectedApplications;
                     displayFunction = displayRejectedApplications;
+                    containerId = 'rejectedApplicationsList';
                     break;
             }
             
-            // If search is empty, show all applications
+            // If search is empty, show all applications (don't call display function to avoid override)
             if (!searchTerm) {
-                displayFunction(applicationsToFilter);
+                console.log(`🔍 Search cleared for ${type} - showing all ${applicationsToFilter.length} applications`);
+                // Directly display the table without going through display function
+                const container = document.getElementById(containerId);
+                if (applicationsToFilter.length > 0) {
+                    container.innerHTML = createApplicationsTable(applicationsToFilter, type);
+                    fetchReferralCountsForApplications(applicationsToFilter);
+                } else {
+                    // Only show empty state if truly no data exists
+                    const emptyMessage = getEmptyMessage(type);
+                    container.innerHTML = emptyMessage;
+                }
                 return;
             }
+            
+            console.log(`🔍 Searching ${type} applications for: "${searchTerm}"`);
+            console.log(`   Total applications to search: ${applicationsToFilter.length}`);
             
             // Filter applications based on search term
             const filteredApplications = applicationsToFilter.filter(app => {
@@ -794,8 +811,56 @@
                        state.includes(searchTerm);
             });
             
-            // Display filtered results
-            displayFunction(filteredApplications);
+            console.log(`   Found ${filteredApplications.length} matching applications`);
+            
+            // Display filtered results with appropriate message
+            const container = document.getElementById(containerId);
+            if (filteredApplications.length > 0) {
+                container.innerHTML = createApplicationsTable(filteredApplications, type);
+                fetchReferralCountsForApplications(filteredApplications);
+            } else {
+                // Show "no results found" message instead of "no applications" message
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No results found</h5>
+                        <p class="text-muted">No applications match your search for "${searchTerm}"</p>
+                        <button class="btn btn-outline-primary mt-3" onclick="document.getElementById('${type}Search').value=''; filterApplications('${type}');">
+                            <i class="fas fa-times me-2"></i>Clear Search
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Helper function to get empty state message for each type
+        function getEmptyMessage(type) {
+            switch(type) {
+                case 'pending':
+                    return `
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">No pending applications</h5>
+                            <p class="text-muted">All applications have been processed</p>
+                        </div>
+                    `;
+                case 'approved':
+                    return `
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h5 class="text-muted">No approved applications</h5>
+                            <p class="text-muted">No applications have been approved yet</p>
+                        </div>
+                    `;
+                case 'rejected':
+                    return `
+                        <div class="text-center py-5">
+                            <i class="fas fa-times-circle fa-4x text-danger mb-3"></i>
+                            <h5 class="text-muted">No rejected applications</h5>
+                            <p class="text-muted">No applications have been rejected</p>
+                        </div>
+                    `;
+            }
         }
 
         function createApplicationsTable(applications, status) {
