@@ -321,14 +321,25 @@
         // Load statistics
         async function loadStatistics() {
             try {
-                const response = await fetch(`${API_BASE_URL}/locations/all`);
+                const response = await fetch(`${API_BASE_URL}/locations/all?format=distinct`);
                 const data = await response.json();
                 
-                document.getElementById('totalZones').textContent = data.zones.length;
-                document.getElementById('totalStates').textContent = data.states.length;
-                document.getElementById('totalDivisions').textContent = data.divisions.length;
+                if (data.zones && data.states && data.divisions) {
+                    document.getElementById('totalZones').textContent = data.zones.length;
+                    document.getElementById('totalStates').textContent = data.states.length;
+                    document.getElementById('totalDivisions').textContent = data.divisions.length;
+                } else {
+                    // Fallback if format is different
+                    document.getElementById('totalZones').textContent = '0';
+                    document.getElementById('totalStates').textContent = '0';
+                    document.getElementById('totalDivisions').textContent = '0';
+                }
             } catch (error) {
                 console.error('Error loading statistics:', error);
+                // Set to 0 on error
+                document.getElementById('totalZones').textContent = '0';
+                document.getElementById('totalStates').textContent = '0';
+                document.getElementById('totalDivisions').textContent = '0';
             }
         }
 
