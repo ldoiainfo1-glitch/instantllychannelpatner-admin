@@ -204,24 +204,24 @@
                         <input type="hidden" id="locationId">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Country</label>
-                                <input type="text" class="form-control" id="country" value="India">
+                                <label class="form-label">Country <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="country" value="India" placeholder="e.g., India">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Zone *</label>
-                                <input type="text" class="form-control" id="zone" required placeholder="e.g., North">
+                                <label class="form-label">Zone <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="zone" placeholder="e.g., North">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">State *</label>
-                                <input type="text" class="form-control" id="state" required placeholder="e.g., Maharashtra">
+                                <label class="form-label">State <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="state" placeholder="e.g., Maharashtra">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Division *</label>
-                                <input type="text" class="form-control" id="division" required placeholder="e.g., Konkan">
+                                <label class="form-label">Division <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="division" placeholder="e.g., Konkan">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">District *</label>
-                                <input type="text" class="form-control" id="district" required placeholder="e.g., Mumbai">
+                                <label class="form-label">District <small class="text-muted">(optional)</small></label>
+                                <input type="text" class="form-control" id="district" placeholder="e.g., Mumbai">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Tehsil <small class="text-muted">(optional)</small></label>
@@ -242,7 +242,7 @@
                             <br>
                             <small class="text-muted mt-2 d-block">
                                 <i class="fas fa-lightbulb me-1"></i>
-                                You can add locations at any level - just fill in the fields you have. Leave Tehsil, Pincode, and Village empty if you only want to add district-level data.
+                                All fields are optional. You can add locations at any level - just fill in the fields you have. For example, you can add just a Zone, or a complete hierarchy down to Village level.
                             </small>
                         </div>
                     </form>
