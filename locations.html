@@ -307,6 +307,7 @@
 
         // Load locations on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('📦 DOM Loaded - API Base URL:', API_BASE_URL);
             loadStatistics();
             loadLocations();
             
@@ -324,8 +325,16 @@
         // Load statistics
         async function loadStatistics() {
             try {
+                console.log('📊 Loading statistics from:', `${API_BASE_URL}/locations/all?format=distinct`);
                 const response = await fetch(`${API_BASE_URL}/locations/all?format=distinct`);
+                console.log('📊 Statistics Response Status:', response.status, response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('📊 Statistics Data:', data);
                 
                 if (data.zones && data.states && data.divisions) {
                     document.getElementById('totalZones').textContent = data.zones.length;
@@ -338,7 +347,7 @@
                     document.getElementById('totalDivisions').textContent = '0';
                 }
             } catch (error) {
-                console.error('Error loading statistics:', error);
+                console.error('❌ Error loading statistics:', error);
                 // Set to 0 on error
                 document.getElementById('totalZones').textContent = '0';
                 document.getElementById('totalStates').textContent = '0';
@@ -350,18 +359,34 @@
         async function loadLocations(page = 1) {
             try {
                 const search = document.getElementById('searchInput').value;
-                const response = await fetch(`${API_BASE_URL}/locations/manage?page=${page}&limit=50&search=${search}`);
+                const url = `${API_BASE_URL}/locations/manage?page=${page}&limit=50&search=${search}`;
+                console.log('📍 Loading locations from:', url);
+                
+                const response = await fetch(url);
+                console.log('📍 Locations Response Status:', response.status, response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('📍 Locations Data:', data);
                 
                 if (data.success) {
                     displayLocations(data.locations);
                     displayPagination(data.pagination);
                     document.getElementById('totalLocations').textContent = data.pagination.total;
+                } else {
+                    throw new Error(data.error || 'Failed to load locations');
                 }
             } catch (error) {
-                console.error('Error loading locations:', error);
+                console.error('❌ Error loading locations:', error);
                 document.getElementById('locationsTableBody').innerHTML = `
-                    <tr><td colspan="8" class="text-center text-danger">Error loading locations: ${error.message}</td></tr>
+                    <tr><td colspan="8" class="text-center text-danger p-4">
+                        <i class="fas fa-exclamation-triangle mb-2"></i><br>
+                        Error loading locations: ${error.message}<br>
+                        <small>Please check the console for more details</small>
+                    </td></tr>
                 `;
             }
         }
