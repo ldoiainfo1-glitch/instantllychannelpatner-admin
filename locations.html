@@ -211,40 +211,48 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Country <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="country" value="India" placeholder="e.g., India">
+                                <input type="text" class="form-control" id="country" value="India" placeholder="e.g., India" list="countryList">
+                                <datalist id="countryList"></datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Zone <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="zone" placeholder="e.g., North">
+                                <input type="text" class="form-control" id="zone" placeholder="e.g., North" list="zoneList" autocomplete="off">
+                                <datalist id="zoneList"></datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">State <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="state" placeholder="e.g., Maharashtra">
+                                <input type="text" class="form-control" id="state" placeholder="e.g., Maharashtra" list="stateList" autocomplete="off">
+                                <datalist id="stateList"></datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Division <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="division" placeholder="e.g., Konkan">
+                                <input type="text" class="form-control" id="division" placeholder="e.g., Konkan" list="divisionList" autocomplete="off">
+                                <datalist id="divisionList"></datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">District <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="district" placeholder="e.g., Mumbai">
+                                <input type="text" class="form-control" id="district" placeholder="e.g., Mumbai" list="districtList" autocomplete="off">
+                                <datalist id="districtList"></datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Tehsil <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="tehsil" placeholder="e.g., Andheri">
+                                <input type="text" class="form-control" id="tehsil" placeholder="e.g., Andheri" list="tehsilList" autocomplete="off">
+                                <datalist id="tehsilList"></datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Pincode <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="pincode" placeholder="e.g., 400001" pattern="\d{6}">
+                                <input type="text" class="form-control" id="pincode" placeholder="e.g., 400001" pattern="\d{6}" list="pincodeList" autocomplete="off">
+                                <datalist id="pincodeList"></datalist>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Village <small class="text-muted">(optional)</small></label>
-                                <input type="text" class="form-control" id="village" placeholder="e.g., Andheri West">
+                                <input type="text" class="form-control" id="village" placeholder="e.g., Andheri West" list="villageList" autocomplete="off">
+                                <datalist id="villageList"></datalist>
                             </div>
                         </div>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Tip:</strong> Make sure to use consistent naming (e.g., always use "Konkan" not "konkan" or "KONKAN")
+                            <strong>Tip:</strong> Start typing to see suggestions from existing data. Make sure to use consistent naming.
                             <br>
                             <small class="text-muted mt-2 d-block">
                                 <i class="fas fa-lightbulb me-1"></i>
@@ -714,6 +722,92 @@
                 alert('Failed to download CSV: ' + error.message);
             }
         }
+
+        // Autocomplete data cache
+        let autocompleteData = {
+            country: [],
+            zone: [],
+            state: [],
+            division: [],
+            district: [],
+            tehsil: [],
+            pincode: [],
+            village: []
+        };
+
+        // Load autocomplete suggestions
+        async function loadAutocompleteSuggestions() {
+            console.log('🔍 Loading autocomplete suggestions...');
+            try {
+                const response = await fetch(`${CONFIG.PRODUCTION}/locations/all?format=distinct`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Autocomplete data loaded:', {
+                    zones: data.zones?.length || 0,
+                    states: data.states?.length || 0,
+                    divisions: data.divisions?.length || 0,
+                    districts: data.districts?.length || 0,
+                    tehsils: data.tehsils?.length || 0,
+                    pincodes: data.pincodes?.length || 0,
+                    villages: data.villages?.length || 0
+                });
+
+                // Store in cache
+                autocompleteData = {
+                    country: data.countries || ['India'],
+                    zone: data.zones || [],
+                    state: data.states || [],
+                    division: data.divisions || [],
+                    district: data.districts || [],
+                    tehsil: data.tehsils || [],
+                    pincode: data.pincodes || [],
+                    village: data.villages || []
+                };
+
+                // Populate datalists
+                populateDatalist('countryList', autocompleteData.country);
+                populateDatalist('zoneList', autocompleteData.zone);
+                populateDatalist('stateList', autocompleteData.state);
+                populateDatalist('divisionList', autocompleteData.division);
+                populateDatalist('districtList', autocompleteData.district);
+                populateDatalist('tehsilList', autocompleteData.tehsil);
+                populateDatalist('pincodeList', autocompleteData.pincode);
+                populateDatalist('villageList', autocompleteData.village);
+
+                console.log('✅ Datalists populated successfully');
+            } catch (error) {
+                console.error('❌ Failed to load autocomplete suggestions:', error);
+            }
+        }
+
+        // Populate a datalist element with options
+        function populateDatalist(datalistId, values) {
+            const datalist = document.getElementById(datalistId);
+            if (!datalist) return;
+
+            // Clear existing options
+            datalist.innerHTML = '';
+
+            // Add new options (limit to top 500 for performance)
+            const uniqueValues = [...new Set(values)].filter(v => v && v.trim());
+            uniqueValues.slice(0, 500).forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                datalist.appendChild(option);
+            });
+        }
+
+        // Load autocomplete data when page loads
+        document.addEventListener('DOMContentLoaded', loadAutocompleteSuggestions);
     </script>
 </body>
 </html>
