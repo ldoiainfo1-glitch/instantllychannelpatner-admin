@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location Management - Channel Partner Admin (v1.1)</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Location Management - Channel Partner Admin (v1.2 - Debug)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
@@ -296,6 +299,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // IMMEDIATE TEST - Check if JavaScript is running
+        console.log('🔥 SCRIPT LOADED - JavaScript is executing!');
+        console.log('🌐 Window location:', window.location.hostname);
+        
         // Use local backend if available, otherwise use production
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:5000/api'
@@ -303,7 +310,14 @@
         let currentPage = 1;
         let csvData = [];
         
-        console.log('API Base URL:', API_BASE_URL);
+        console.log('✅ API Base URL:', API_BASE_URL);
+        console.log('📋 Page Elements Check:');
+        console.log('  - totalZones element:', document.getElementById('totalZones'));
+        console.log('  - totalStates element:', document.getElementById('totalStates'));
+        console.log('  - totalDivisions element:', document.getElementById('totalDivisions'));
+        console.log('  - totalLocations element:', document.getElementById('totalLocations'));
+        console.log('  - searchInput element:', document.getElementById('searchInput'));
+        console.log('  - locationsTableBody element:', document.getElementById('locationsTableBody'));
 
         // Load locations on page load
         document.addEventListener('DOMContentLoaded', function() {
