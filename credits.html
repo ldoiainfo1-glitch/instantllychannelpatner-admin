@@ -459,7 +459,7 @@
     <script>
         // Use admin configuration for API endpoints
         const CHANNEL_PARTNER_API = ADMIN_CONFIG.getApiBaseUrl().replace('/api', '') + '/api';
-        const MAIN_APP_API = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+        const MAIN_APP_API = ADMIN_CONFIG.getApiBaseUrl();
         
         let allTransactions = [];
         let filteredTransactions = [];

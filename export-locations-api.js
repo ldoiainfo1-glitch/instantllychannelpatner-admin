@@ -9,7 +9,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const API_URL = 'https://instantllychannelpatner.onrender.com/api/locations/export-all';
+const API_URL = 'https://api.channel-partner.instantllycards.com/api/locations/export-all';
 
 // Convert JSON to CSV
 function jsonToCSV(data) {
