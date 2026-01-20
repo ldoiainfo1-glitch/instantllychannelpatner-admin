@@ -164,13 +164,27 @@
                     <table class="table table-hover location-table mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 10%;">Zone</th>
-                                <th style="width: 12%;">State</th>
-                                <th style="width: 12%;">Division</th>
-                                <th style="width: 13%;">District</th>
-                                <th style="width: 13%;">Tehsil</th>
-                                <th style="width: 10%;">Pincode</th>
-                                <th style="width: 15%;">Village</th>
+                                <th style="width: 10%; cursor: pointer;" onclick="openFindReplaceModal('zone')" title="Click to Find & Replace">
+                                    Zone <i class="fas fa-search-plus fa-xs ms-1"></i>
+                                </th>
+                                <th style="width: 12%; cursor: pointer;" onclick="openFindReplaceModal('state')" title="Click to Find & Replace">
+                                    State <i class="fas fa-search-plus fa-xs ms-1"></i>
+                                </th>
+                                <th style="width: 12%; cursor: pointer;" onclick="openFindReplaceModal('division')" title="Click to Find & Replace">
+                                    Division <i class="fas fa-search-plus fa-xs ms-1"></i>
+                                </th>
+                                <th style="width: 13%; cursor: pointer;" onclick="openFindReplaceModal('district')" title="Click to Find & Replace">
+                                    District <i class="fas fa-search-plus fa-xs ms-1"></i>
+                                </th>
+                                <th style="width: 13%; cursor: pointer;" onclick="openFindReplaceModal('tehsil')" title="Click to Find & Replace">
+                                    Tehsil <i class="fas fa-search-plus fa-xs ms-1"></i>
+                                </th>
+                                <th style="width: 10%; cursor: pointer;" onclick="openFindReplaceModal('pincode')" title="Click to Find & Replace">
+                                    Pincode <i class="fas fa-search-plus fa-xs ms-1"></i>
+                                </th>
+                                <th style="width: 15%; cursor: pointer;" onclick="openFindReplaceModal('village')" title="Click to Find & Replace">
+                                    Village <i class="fas fa-search-plus fa-xs ms-1"></i>
+                                </th>
                                 <th style="width: 15%;">Actions</th>
                             </tr>
                         </thead>
@@ -305,6 +319,60 @@
         </div>
     </div>
 
+    <!-- Find & Replace Modal -->
+    <div class="modal fade" id="findReplaceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="fas fa-search-plus me-2"></i>Find & Replace in <span id="findReplaceColumn" class="text-capitalize fw-bold"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="findReplaceColumnName">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This will find and replace all matching values in the <span id="findReplaceColumnDisplay" class="fw-bold"></span> column across all locations. 
+                        <strong>Changes will be permanent!</strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="findValue" class="form-label fw-bold">Find What:</label>
+                        <input type="text" class="form-control" id="findValue" 
+                               placeholder="e.g., akola division" 
+                               oninput="checkFindReplaceValues()">
+                        <small class="text-muted">Search is case-insensitive and matches exact values</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="replaceValue" class="form-label fw-bold">Replace With:</label>
+                        <input type="text" class="form-control" id="replaceValue" 
+                               placeholder="e.g., amravati division"
+                               oninput="checkFindReplaceValues()">
+                    </div>
+                    
+                    <div id="previewCount" class="alert alert-secondary d-none">
+                        <i class="fas fa-calculator me-2"></i>
+                        <span id="matchCount">0</span> location(s) will be updated
+                    </div>
+                    
+                    <div id="findReplaceError" class="alert alert-danger d-none"></div>
+                    <div id="findReplaceSuccess" class="alert alert-success d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="previewBtn" onclick="previewFindReplace()" disabled>
+                        <i class="fas fa-eye me-2"></i>Preview Matches
+                    </button>
+                    <button type="button" class="btn btn-warning" id="replaceBtn" onclick="executeFindReplace()" disabled>
+                        <i class="fas fa-exchange-alt me-2"></i>Replace All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // IMMEDIATE TEST - Check if JavaScript is running
@@ -313,7 +381,7 @@
         
         // Use local backend if available, otherwise use production
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:5000/api'
+            ? 'http://localhost:5001/api'
             : 'https://api.channel-partner.instantllycards.com/api';
         let currentPage = 1;
         let csvData = [];
@@ -808,6 +876,153 @@
 
         // Load autocomplete data when page loads
         document.addEventListener('DOMContentLoaded', loadAutocompleteSuggestions);
+
+        // Find & Replace Functions
+        let currentFindReplaceColumn = '';
+        let matchedLocationsCount = 0;
+
+        function openFindReplaceModal(columnName) {
+            currentFindReplaceColumn = columnName;
+            document.getElementById('findReplaceColumnName').value = columnName;
+            document.getElementById('findReplaceColumn').textContent = columnName;
+            document.getElementById('findReplaceColumnDisplay').textContent = columnName;
+            document.getElementById('findValue').value = '';
+            document.getElementById('replaceValue').value = '';
+            document.getElementById('previewCount').classList.add('d-none');
+            document.getElementById('findReplaceError').classList.add('d-none');
+            document.getElementById('findReplaceSuccess').classList.add('d-none');
+            document.getElementById('previewBtn').disabled = true;
+            document.getElementById('replaceBtn').disabled = true;
+            matchedLocationsCount = 0;
+            
+            new bootstrap.Modal(document.getElementById('findReplaceModal')).show();
+        }
+
+        function checkFindReplaceValues() {
+            const findValue = document.getElementById('findValue').value.trim();
+            const replaceValue = document.getElementById('replaceValue').value.trim();
+            const previewBtn = document.getElementById('previewBtn');
+            
+            if (findValue && replaceValue && findValue !== replaceValue) {
+                previewBtn.disabled = false;
+            } else {
+                previewBtn.disabled = true;
+                document.getElementById('replaceBtn').disabled = true;
+                document.getElementById('previewCount').classList.add('d-none');
+            }
+        }
+
+        async function previewFindReplace() {
+            const column = document.getElementById('findReplaceColumnName').value;
+            const findValue = document.getElementById('findValue').value.trim();
+            const replaceValue = document.getElementById('replaceValue').value.trim();
+            const errorDiv = document.getElementById('findReplaceError');
+            const previewDiv = document.getElementById('previewCount');
+            
+            if (!findValue || !replaceValue) {
+                errorDiv.textContent = 'Please enter both find and replace values';
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+            
+            if (findValue.toLowerCase() === replaceValue.toLowerCase()) {
+                errorDiv.textContent = 'Find and Replace values cannot be the same';
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+            
+            errorDiv.classList.add('d-none');
+            document.getElementById('previewBtn').disabled = true;
+            document.getElementById('previewBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Checking...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/locations/find-replace/preview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ column, findValue, replaceValue })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    matchedLocationsCount = data.matchCount;
+                    document.getElementById('matchCount').textContent = matchedLocationsCount;
+                    previewDiv.classList.remove('d-none');
+                    
+                    if (matchedLocationsCount > 0) {
+                        document.getElementById('replaceBtn').disabled = false;
+                    } else {
+                        errorDiv.textContent = 'No matching locations found for the search value';
+                        errorDiv.classList.remove('d-none');
+                        document.getElementById('replaceBtn').disabled = true;
+                    }
+                } else {
+                    errorDiv.textContent = data.error || 'Failed to preview matches';
+                    errorDiv.classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error('Error previewing find & replace:', error);
+                errorDiv.textContent = 'Error previewing matches: ' + error.message;
+                errorDiv.classList.remove('d-none');
+            } finally {
+                document.getElementById('previewBtn').disabled = false;
+                document.getElementById('previewBtn').innerHTML = '<i class="fas fa-eye me-2"></i>Preview Matches';
+            }
+        }
+
+        async function executeFindReplace() {
+            const column = document.getElementById('findReplaceColumnName').value;
+            const findValue = document.getElementById('findValue').value.trim();
+            const replaceValue = document.getElementById('replaceValue').value.trim();
+            const errorDiv = document.getElementById('findReplaceError');
+            const successDiv = document.getElementById('findReplaceSuccess');
+            
+            if (!confirm(`Are you sure you want to replace "${findValue}" with "${replaceValue}" in ${matchedLocationsCount} location(s)?\n\nThis action cannot be undone!`)) {
+                return;
+            }
+            
+            errorDiv.classList.add('d-none');
+            successDiv.classList.add('d-none');
+            document.getElementById('replaceBtn').disabled = true;
+            document.getElementById('replaceBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Replacing...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/locations/find-replace/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ column, findValue, replaceValue })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        Successfully updated ${data.updatedCount} location(s)!
+                        ${data.channelPartnersUpdated ? `<br><small>Also updated ${data.channelPartnersUpdated} channel partner record(s)</small>` : ''}
+                    `;
+                    successDiv.classList.remove('d-none');
+                    
+                    // Reload data after 2 seconds
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('findReplaceModal')).hide();
+                        loadLocations(currentPage);
+                        loadStatistics();
+                    }, 2000);
+                } else {
+                    errorDiv.textContent = data.error || 'Failed to execute find & replace';
+                    errorDiv.classList.remove('d-none');
+                    document.getElementById('replaceBtn').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error executing find & replace:', error);
+                errorDiv.textContent = 'Error executing find & replace: ' + error.message;
+                errorDiv.classList.remove('d-none');
+                document.getElementById('replaceBtn').disabled = false;
+            } finally {
+                document.getElementById('replaceBtn').innerHTML = '<i class="fas fa-exchange-alt me-2"></i>Replace All';
+            }
+        }
     </script>
 </body>
 </html>

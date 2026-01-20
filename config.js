@@ -3,7 +3,7 @@ const ADMIN_CONFIG = {
     // Backend API Configuration
     API: {
         // Local development
-        LOCAL: 'http://localhost:5000/api',
+        LOCAL: 'http://localhost:5001/api',
         
         // Production backend for channel partner admin (AWS)
         PRODUCTION: 'https://api.channel-partner.instantllycards.com/api',
