@@ -959,7 +959,13 @@
                             <strong class="text-primary">${app.applicantInfo.name}</strong>
                             <br><span class="badge ${statusBadgeClass}">${status.toUpperCase()}</span>
                         </td>
-                        <td>${app.applicantInfo.phone}</td>
+                        <td>
+                            <span class="phone-editable" style="cursor: pointer; color: #0066cc; text-decoration: underline;" 
+                                  onclick="openEditPhoneModal('${app._id}', '${app.applicantInfo.phone}', '${app.applicantInfo.name}', '${positionTitle}')" 
+                                  title="Click to edit phone number">
+                                ${app.applicantInfo.phone}
+                            </span>
+                        </td>
                         <td id="referrer-${app.applicantInfo.phone.replace(/\D/g, '')}">
                             <div class="spinner-border spinner-border-sm text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
@@ -1740,6 +1746,138 @@
                 'info': 'info'
             };
             return classes[type] || 'info';
+        }
+
+        // Edit Phone Number Modal and Function
+        let currentEditingApplicationId = null;
+
+        function openEditPhoneModal(applicationId, currentPhone, name, position) {
+            currentEditingApplicationId = applicationId;
+            
+            const modalHTML = `
+                <div class="modal fade" id="editPhoneModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-phone-alt me-2"></i>Edit Phone Number
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-info mb-3">
+                                    <strong>Application:</strong> ${name}<br>
+                                    <small>${position}</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Current Phone:</strong></label>
+                                    <input type="text" class="form-control" value="${currentPhone}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>New Phone Number:</strong></label>
+                                    <input type="text" class="form-control" id="newPhoneInput" 
+                                           placeholder="Enter 10-digit number" maxlength="10">
+                                    <small class="text-muted">Must be 10 digits and not already in use</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>Reason for Change (Optional):</strong></label>
+                                    <textarea class="form-control" id="adminNoteInput" rows="2" 
+                                              placeholder="e.g., Duplicate number resolution, user request..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="savePhoneUpdate()">
+                                    <i class="fas fa-save me-2"></i>Update Phone
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('editPhoneModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editPhoneModal'));
+            modal.show();
+            
+            // Focus on new phone input
+            setTimeout(() => {
+                document.getElementById('newPhoneInput').focus();
+            }, 500);
+        }
+
+        async function savePhoneUpdate() {
+            const newPhone = document.getElementById('newPhoneInput').value.trim();
+            const adminNote = document.getElementById('adminNoteInput').value.trim();
+            
+            // Validation
+            if (!newPhone) {
+                showNotification('Please enter a new phone number', 'error');
+                return;
+            }
+            
+            if (!/^\d{10}$/.test(newPhone)) {
+                showNotification('Phone number must be exactly 10 digits', 'error');
+                return;
+            }
+            
+            const updateBtn = event.target;
+            const originalText = updateBtn.innerHTML;
+            updateBtn.disabled = true;
+            updateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/applications/${currentEditingApplicationId}/phone`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        newPhone: newPhone,
+                        adminNote: adminNote || 'Phone number updated by admin'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to update phone number');
+                }
+                
+                console.log('✅ Phone updated successfully:', data);
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editPhoneModal'));
+                modal.hide();
+                
+                // Show success message
+                showNotification(`Phone updated from ${data.application.oldPhone} to ${data.application.newPhone}. ${data.userUpdated ? 'Login credentials updated automatically.' : ''}`, 'success');
+                
+                // Reload the approved applications to show updated data
+                const approvedResponse = await fetch(`${API_BASE_URL}/admin/applications/approved`);
+                const approvedApplications = await approvedResponse.json();
+                displayApprovedApplications(approvedApplications);
+                
+                // Refresh dashboard stats
+                await refreshDashboardStats();
+                
+            } catch (error) {
+                console.error('❌ Error updating phone:', error);
+                showNotification('Error: ' + error.message, 'error');
+                updateBtn.disabled = false;
+                updateBtn.innerHTML = originalText;
+            }
         }
 
         // Refresh button
