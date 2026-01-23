@@ -537,68 +537,60 @@
 
             // Auto-reload when clicking Pending tab
             pendingTab.addEventListener('click', async function() {
-                console.log('🔄 Reloading pending applications...');
+                console.log('🔄 Pending tab clicked');
                 try {
-                    // Reload dashboard stats first
                     await refreshDashboardStats();
-                    
-                    // Then reload pending applications
-                    const pendingResponse = await fetch(`${API_BASE_URL}/admin/applications/pending`);
-                    const pendingApplications = await pendingResponse.json();
-                    console.log('📥 Pending Applications API Response:', pendingApplications);
-                    if (pendingApplications.length > 0) {
-                        console.log('📥 First application sample:', pendingApplications[0]);
-                        console.log('📥 Has payment?', !!pendingApplications[0].payment);
-                        if (pendingApplications[0].payment) {
-                            console.log('📥 Payment data:', {
-                                hasScreenshot: !!pendingApplications[0].payment.paymentScreenshot,
-                                screenshotLength: pendingApplications[0].payment.paymentScreenshot ? pendingApplications[0].payment.paymentScreenshot.length : 0,
-                                amount: pendingApplications[0].payment.amount,
-                                status: pendingApplications[0].payment.status
-                            });
-                        }
-                    }
-                    displayPendingApplications(pendingApplications);
-                    document.getElementById('pendingCount').textContent = pendingApplications.length;
-                    console.log('✅ Pending applications reloaded');
+                    await loadPendingApplications();
                 } catch (error) {
-                    console.error('Error reloading pending applications:', error);
+                    console.error('Error loading pending applications:', error);
                 }
             });
 
-            // Auto-reload when clicking Approved tab
+            // Load approved applications when clicking Approved tab (lazy load)
             approvedTab.addEventListener('click', async function() {
-                console.log('🔄 Reloading approved applications...');
+                console.log('🔄 Approved tab clicked');
+                
+                // Show loading indicator if not loaded yet
+                if (!tabsLoaded.approved) {
+                    document.getElementById('approvedApplicationsList').innerHTML = `
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Loading approved applications...</p>
+                        </div>
+                    `;
+                }
+                
                 try {
-                    // Reload dashboard stats first
                     await refreshDashboardStats();
-                    
-                    // Then reload approved applications
-                    const approvedResponse = await fetch(`${API_BASE_URL}/admin/applications/approved`);
-                    const approvedApplications = await approvedResponse.json();
-                    displayApprovedApplications(approvedApplications);
-                    document.getElementById('approvedCount').textContent = approvedApplications.length;
-                    console.log('✅ Approved applications reloaded');
+                    await loadApprovedApplications();
                 } catch (error) {
-                    console.error('Error reloading approved applications:', error);
+                    console.error('Error loading approved applications:', error);
                 }
             });
 
-            // Auto-reload when clicking Rejected tab
+            // Load rejected applications when clicking Rejected tab (lazy load)
             rejectedTab.addEventListener('click', async function() {
-                console.log('🔄 Reloading rejected applications...');
+                console.log('🔄 Rejected tab clicked');
+                
+                // Show loading indicator if not loaded yet
+                if (!tabsLoaded.rejected) {
+                    document.getElementById('rejectedApplicationsList').innerHTML = `
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-danger" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Loading rejected applications...</p>
+                        </div>
+                    `;
+                }
+                
                 try {
-                    // Reload dashboard stats first
                     await refreshDashboardStats();
-                    
-                    // Then reload rejected applications
-                    const rejectedResponse = await fetch(`${API_BASE_URL}/admin/applications/rejected`);
-                    const rejectedApplications = await rejectedResponse.json();
-                    displayRejectedApplications(rejectedApplications);
-                    document.getElementById('rejectedCount').textContent = rejectedApplications.length;
-                    console.log('✅ Rejected applications reloaded');
+                    await loadRejectedApplications();
                 } catch (error) {
-                    console.error('Error reloading rejected applications:', error);
+                    console.error('Error loading rejected applications:', error);
                 }
             });
         }
@@ -645,44 +637,65 @@
             }
         }
 
+        // Track which tabs have been loaded
+        const tabsLoaded = {
+            pending: false,
+            approved: false,
+            rejected: false
+        };
+
         async function loadAllApplications() {
             try {
-                // Load pending applications
-                const pendingResponse = await fetch(`${API_BASE_URL}/admin/applications/pending`);
-                const pendingApplications = await pendingResponse.json();
-                console.log('📥 INITIAL LOAD - Pending Applications:', pendingApplications);
-                if (pendingApplications.length > 0) {
-                    console.log('📥 INITIAL LOAD - First application:', pendingApplications[0]);
-                    console.log('📥 INITIAL LOAD - Application name:', pendingApplications[0].applicantInfo?.name);
-                    console.log('📥 INITIAL LOAD - Has payment?', !!pendingApplications[0].payment);
-                    if (pendingApplications[0].payment) {
-                        console.log('📥 INITIAL LOAD - Payment data:', {
-                            hasScreenshot: !!pendingApplications[0].payment.paymentScreenshot,
-                            screenshotLength: pendingApplications[0].payment.paymentScreenshot ? pendingApplications[0].payment.paymentScreenshot.length : 0,
-                            amount: pendingApplications[0].payment.amount,
-                            status: pendingApplications[0].payment.status
-                        });
-                    } else {
-                        console.log('❌ INITIAL LOAD - NO PAYMENT DATA FOUND!');
-                    }
-                }
-                displayPendingApplications(pendingApplications);
-                document.getElementById('pendingCount').textContent = pendingApplications.length;
+                // Only load pending applications initially (the active tab)
+                await loadPendingApplications();
                 
-                // Load approved applications
-                const approvedResponse = await fetch(`${API_BASE_URL}/admin/applications/approved`);
-                const approvedApplications = await approvedResponse.json();
-                displayApprovedApplications(approvedApplications);
-                document.getElementById('approvedCount').textContent = approvedApplications.length;
-                
-                // Load rejected applications
-                const rejectedResponse = await fetch(`${API_BASE_URL}/admin/applications/rejected`);
-                const rejectedApplications = await rejectedResponse.json();
-                displayRejectedApplications(rejectedApplications);
-                document.getElementById('rejectedCount').textContent = rejectedApplications.length;
+                // Load counts for other tabs asynchronously in the background
+                loadTabCounts();
             } catch (error) {
                 console.error('Error loading applications:', error);
                 showNotification('Error loading applications', 'error');
+            }
+        }
+
+        // Load only pending applications
+        async function loadPendingApplications() {
+            const pendingResponse = await fetch(`${API_BASE_URL}/admin/applications/pending`);
+            const pendingApplications = await pendingResponse.json();
+            console.log('📥 Pending Applications loaded:', pendingApplications.length);
+            displayPendingApplications(pendingApplications);
+            document.getElementById('pendingCount').textContent = pendingApplications.length;
+            tabsLoaded.pending = true;
+        }
+
+        // Load only approved applications
+        async function loadApprovedApplications() {
+            const approvedResponse = await fetch(`${API_BASE_URL}/admin/applications/approved`);
+            const approvedApplications = await approvedResponse.json();
+            console.log('📥 Approved Applications loaded:', approvedApplications.length);
+            displayApprovedApplications(approvedApplications);
+            document.getElementById('approvedCount').textContent = approvedApplications.length;
+            tabsLoaded.approved = true;
+        }
+
+        // Load only rejected applications
+        async function loadRejectedApplications() {
+            const rejectedResponse = await fetch(`${API_BASE_URL}/admin/applications/rejected`);
+            const rejectedApplications = await rejectedResponse.json();
+            console.log('📥 Rejected Applications loaded:', rejectedApplications.length);
+            displayRejectedApplications(rejectedApplications);
+            document.getElementById('rejectedCount').textContent = rejectedApplications.length;
+            tabsLoaded.rejected = true;
+        }
+
+        // Load counts for tabs in background (lighter query)
+        async function loadTabCounts() {
+            try {
+                const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard`);
+                const stats = await statsResponse.json();
+                document.getElementById('approvedCount').textContent = stats.approvedApplications || 0;
+                document.getElementById('rejectedCount').textContent = stats.rejectedApplications || 0;
+            } catch (error) {
+                console.error('Error loading tab counts:', error);
             }
         }
 
