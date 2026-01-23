@@ -2250,27 +2250,36 @@ Current Position: ${positionTitle}
 ID: ${currentPosition}
 
 Enter the new Position ID:
-(You can copy Position IDs from the Channel Partner website)
+⚠️ IMPORTANT: Copy the EXACT Position ID from the Channel Partner website
+(Right-click on position and copy the ID attribute, NOT the display text)
 
-Examples:
+Examples of correct format:
 - division-head_india_west-zone_maharashtra_baramati-division
 - division-head_india_west-zone_maharashtra_amravati-vidarbha
-- president_india`;
+- president_india
 
-            const newPosition = prompt(instructions);
+DO NOT paste display text like "division head - india - west zone"`;
+
+            let newPosition = prompt(instructions);
             
             if (!newPosition || newPosition.trim() === '') {
                 return; // User cancelled or entered nothing
             }
             
-            if (newPosition.trim() === currentPosition) {
+            newPosition = newPosition.trim();
+            
+            // Remove pos_ prefix if present (for backward compatibility)
+            if (newPosition.startsWith('pos_')) {
+                newPosition = newPosition.replace('pos_', '');
+            }
+            
+            if (newPosition === currentPosition) {
                 alert('Same position selected. No changes made.');
                 return;
             }
             
-            // Format position title for display (remove pos_ prefix if exists)
-            const cleanPosition = newPosition.startsWith('pos_') ? newPosition.replace('pos_', '') : newPosition;
-            const newPositionTitle = cleanPosition.replace(/-/g, ' ').replace(/_/g, ' - ');
+            // Format position title for display
+            const newPositionTitle = newPosition.replace(/-/g, ' ').replace(/_/g, ' - ');
             
             if (!confirm(`Confirm Transfer:\n\n${applicantName}\n\nFrom: ${positionTitle}\n\nTo: ${newPositionTitle}\n\nProceed?`)) {
                 return;
@@ -2283,6 +2292,7 @@ Examples:
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
+                        newPositionId: newPosition
                         newPositionId: newPosition.trim()
                     })
                 });
