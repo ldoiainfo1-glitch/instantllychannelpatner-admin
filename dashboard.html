@@ -2253,9 +2253,9 @@ Enter the new Position ID:
 (You can copy Position IDs from the Channel Partner website)
 
 Examples:
-- pos_Central-India_Maharashtra_Mumbai
-- pos_Central-India_Maharashtra_Thane
-- pos_president_india`;
+- division-head_india_west-zone_maharashtra_baramati-division
+- division-head_india_west-zone_maharashtra_amravati-vidarbha
+- president_india`;
 
             const newPosition = prompt(instructions);
             
@@ -2268,13 +2268,9 @@ Examples:
                 return;
             }
             
-            // Validate position ID format
-            if (!newPosition.startsWith('pos_')) {
-                alert('Invalid position ID format. Position ID must start with "pos_"');
-                return;
-            }
-            
-            const newPositionTitle = newPosition.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ');
+            // Format position title for display (remove pos_ prefix if exists)
+            const cleanPosition = newPosition.startsWith('pos_') ? newPosition.replace('pos_', '') : newPosition;
+            const newPositionTitle = cleanPosition.replace(/-/g, ' ').replace(/_/g, ' - ');
             
             if (!confirm(`Confirm Transfer:\n\n${applicantName}\n\nFrom: ${positionTitle}\n\nTo: ${newPositionTitle}\n\nProceed?`)) {
                 return;
