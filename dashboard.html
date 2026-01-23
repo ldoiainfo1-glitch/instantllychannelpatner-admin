@@ -2250,15 +2250,11 @@ Current Position: ${positionTitle}
 ID: ${currentPosition}
 
 Enter the new Position ID:
-⚠️ IMPORTANT: Copy the EXACT Position ID from the Channel Partner website
-(Right-click on position and copy the ID attribute, NOT the display text)
+You can paste EITHER format:
+1. Display format: "pincode head - india - west zone - maharashtra - konkan - thane - thane - 401107"
+2. ID format: "pincode-head_india_west-zone_maharashtra_konkan_thane_thane_401107"
 
-Examples of correct format:
-- division-head_india_west-zone_maharashtra_baramati-division
-- division-head_india_west-zone_maharashtra_amravati-vidarbha
-- president_india
-
-DO NOT paste display text like "division head - india - west zone"`;
+System will auto-convert to correct format.`;
 
             let newPosition = prompt(instructions);
             
@@ -2271,6 +2267,21 @@ DO NOT paste display text like "division head - india - west zone"`;
             // Remove pos_ prefix if present (for backward compatibility)
             if (newPosition.startsWith('pos_')) {
                 newPosition = newPosition.replace('pos_', '');
+            }
+            
+            // Auto-convert display format to database format
+            // "pincode head - india - west zone - maharashtra - konkan - thane - thane - 401107"
+            // TO: "pincode-head_india_west-zone_maharashtra_konkan_thane_thane_401107"
+            if (newPosition.includes(' - ')) {
+                console.log('🔧 Converting display format to database format');
+                console.log('   Input:', newPosition);
+                
+                // Split by " - " to get hierarchy levels
+                const parts = newPosition.split(' - ');
+                // Replace spaces within each part with dashes, then join with underscores
+                newPosition = parts.map(part => part.trim().replace(/\s+/g, '-')).join('_');
+                
+                console.log('   Converted to:', newPosition);
             }
             
             if (newPosition === currentPosition) {
