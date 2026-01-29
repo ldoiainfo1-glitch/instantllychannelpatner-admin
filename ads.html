@@ -1042,8 +1042,9 @@
                 const pendingAds = data.data || [];
                 renderPendingAdsTable(pendingAds);
                 
-                // Update pending count in stats
-                document.getElementById('pendingAds').textContent = pendingAds.length;
+                // Update pending count in stats (guard in case element missing)
+                const pendingEl = document.getElementById('pendingAds');
+                if (pendingEl) pendingEl.textContent = pendingAds.length;
             } catch (error) {
                 log.error('LOAD_PENDING_ADS', 'Error loading pending ads', error);
             }
