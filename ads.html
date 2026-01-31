@@ -978,10 +978,10 @@
         // Load all ads
         async function loadAllAds() {
             try {
-                // IMPORTANT: Admin needs to see ALL ads (pending, approved, rejected)
-                const url = `${API_BASE_URL}/admin/ads?approvalStatus=all`;
+                // Fetch ALL ads from Instantlly backend
+                const url = `${API_BASE_URL}/ads`;
                 log.api(url, 'GET');
-                log.frontend('Fetching ALL ads (including pending, approved, rejected)');
+                log.frontend('Fetching ALL ads from Instantlly backend');
                 
                 // Admin endpoint requires authentication
                 const token = localStorage.getItem('channelPartnerToken');
@@ -1007,6 +1007,7 @@
                 const data = await response.json();
                 log.backend('Loaded ads response', { count: data.data?.length || 0, data: data });
                 log.success(`Loaded ${data.data?.length || 0} ads successfully`);
+                // Response format: { success: true, data: [...ads] }
                 allAds = data.data || [];
                 filteredAds = allAds; // Initialize filtered ads
                 updateStats();
@@ -1032,9 +1033,9 @@
         // Load pending ads
         async function loadPendingAds() {
             try {
-                log.api(`${API_BASE_URL}/admin/ads?approvalStatus=pending`, 'GET');
+                log.api(`${API_BASE_URL}/admin/ads/pending`, 'GET');
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/admin/ads?approvalStatus=pending`, {
+                const response = await fetch(`${API_BASE_URL}/admin/ads/pending`, {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -1047,9 +1048,10 @@
                 }
 
                 const data = await response.json();
-                log.backend('Loaded pending ads response', { count: data.data?.length || 0 });
+                log.backend('Loaded pending ads response', { count: data.ads?.length || 0 });
                 
-                const pendingAds = data.data || [];
+                // Response format: { success: true, ads: [...] }
+                const pendingAds = data.ads || [];
                 renderPendingAdsTable(pendingAds);
                 
                 // Update pending count in stats (guard in case element missing)
