@@ -915,12 +915,15 @@
 
         // Check admin authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Just load ads - no auth redirect needed (already logged in)
-            log.frontend('Loading ads page');
-            Promise.all([loadAllAds(), loadPendingAds()]);
+            const token = localStorage.getItem('channelPartnerToken');
+            if (!token) {
+                log.warn('No authentication token found - showing login modal');
+                showLoginModal();
+            } else {
+                log.frontend('Loading ads page');
+                Promise.all([loadAllAds(), loadPendingAds()]);
+            }
         });
-
-        // Removed redundant auth check - authentication handled at dashboard level
 
         // Show login modal
         function showLoginModal() {
@@ -988,6 +991,13 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
+
+                if (response.status === 401) {
+                    log.error('AUTH', 'Unauthorized - showing login modal');
+                    localStorage.removeItem('channelPartnerToken');
+                    showLoginModal();
+                    return;
+                }
 
                 if (!response.ok) {
                     log.error('API', `Failed to load ads - Status: ${response.status}`);
@@ -1505,6 +1515,12 @@
             const priority = document.getElementById('approvePriority').value;
             const token = localStorage.getItem('channelPartnerToken');
 
+            if (!token) {
+                alert('Please login first');
+                showLoginModal();
+                return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/ads/${selectedAdId}/approve`, {
                     method: 'POST',
@@ -1515,15 +1531,28 @@
                     body: JSON.stringify({ priority: parseInt(priority) })
                 });
 
-                if (!response.ok) throw new Error('Failed to approve');
+                if (response.status === 401) {
+                    log.error('AUTH', 'Unauthorized - token expired or invalid');
+                    alert('Session expired. Please login again.');
+                    localStorage.removeItem('channelPartnerToken');
+                    showLoginModal();
+                    return;
+                }
 
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Failed to approve (Status: ${response.status})`);
+                }
+
+                const data = await response.json();
+                log.success('Advertisement approved successfully', data);
                 alert('Advertisement approved successfully!');
                 bootstrap.Modal.getInstance(document.getElementById('approveModal')).hide();
                 await loadAllAds();
                 await loadPendingAds();
             } catch (error) {
                 console.error('Error approving ad:', error);
-                alert('Failed to approve advertisement');
+                alert(`Failed to approve advertisement: ${error.message}`);
             }
         }
 
