@@ -5,11 +5,14 @@ const ADMIN_CONFIG = {
         // Local development
         LOCAL: 'http://localhost:5001/api',
         
-        // Production backend (Render.com deployment)
-        PRODUCTION: 'https://instantlly-cards-backend-6ki0.onrender.com/api',
+        // Production backend - Channel Partner Backend (dashboard, applications, credits)
+        PRODUCTION: 'https://api.channel-partner.instantllycards.com/api',
         
-        // Dedicated admin backend (same as production)
-        ADMIN_BACKEND: 'https://instantlly-cards-backend-6ki0.onrender.com/api'
+        // Dedicated admin backend
+        ADMIN_BACKEND: 'https://api.channel-partner.instantllycards.com/api',
+        
+        // Ads backend - ONLY for ads management
+        ADS_BACKEND: 'https://instantlly-cards-backend-6ki0.onrender.com/api'
     },
     
     // Determine which API to use
@@ -19,12 +22,17 @@ const ADMIN_CONFIG = {
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
             return this.API.LOCAL;
         } else if (hostname.includes('vercel.app') || hostname.includes('netlify.app')) {
-            // For deployed admin panel, use production backend
+            // For deployed admin panel, use Channel Partner backend
             return this.API.PRODUCTION;
         } else {
-            // Default to production
+            // Default to Channel Partner backend
             return this.API.PRODUCTION;
         }
+    },
+    
+    // Get ads backend URL (separate backend for ads only)
+    getAdsApiBaseUrl() {
+        return this.API.ADS_BACKEND;
     },
     
     // Admin credentials
