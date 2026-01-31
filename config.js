@@ -5,11 +5,11 @@ const ADMIN_CONFIG = {
         // Local development
         LOCAL: 'http://localhost:5001/api',
         
-        // Production backend for channel partner admin (AWS)
-        PRODUCTION: 'https://api.channel-partner.instantllycards.com/api',
+        // Production backend (Render.com deployment)
+        PRODUCTION: 'https://instantlly-cards-backend-6ki0.onrender.com/api',
         
-        // Dedicated admin backend (if different from main backend)
-        ADMIN_BACKEND: 'https://api.channel-partner.instantllycards.com/api'
+        // Dedicated admin backend (same as production)
+        ADMIN_BACKEND: 'https://instantlly-cards-backend-6ki0.onrender.com/api'
     },
     
     // Determine which API to use
