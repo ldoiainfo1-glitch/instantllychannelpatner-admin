@@ -3,7 +3,7 @@ const ADMIN_CONFIG = {
     // Backend API Configuration
     API: {
         // Local development
-        LOCAL: 'http://localhost:5001/api',
+        LOCAL: 'http://localhost:5000/api',
         
         // Production backend - Channel Partner Backend (dashboard, applications, credits)
         PRODUCTION: 'https://api.channel-partner.instantllycards.com/api',
@@ -12,7 +12,7 @@ const ADMIN_CONFIG = {
         ADMIN_BACKEND: 'https://api.channel-partner.instantllycards.com/api',
         
         // Ads backend - ONLY for ads management
-        ADS_BACKEND: 'https://instantlly-cards-backend-6ki0.onrender.com/api'
+        ADS_BACKEND: 'https://api.instantllycards.com/api'
     },
     
     // Determine which API to use

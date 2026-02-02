@@ -893,7 +893,7 @@
     <script src="js/cache-buster.js"></script>
     <script>
         // Use the ADS backend specifically for ads management
-        const BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com';
+        const BACKEND_URL = 'https://api.instantllycards.com';
         const API_BASE_URL = `${BACKEND_URL}/api`;
         
         let allAds = [];
@@ -940,6 +940,7 @@
             const errorDiv = document.getElementById('loginError');
 
             try {
+                log.api(`${API_BASE_URL}/admin-auth/login`, 'POST');
                 const response = await fetch(`${API_BASE_URL}/admin-auth/login`, {
                     method: 'POST',
                     headers: {
@@ -949,16 +950,39 @@
                 });
 
                 const data = await response.json();
+                log.backend('Login response:', data);
 
-                if (data.success && data.data.token) {
-                    log.success('Login successful');
-                    localStorage.setItem('channelPartnerToken', data.data.token);
-                    bootstrap.Modal.getInstance(document.getElementById('adminLoginModal')).hide();
+                // Check multiple possible token locations in response
+                const token = data.data?.token || data.token || data.accessToken;
+                
+                if (data.success && token) {
+                    log.success('Login successful - Token saved', token.substring(0, 20) + '...');
+                    localStorage.setItem('channelPartnerToken', token);
+                    console.log('✅ Token stored in localStorage:', localStorage.getItem('channelPartnerToken'));
+                    
+                    // Hide modal and ensure backdrop is removed
+                    const modalElement = document.getElementById('adminLoginModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+                    
+                    // Remove backdrop overlay if it exists
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                    
+                    // Remove modal-open class from body to allow scrolling
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    
                     await Promise.all([loadAllAds(), loadPendingAds()]);
                     setupUploadArea();
                 } else {
                     log.error('LOGIN', 'Login failed: ' + (data.message || 'Unknown error'));
-                    errorDiv.textContent = data.message || 'Login failed';
+                    errorDiv.textContent = data.message || 'Login failed. Check credentials.';
                     errorDiv.style.display = 'block';
                 }
             } catch (error) {
@@ -1033,8 +1057,16 @@
         // Load pending ads
         async function loadPendingAds() {
             try {
-                log.api(`${API_BASE_URL}/admin/ads/pending`, 'GET');
                 const token = localStorage.getItem('channelPartnerToken');
+                log.api(`${API_BASE_URL}/admin/ads/pending`, 'GET');
+                console.log('🔐 Token in localStorage:', token ? token.substring(0, 20) + '...' : 'NO TOKEN FOUND');
+                
+                if (!token) {
+                    log.warn('No token found - showing login modal');
+                    showLoginModal();
+                    return;
+                }
+                
                 const response = await fetch(`${API_BASE_URL}/admin/ads/pending`, {
                     headers: {
                         'Content-Type': 'application/json',
@@ -1042,16 +1074,34 @@
                     }
                 });
 
+                log.backend(`Response status: ${response.status}`);
+                
                 if (!response.ok) {
                     log.error('API', `Failed to load pending ads - Status: ${response.status}`);
+                    if (response.status === 401) {
+                        log.warn('Unauthorized - Token may be invalid');
+                        localStorage.removeItem('channelPartnerToken');
+                        showLoginModal();
+                    }
                     return;
                 }
 
                 const data = await response.json();
                 log.backend('Loaded pending ads response', { count: data.ads?.length || 0 });
+                console.log('📊 Full pending ads response:', data);
+                console.log('📊 First ad structure:', data.ads?.[0]);
                 
                 // Response format: { success: true, ads: [...] }
                 const pendingAds = data.ads || [];
+                
+                // Check if ads have _id
+                if (pendingAds.length > 0) {
+                    console.log('🔍 Checking ad ID fields:');
+                    pendingAds.forEach((ad, idx) => {
+                        console.log(`  Ad ${idx}: _id=${ad._id}, id=${ad.id}, title=${ad.title}`);
+                    });
+                }
+                
                 renderPendingAdsTable(pendingAds);
                 
                 // Update pending count in stats (guard in case element missing)
@@ -1314,33 +1364,35 @@
                 return;
             }
 
-            tbody.innerHTML = ads.map((ad, index) => `
+            tbody.innerHTML = ads.map((ad, index) => {
+                console.log(`📋 Rendering ad ${index + 1}:`, { id: ad.id, title: ad.title });
+                return `
                 <tr>
                     <td>${index + 1}</td>
                     <td>
                         <div class="ad-images-container">
                             <div class="ad-image-wrapper">
                                 <span class="ad-image-label">Bottom</span>
-                                <img src="${getImageUrl(ad._id, 'bottom')}" 
+                                <img src="${getImageUrl(ad.id, 'bottom')}" 
                                     alt="${ad.title} - Bottom"
                                     class="ad-image" 
-                                    onclick="showImageModal('${ad._id}', 'bottom')" 
+                                    onclick="showImageModal('${ad.id}', 'bottom')" 
                                     title="Click to view full size"
                                     crossorigin="anonymous"
-                                    onload="console.log('✅ Pending bottom image loaded:', '${ad._id}')"
-                                    onerror="console.error('❌ Pending bottom image failed:', '${getImageUrl(ad._id, 'bottom')}'); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22%3E%3Crect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22%3ELoading...%3C/text%3E%3C/svg%3E'">
+                                    onload="console.log('✅ Pending bottom image loaded:', '${ad.id}')"
+                                    onerror="console.error('❌ Pending bottom image failed:', '${getImageUrl(ad.id, 'bottom')}'); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2250%22%3E%3Crect fill=%22%23f8f9fa%22 width=%22100%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23adb5bd%22 font-size=%2210%22%3ELoading...%3C/text%3E%3C/svg%3E'">
                             </div>
                             ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
                                 <div class="ad-image-wrapper">
                                     <span class="ad-image-label">Full</span>
-                                    <img src="${getImageUrl(ad._id, 'fullscreen')}" 
+                                    <img src="${getImageUrl(ad.id, 'fullscreen')}" 
                                         alt="${ad.title} - Fullscreen"
                                         class="ad-image" 
-                                        onclick="showImageModal('${ad._id}', 'fullscreen')" 
+                                        onclick="showImageModal('${ad.id}', 'fullscreen')" 
                                         title="Click to view full size"
                                         crossorigin="anonymous"
-                                        onload="console.log('✅ Pending full image loaded:', '${ad._id}')"
-                                        onerror="console.error('❌ Pending full image failed:', '${getImageUrl(ad._id, 'fullscreen')}'); this.style.display='none'; this.parentElement.style.display='none';">
+                                        onload="console.log('✅ Pending full image loaded:', '${ad.id}')"
+                                        onerror="console.error('❌ Pending full image failed:', '${getImageUrl(ad.id, 'fullscreen')}'); this.style.display='none'; this.parentElement.style.display='none';">
                                 </div>
                             ` : ''}
                         </div>
@@ -1363,15 +1415,15 @@
                     </td>
                     <td><small>${formatDateTime(ad.createdAt)}</small></td>
                     <td class="action-buttons">
-                        <button class="btn btn-success btn-sm" onclick="showApproveModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-success btn-sm" onclick="showApproveModal('${ad.id}', '${ad.title.replace(/'/g, "\\'")}')">
                             <i class="fas fa-check me-1"></i>Approve
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="showRejectModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-danger btn-sm" onclick="showRejectModal('${ad.id}', '${ad.title.replace(/'/g, "\\'")}')">
                             <i class="fas fa-times me-1"></i>Reject
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         // Approve/Reject/Delete functions
@@ -1517,14 +1569,25 @@
             const priority = document.getElementById('approvePriority').value;
             const token = localStorage.getItem('channelPartnerToken');
 
+            console.log('🔘 Approve button clicked:', { selectedAdId, priority, tokenExists: !!token });
+
             if (!token) {
                 alert('Please login first');
                 showLoginModal();
                 return;
             }
 
+            if (!selectedAdId) {
+                alert('No ad selected. Please try again.');
+                console.error('❌ selectedAdId is undefined!');
+                return;
+            }
+
             try {
-                const response = await fetch(`${API_BASE_URL}/admin/ads/${selectedAdId}/approve`, {
+                const url = `${API_BASE_URL}/admin/ads/${selectedAdId}/approve`;
+                console.log('📡 Making approve request:', { url, selectedAdId, priority });
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1532,6 +1595,8 @@
                     },
                     body: JSON.stringify({ priority: parseInt(priority) })
                 });
+
+                console.log('📥 Approve response status:', response.status);
 
                 if (response.status === 401) {
                     log.error('AUTH', 'Unauthorized - token expired or invalid');
@@ -1562,13 +1627,24 @@
             const reason = document.getElementById('rejectionReason').value.trim();
             const token = localStorage.getItem('channelPartnerToken');
 
+            console.log('🔘 Reject button clicked:', { selectedAdId, reason, tokenExists: !!token });
+
             if (!reason) {
                 alert('Please provide a rejection reason');
                 return;
             }
 
+            if (!selectedAdId) {
+                alert('No ad selected. Please try again.');
+                console.error('❌ selectedAdId is undefined!');
+                return;
+            }
+
             try {
-                const response = await fetch(`${API_BASE_URL}/admin/ads/${selectedAdId}/reject`, {
+                const url = `${API_BASE_URL}/admin/ads/${selectedAdId}/reject`;
+                console.log('📡 Making reject request:', { url, selectedAdId, reason });
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1576,6 +1652,8 @@
                     },
                     body: JSON.stringify({ reason })
                 });
+
+                console.log('📥 Reject response status:', response.status);
 
                 if (!response.ok) throw new Error('Failed to reject');
 
@@ -1592,7 +1670,7 @@
         async function confirmDelete() {
             try {
                 const token = localStorage.getItem('channelPartnerToken');
-                const response = await fetch(`${API_BASE_URL}/admin/ads/${selectedAdId}`, {
+                const response = await fetch(`${API_BASE_URL}/ads/${selectedAdId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`

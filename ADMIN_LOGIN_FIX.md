@@ -6,14 +6,14 @@ The admin login page was showing "Server error. Please try again." when attempti
 ## Root Cause
 The admin panel ([ads.html](ads.html)) was configured with the **WRONG backend URL**:
 - ❌ **Wrong URL:** `https://api.channel-partner.instantllycards.com`
-- ✅ **Correct URL:** `https://instantlly-cards-backend-6ki0.onrender.com`
+- ✅ **Correct URL:** `https://api.instantllycards.com`
 
 The wrong URL was returning HTML error pages instead of JSON responses, causing the "Server error" message.
 
 ## Solution Applied
 
 ### Files Modified:
-1. ✅ [ads.html](ads.html) - Updated BACKEND_URL from `api.channel-partner.instantllycards.com` to `instantlly-cards-backend-6ki0.onrender.com`
+1. ✅ [ads.html](ads.html) - Updated BACKEND_URL from `api.channel-partner.instantllycards.com` to `api.instantllycards.com`
 2. ✅ [config.js](config.js) - Updated PRODUCTION and ADMIN_BACKEND URLs to use correct backend
 
 ## Login Credentials
@@ -28,7 +28,7 @@ Password: admin123
 - https://instantllychannelpatneradmin.vercel.app
 
 **Backend API:**
-- https://instantlly-cards-backend-6ki0.onrender.com/api
+- https://api.instantllycards.com/api
 
 ## Verification
 ✅ Login API tested and confirmed working with credentials above

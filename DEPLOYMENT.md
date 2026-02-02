@@ -181,7 +181,7 @@ After deployment, verify:
 ### Issue: Cannot connect to backend
 **Solution:** Verify backend URL is correct:
 ```
-https://instantlly-cards-backend-6ki0.onrender.com/api
+https://api.instantllycards.com/api
 ```
 
 ---

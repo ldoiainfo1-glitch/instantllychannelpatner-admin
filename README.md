@@ -42,7 +42,7 @@ vercel --prod
 
 The admin portal connects to:
 ```
-https://instantlly-cards-backend-6ki0.onrender.com/api
+https://api.instantllycards.com/api
 ```
 
 Endpoints used:
