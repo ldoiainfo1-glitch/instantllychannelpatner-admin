@@ -517,7 +517,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 Dashboard loading...');
             
-            // Check if user is logged in
+        // Referral count cache to avoid repeated API calls
+        const referralCountCache = {};
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        
+        // Check if user is logged in
             const token = localStorage.getItem('channelPartnerToken');
             
             if (!token) {
@@ -705,7 +709,7 @@
         }
 
         // Batch rendering settings
-        const BATCH_SIZE = 20; // Number of applications to render at once
+        const BATCH_SIZE = 10; // Number of applications to render at once (reduced for faster initial load)
         let approvedBatchIndex = 0;
         let pendingBatchIndex = 0;
         let rejectedBatchIndex = 0;
@@ -743,8 +747,8 @@
                 `);
             }
             
-            // Fetch referral counts for first batch only
-            fetchReferralCountsForApplications(firstBatch);
+            // Fetch referral counts in background (non-blocking)
+            setTimeout(() => fetchReferralCountsForApplications(firstBatch), 100);
         }
 
         function loadMoreApproved() {
@@ -795,8 +799,8 @@
             
             container.innerHTML = createApplicationsTable(applications, 'pending');
             
-            // Fetch referral counts for all applications asynchronously
-            fetchReferralCountsForApplications(applications);
+            // Fetch referral counts in background (non-blocking)
+            setTimeout(() => fetchReferralCountsForApplications(applications), 100);
         }
 
         function displayApprovedApplications(applications) {
@@ -851,8 +855,8 @@
             
             container.innerHTML = createApplicationsTable(applications, 'rejected');
             
-            // Fetch referral counts for all applications asynchronously
-            fetchReferralCountsForApplications(applications);
+            // Fetch referral counts in background (non-blocking)
+            setTimeout(() => fetchReferralCountsForApplications(applications), 100);
         }
 
         // Load more approved applications (batch loading)
@@ -885,8 +889,8 @@
                 loadMoreContainer.remove();
             }
             
-            // Fetch referral counts for this batch
-            fetchReferralCountsForApplications(batch);
+            // Fetch referral counts in background (non-blocking)
+            setTimeout(() => fetchReferralCountsForApplications(batch), 100);
         }
 
         // Create a single application row (extracted for batch loading)
@@ -2718,9 +2722,9 @@ System will auto-convert to correct format.`;
             }
         }
 
-        // Fetch referral counts for all applications
+        // Fetch referral counts for all applications (PARALLEL for speed)
         async function fetchReferralCountsForApplications(applications) {
-            console.log('🔄 Fetching referral counts for', applications.length, 'applications');
+            console.log('🔄 Fetching referral counts for', applications.length, 'applications (parallel)');
             
             // Get auth token
             const token = localStorage.getItem('channelPartnerToken');
@@ -2729,12 +2733,32 @@ System will auto-convert to correct format.`;
                 return;
             }
             
-            for (const app of applications) {
+            // Fetch all referral counts in PARALLEL (not sequential)
+            const fetchPromises = applications.map(async (app) => {
                 const phone = app.applicantInfo.phone;
                 const name = app.applicantInfo.name;
                 const cleanPhone = phone.replace(/\D/g, '');
                 
-                console.log(`📞 Processing ${name} (${phone}) - Cell ID: referrer-${cleanPhone}`);
+                // Check cache first
+                const now = Date.now();
+                if (referralCountCache[phone] && (now - referralCountCache[phone].timestamp) < CACHE_DURATION) {
+                    const count = referralCountCache[phone].count;
+                    const cell = document.getElementById(`referrer-${cleanPhone}`);
+                    if (cell) {
+                        if (count > 0) {
+                            cell.innerHTML = `
+                                <a href="#" onclick="showReferredPeopleAdmin('${phone.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}'); return false;" 
+                                   class="btn btn-sm btn-primary" 
+                                   title="View ${count} referred ${count === 1 ? 'person' : 'people'}">
+                                    <i class="fas fa-users me-1"></i>${count}
+                                </a>
+                            `;
+                        } else {
+                            cell.innerHTML = '<span class="text-muted">0</span>';
+                        }
+                    }
+                    return { name, count, success: true, cached: true };
+                }
                 
                 try {
                     // Try with original phone format first
@@ -2751,8 +2775,6 @@ System will auto-convert to correct format.`;
                             referredApps = [];
                         }
                     } else {
-                        console.warn(`⚠️ API returned ${response.status} for ${name}, trying alternate format...`);
-                        
                         // Try with +91 prefix if not present
                         const altPhone = phone.startsWith('+91') ? phone.substring(3) : `+91${phone}`;
                         response = await fetch(`${API_BASE_URL}/applications?introducedBy=${encodeURIComponent(altPhone)}&status=approved`, {
@@ -2770,7 +2792,9 @@ System will auto-convert to correct format.`;
                     }
                     
                     const count = referredApps.length;
-                    console.log(`✅ ${name} has ${count} referrals`);
+                    
+                    // Cache the result
+                    referralCountCache[phone] = { count, timestamp: now };
                     
                     const cell = document.getElementById(`referrer-${cleanPhone}`);
                     if (cell) {
@@ -2785,18 +2809,21 @@ System will auto-convert to correct format.`;
                         } else {
                             cell.innerHTML = '<span class="text-muted">0</span>';
                         }
-                    } else {
-                        // Cell not in current view (pagination/filtering) - skip silently
-                        console.log(`ℹ️ Cell not in current view: referrer-${cleanPhone}`);
                     }
+                    
+                    return { name, count, success: true, cached: false };
                 } catch (error) {
                     console.error(`❌ Error fetching referral count for ${name}:`, error);
                     const cell = document.getElementById(`referrer-${cleanPhone}`);
                     if (cell) cell.innerHTML = '<span class="text-muted">0</span>';
+                    return { name, count: 0, success: false };
                 }
-            }
+            });
             
-            console.log('✅ Finished fetching all referral counts');
+            // Wait for all requests to complete
+            const results = await Promise.all(fetchPromises);
+            const cached = results.filter(r => r.cached).length;
+            console.log('✅ Finished fetching all referral counts:', results.filter(r => r.success).length, 'successful,', cached, 'from cache');
         }
 
         // Show referred people modal for admin
