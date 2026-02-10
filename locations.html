@@ -1008,7 +1008,7 @@
         async function loadAutocompleteSuggestions() {
             console.log('🔍 Loading autocomplete suggestions...');
             try {
-                const response = await fetch(`${CONFIG.PRODUCTION}/locations/all?format=distinct`, {
+                const response = await fetch(`${API_BASE_URL}/locations/all?format=distinct`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
                         'Content-Type': 'application/json'
