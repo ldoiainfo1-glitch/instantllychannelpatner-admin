@@ -145,12 +145,38 @@
                 <button class="btn btn-add-location me-2" onclick="showAddLocationModal()">
                     <i class="fas fa-plus me-2"></i>Add New Location
                 </button>
+                <button class="btn btn-warning me-2" id="bulkRemapBtn" onclick="showBulkRemapModal()" style="display: none;">
+                    <i class="fas fa-exchange-alt me-2"></i>Bulk Re-Mapping (<span id="selectedCount">0</span>)
+                </button>
                 <button class="btn btn-success me-2" onclick="downloadCSV()">
                     <i class="fas fa-download me-2"></i>Export CSV
                 </button>
                 <button class="btn btn-outline-primary" onclick="showBulkImportModal()">
                     <i class="fas fa-file-upload me-2"></i>Bulk Import
                 </button>
+            </div>
+        </div>
+        
+        <!-- Selection Controls (shown when selections exist) -->
+        <div class="row mb-3" id="selectionControls" style="display: none;">
+            <div class="col-md-12">
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-check-square me-2"></i>
+                        <strong><span id="selectionSummary">0 locations selected</span></strong>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="selectCurrentPage()">
+                            <i class="fas fa-check-square me-1"></i>Select Current Page
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="selectAllFiltered()">
+                            <i class="fas fa-check-double me-1"></i>Select All Filtered
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                            <i class="fas fa-times me-1"></i>Clear Selection
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -164,6 +190,9 @@
                     <table class="table table-hover location-table mb-0">
                         <thead>
                             <tr>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="Select/Deselect Current Page">
+                                </th>
                                 <th style="width: 10%; cursor: pointer;" onclick="openFindReplaceModal('zone')" title="Click to Find & Replace">
                                     Zone <i class="fas fa-search-plus fa-xs ms-1"></i>
                                 </th>
@@ -190,7 +219,7 @@
                         </thead>
                         <tbody id="locationsTableBody">
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="9" class="text-center py-5">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
@@ -205,6 +234,158 @@
                 <nav>
                     <ul class="pagination pagination-sm mb-0 justify-content-center" id="paginationControls"></ul>
                 </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Re-Mapping Modal -->
+    <div class="modal fade" id="bulkRemapModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exchange-alt me-2"></i>Bulk Location Re-Mapping
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong><span id="bulkRemapCount">0</span> locations selected</strong> for re-mapping.
+                        <br>
+                        <small>Select which fields to update and provide new values. Unselected fields will remain unchanged.</small>
+                    </div>
+                    
+                    <form id="bulkRemapForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="updateZone" onchange="toggleField('zone')">
+                                    <label class="form-check-label fw-bold" for="updateZone">
+                                        Update Zone
+                                    </label>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="newZone" placeholder="New Zone" list="zoneList" disabled>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="updateState" onchange="toggleField('state')">
+                                    <label class="form-check-label fw-bold" for="updateState">
+                                        Update State
+                                    </label>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="newState" placeholder="New State" list="stateList" disabled>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="updateDivision" onchange="toggleField('division')">
+                                    <label class="form-check-label fw-bold" for="updateDivision">
+                                        Update Division
+                                    </label>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="newDivision" placeholder="New Division" list="divisionList" disabled>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="updateDistrict" onchange="toggleField('district')">
+                                    <label class="form-check-label fw-bold" for="updateDistrict">
+                                        Update District
+                                    </label>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="newDistrict" placeholder="New District" list="districtList" disabled>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="updateTehsil" onchange="toggleField('tehsil')">
+                                    <label class="form-check-label fw-bold" for="updateTehsil">
+                                        Update Tehsil
+                                    </label>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="newTehsil" placeholder="New Tehsil" list="tehsilList" disabled>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="updatePincode" onchange="toggleField('pincode')">
+                                    <label class="form-check-label fw-bold" for="updatePincode">
+                                        Update Pincode
+                                    </label>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="newPincode" placeholder="New Pincode" pattern="\d{6}" list="pincodeList" disabled>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="updateVillage" onchange="toggleField('village')">
+                                    <label class="form-check-label fw-bold" for="updateVillage">
+                                        Update Village
+                                    </label>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="newVillage" placeholder="New Village" list="villageList" disabled>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> This will update all selected locations and their related channel partner applications and positions.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="previewRemapBtn" onclick="previewBulkRemap()">
+                        <i class="fas fa-eye me-2"></i>Preview Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Changes Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-eye me-2"></i>Preview Bulk Re-Mapping Changes
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Summary:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><strong><span id="previewTotalRecords">0</span> locations</strong> will be updated</li>
+                            <li id="previewApplications" style="display: none;"><strong><span id="previewAppCount">0</span> channel partner applications</strong> will be updated</li>
+                            <li id="previewPositions" style="display: none;"><strong><span id="previewPosCount">0</span> positions</strong> will be updated</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="previewWarnings"></div>
+                    
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Location ID</th>
+                                    <th id="previewHeaders"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="executeRemapBtn" onclick="executeBulkRemap()">
+                        <i class="fas fa-check me-2"></i>Apply Changes
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -386,6 +567,11 @@
         let currentPage = 1;
         let csvData = [];
         
+        // Selection state management
+        let selectedLocations = new Set(); // Store selected location IDs
+        let currentPageLocations = []; // Store current page location objects
+        let previewData = null; // Store preview data for execution
+        
         console.log('✅ API Base URL:', API_BASE_URL);
         console.log('📋 Page Elements Check:');
         console.log('  - totalZones element:', document.getElementById('totalZones'));
@@ -472,7 +658,7 @@
             } catch (error) {
                 console.error('❌ Error loading locations:', error);
                 document.getElementById('locationsTableBody').innerHTML = `
-                    <tr><td colspan="8" class="text-center text-danger p-4">
+                    <tr><td colspan="9" class="text-center text-danger p-4">
                         <i class="fas fa-exclamation-triangle mb-2"></i><br>
                         Error loading locations: ${error.message}<br>
                         <small>Please check the console for more details</small>
@@ -484,21 +670,29 @@
         // Display locations in table
         function displayLocations(locations) {
             const tbody = document.getElementById('locationsTableBody');
+            currentPageLocations = locations; // Store current page locations
             
             if (locations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No locations found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No locations found</td></tr>';
                 return;
             }
             
             tbody.innerHTML = locations.map(loc => `
                 <tr>
-                    <td>${loc.zone}</td>
-                    <td>${loc.state}</td>
-                    <td>${loc.division}</td>
-                    <td>${loc.district}</td>
-                    <td>${loc.tehsil}</td>
-                    <td>${loc.pincode}</td>
-                    <td>${loc.village}</td>
+                    <td>
+                        <input type="checkbox" 
+                               class="location-checkbox" 
+                               data-location-id="${loc._id}" 
+                               ${selectedLocations.has(loc._id) ? 'checked' : ''}
+                               onchange="toggleLocationSelection('${loc._id}')">
+                    </td>
+                    <td>${loc.zone || '-'}</td>
+                    <td>${loc.state || '-'}</td>
+                    <td>${loc.division || '-'}</td>
+                    <td>${loc.district || '-'}</td>
+                    <td>${loc.tehsil || '-'}</td>
+                    <td>${loc.pincode || '-'}</td>
+                    <td>${loc.village || '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary me-1" onclick='editLocation(${JSON.stringify(loc)})'>
                             <i class="fas fa-edit"></i>
@@ -509,6 +703,8 @@
                     </td>
                 </tr>
             `).join('');
+            
+            updateSelectionUI();
         }
 
         // Display pagination
@@ -876,6 +1072,357 @@
 
         // Load autocomplete data when page loads
         document.addEventListener('DOMContentLoaded', loadAutocompleteSuggestions);
+
+        // ==========================================
+        // SELECTION MANAGEMENT FUNCTIONS
+        // ==========================================
+        
+        function toggleLocationSelection(locationId) {
+            if (selectedLocations.has(locationId)) {
+                selectedLocations.delete(locationId);
+            } else {
+                selectedLocations.add(locationId);
+            }
+            updateSelectionUI();
+        }
+        
+        function toggleSelectAll() {
+            const checkbox = document.getElementById('selectAllCheckbox');
+            const checkboxes = document.querySelectorAll('.location-checkbox');
+            
+            if (checkbox.checked) {
+                // Select all on current page
+                checkboxes.forEach(cb => {
+                    selectedLocations.add(cb.dataset.locationId);
+                    cb.checked = true;
+                });
+            } else {
+                // Deselect all on current page
+                checkboxes.forEach(cb => {
+                    selectedLocations.delete(cb.dataset.locationId);
+                    cb.checked = false;
+                });
+            }
+            updateSelectionUI();
+        }
+        
+        function selectCurrentPage() {
+            currentPageLocations.forEach(loc => {
+                selectedLocations.add(loc._id);
+            });
+            // Update checkboxes
+            document.querySelectorAll('.location-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            document.getElementById('selectAllCheckbox').checked = true;
+            updateSelectionUI();
+        }
+        
+        async function selectAllFiltered() {
+            const search = document.getElementById('searchInput').value.trim();
+            
+            // Confirm action
+            if (!confirm('This will select all locations matching the current filter. Continue?')) {
+                return;
+            }
+            
+            try {
+                // Fetch all filtered location IDs (limit to 1000 for safety)
+                const response = await fetch(`${API_BASE_URL}/locations/manage?page=1&limit=1000&search=${search}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    data.locations.forEach(loc => {
+                        selectedLocations.add(loc._id);
+                    });
+                    
+                    // Update checkboxes on current page
+                    document.querySelectorAll('.location-checkbox').forEach(cb => {
+                        if (selectedLocations.has(cb.dataset.locationId)) {
+                            cb.checked = true;
+                        }
+                    });
+                    
+                    updateSelectionUI();
+                    alert(`Selected ${data.locations.length} filtered locations`);
+                } else {
+                    alert('Error selecting filtered locations: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error selecting filtered locations:', error);
+                alert('Error selecting filtered locations: ' + error.message);
+            }
+        }
+        
+        function clearSelection() {
+            selectedLocations.clear();
+            document.querySelectorAll('.location-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            document.getElementById('selectAllCheckbox').checked = false;
+            updateSelectionUI();
+        }
+        
+        function updateSelectionUI() {
+            const count = selectedLocations.size;
+            
+            // Update selection counter
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('selectionSummary').textContent = `${count} location${count !== 1 ? 's' : ''} selected`;
+            
+            // Show/hide bulk remap button and selection controls
+            if (count > 0) {
+                document.getElementById('bulkRemapBtn').style.display = 'inline-block';
+                document.getElementById('selectionControls').style.display = 'block';
+            } else {
+                document.getElementById('bulkRemapBtn').style.display = 'none';
+                document.getElementById('selectionControls').style.display = 'none';
+            }
+            
+            // Update select all checkbox state
+            const currentPageIds = currentPageLocations.map(loc => loc._id);
+            const allCurrentPageSelected = currentPageIds.length > 0 && 
+                currentPageIds.every(id => selectedLocations.has(id));
+            document.getElementById('selectAllCheckbox').checked = allCurrentPageSelected;
+        }
+        
+        // ==========================================
+        // BULK RE-MAPPING FUNCTIONS
+        // ==========================================
+        
+        function showBulkRemapModal() {
+            if (selectedLocations.size === 0) {
+                alert('Please select at least one location');
+                return;
+            }
+            
+            if (selectedLocations.size > 1000) {
+                alert('Maximum 1000 locations can be updated at once. Please narrow your selection.');
+                return;
+            }
+            
+            // Reset form
+            document.getElementById('bulkRemapForm').reset();
+            document.querySelectorAll('[id^="update"]').forEach(cb => {
+                if (cb.type === 'checkbox') cb.checked = false;
+            });
+            document.querySelectorAll('[id^="new"]').forEach(input => {
+                input.disabled = true;
+                input.value = '';
+            });
+            
+            document.getElementById('bulkRemapCount').textContent = selectedLocations.size;
+            
+            new bootstrap.Modal(document.getElementById('bulkRemapModal')).show();
+        }
+        
+        function toggleField(fieldName) {
+            const checkbox = document.getElementById(`update${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}`);
+            const input = document.getElementById(`new${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}`);
+            input.disabled = !checkbox.checked;
+            if (!checkbox.checked) {
+                input.value = '';
+            }
+        }
+        
+        async function previewBulkRemap() {
+            // Collect selected fields and values
+            const updateFields = [];
+            const newMapping = {};
+            
+            const fields = ['zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+            fields.forEach(field => {
+                const checkbox = document.getElementById(`update${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                const input = document.getElementById(`new${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                
+                if (checkbox.checked && input.value.trim()) {
+                    updateFields.push(field);
+                    newMapping[field] = input.value.trim();
+                }
+            });
+            
+            if (updateFields.length === 0) {
+                alert('Please select at least one field to update and provide a value');
+                return;
+            }
+            
+            const btn = document.getElementById('previewRemapBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading Preview...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/locations/bulk-remap/preview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        locationIds: Array.from(selectedLocations),
+                        newMapping,
+                        updateFields
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    previewData = { ...data, newMapping, updateFields }; // Store for execution
+                    displayPreview(data);
+                    
+                    // Hide bulk remap modal and show preview modal
+                    bootstrap.Modal.getInstance(document.getElementById('bulkRemapModal')).hide();
+                    new bootstrap.Modal(document.getElementById('previewModal')).show();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error previewing bulk remap:', error);
+                alert('Error previewing changes: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-eye me-2"></i>Preview Changes';
+            }
+        }
+        
+        function displayPreview(data) {
+            // Update summary
+            document.getElementById('previewTotalRecords').textContent = data.totalRecords;
+            
+            if (data.relatedData.applications > 0) {
+                document.getElementById('previewApplications').style.display = 'list-item';
+                document.getElementById('previewAppCount').textContent = data.relatedData.applications;
+            } else {
+                document.getElementById('previewApplications').style.display = 'none';
+            }
+            
+            if (data.relatedData.positions > 0) {
+                document.getElementById('previewPositions').style.display = 'list-item';
+                document.getElementById('previewPosCount').textContent = data.relatedData.positions;
+            } else {
+                document.getElementById('previewPositions').style.display = 'none';
+            }
+            
+            // Display warnings
+            const warningsDiv = document.getElementById('previewWarnings');
+            if (data.warnings && data.warnings.length > 0) {
+                warningsDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warnings:</strong>
+                        <ul class="mb-0 mt-2">
+                            ${data.warnings.map(w => `<li>${w}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            } else {
+                warningsDiv.innerHTML = '';
+            }
+            
+            // Build preview table headers
+            const headers = [];
+            data.previewChanges[0].old && Object.keys(data.previewChanges[0].old).forEach(field => {
+                headers.push(`<th>Old ${field}</th><th>New ${field}</th>`);
+            });
+            document.getElementById('previewHeaders').innerHTML = headers.join('');
+            
+            // Build preview table body
+            const tbody = document.getElementById('previewTableBody');
+            tbody.innerHTML = data.previewChanges.slice(0, 50).map(change => {
+                let cells = `<td><small>${change._id}</small></td>`;
+                Object.keys(change.old).forEach(field => {
+                    const oldVal = change.old[field] || '-';
+                    const newVal = change.new[field] || '-';
+                    const changed = oldVal !== newVal;
+                    cells += `
+                        <td ${changed ? 'class="text-muted"' : ''}>${oldVal}</td>
+                        <td ${changed ? 'class="fw-bold text-success"' : ''}>${newVal}</td>
+                    `;
+                });
+                return `<tr>${cells}</tr>`;
+            }).join('');
+            
+            if (data.previewChanges.length > 50) {
+                tbody.innerHTML += `<tr><td colspan="100" class="text-center text-muted">... and ${data.previewChanges.length - 50} more</td></tr>`;
+            }
+        }
+        
+        async function executeBulkRemap() {
+            if (!previewData) {
+                alert('No preview data available');
+                return;
+            }
+            
+            const count = previewData.totalRecords;
+            let confirmMessage = '';
+            
+            if (count > 100) {
+                // Require typing CONFIRM for large operations
+                confirmMessage = prompt(
+                    `⚠️ BULK UPDATE WARNING ⚠️\n\n` +
+                    `You are about to update ${count} location records.\n` +
+                    `This will also update ${previewData.relatedData.applications} channel partner applications and ${previewData.relatedData.positions} positions.\n\n` +
+                    `Changes cannot be undone!\n\n` +
+                    `Type "CONFIRM" to proceed:`
+                );
+                
+                if (confirmMessage !== 'CONFIRM') {
+                    alert('Operation cancelled');
+                    return;
+                }
+            } else {
+                // Simple confirmation for smaller operations
+                if (!confirm(
+                    `Are you sure you want to update ${count} location(s)?\n\n` +
+                    `This will also update ${previewData.relatedData.applications} applications and ${previewData.relatedData.positions} positions.\n\n` +
+                    `This action cannot be undone!`
+                )) {
+                    return;
+                }
+            }
+            
+            const btn = document.getElementById('executeRemapBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Applying Changes...';
+            
+            try {
+                const adminUsername = localStorage.getItem('adminUsername') || 'admin';
+                
+                const response = await fetch(`${API_BASE_URL}/locations/bulk-remap/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        locationIds: Array.from(selectedLocations),
+                        newMapping: previewData.newMapping,
+                        updateFields: previewData.updateFields,
+                        adminUsername: adminUsername
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(
+                        `✅ Success!\n\n` +
+                        `${data.results.locationsUpdated} locations updated\n` +
+                        `${data.results.applicationsUpdated} applications updated\n` +
+                        `${data.results.positionsUpdated} positions updated\n\n` +
+                        `Completed in ${data.results.executionDuration}ms`
+                    );
+                    
+                    // Close modal and reload data
+                    bootstrap.Modal.getInstance(document.getElementById('previewModal')).hide();
+                    clearSelection();
+                    loadLocations(currentPage);
+                    loadStatistics();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error executing bulk remap:', error);
+                alert('Error applying changes: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check me-2"></i>Apply Changes';
+            }
+        }
 
         // Find & Replace Functions
         let currentFindReplaceColumn = '';
