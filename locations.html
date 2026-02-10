@@ -145,7 +145,7 @@
                 <button class="btn btn-add-location me-2" onclick="showAddLocationModal()">
                     <i class="fas fa-plus me-2"></i>Add New Location
                 </button>
-                <button class="btn btn-warning me-2" id="bulkRemapBtn" onclick="showBulkRemapModal()" style="display: none;">
+                <button class="btn btn-warning me-2" id="bulkRemapBtn" onclick="showBulkRemapModal()" disabled>
                     <i class="fas fa-exchange-alt me-2"></i>Bulk Re-Mapping (<span id="selectedCount">0</span>)
                 </button>
                 <button class="btn btn-success me-2" onclick="downloadCSV()">
@@ -1170,12 +1170,15 @@
             document.getElementById('selectedCount').textContent = count;
             document.getElementById('selectionSummary').textContent = `${count} location${count !== 1 ? 's' : ''} selected`;
             
-            // Show/hide bulk remap button and selection controls
+            // Enable/disable bulk remap button and show/hide selection controls
+            const bulkRemapBtn = document.getElementById('bulkRemapBtn');
             if (count > 0) {
-                document.getElementById('bulkRemapBtn').style.display = 'inline-block';
+                bulkRemapBtn.disabled = false;
+                bulkRemapBtn.title = `Bulk re-map ${count} selected location${count !== 1 ? 's' : ''}`;
                 document.getElementById('selectionControls').style.display = 'block';
             } else {
-                document.getElementById('bulkRemapBtn').style.display = 'none';
+                bulkRemapBtn.disabled = true;
+                bulkRemapBtn.title = 'Select locations to enable bulk re-mapping';
                 document.getElementById('selectionControls').style.display = 'none';
             }
             
