@@ -193,6 +193,7 @@
                                 <th style="width: 50px;">
                                     <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="Select/Deselect Current Page">
                                 </th>
+                                <th style="width: 60px;">Sr No.</th>
                                 <th style="width: 10%; cursor: pointer;" onclick="openFindReplaceModal('zone')" title="Click to Find & Replace">
                                     Zone <i class="fas fa-search-plus fa-xs ms-1"></i>
                                 </th>
@@ -219,7 +220,7 @@
                         </thead>
                         <tbody id="locationsTableBody">
                             <tr>
-                                <td colspan="9" class="text-center py-5">
+                                <td colspan="10" class="text-center py-5">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
@@ -658,7 +659,7 @@
             } catch (error) {
                 console.error('❌ Error loading locations:', error);
                 document.getElementById('locationsTableBody').innerHTML = `
-                    <tr><td colspan="9" class="text-center text-danger p-4">
+                    <tr><td colspan="10" class="text-center text-danger p-4">
                         <i class="fas fa-exclamation-triangle mb-2"></i><br>
                         Error loading locations: ${error.message}<br>
                         <small>Please check the console for more details</small>
@@ -673,11 +674,13 @@
             currentPageLocations = locations; // Store current page locations
             
             if (locations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No locations found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4">No locations found</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = locations.map(loc => `
+            tbody.innerHTML = locations.map((loc, index) => {
+                const srNo = (currentPage - 1) * 100 + index + 1;
+                return `
                 <tr>
                     <td>
                         <input type="checkbox" 
@@ -686,7 +689,8 @@
                                ${selectedLocations.has(loc._id) ? 'checked' : ''}
                                onchange="toggleLocationSelection('${loc._id}')">
                     </td>
-                    <td>${loc.zone || '-'}</td>
+                    <td class="text-center">${srNo}</td>
+                    <td>${loc.zone || '-'}</td>`;
                     <td>${loc.state || '-'}</td>
                     <td>${loc.division || '-'}</td>
                     <td>${loc.district || '-'}</td>
@@ -702,7 +706,8 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
             
             updateSelectionUI();
         }
