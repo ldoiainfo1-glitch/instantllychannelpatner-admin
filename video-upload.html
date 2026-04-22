@@ -25,8 +25,40 @@
             line-height: 30px;
         }
     </style>
+    <link href="css/sidebar.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Mobile Toggle -->
+    <button class="sidebar-mobile-toggle" onclick="toggleAdminSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleAdminSidebar()"></div>
+
+    <!-- Left Sidebar -->
+    <div class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <img src="/logo.jpg" alt="Logo" height="42" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22%3E%3Crect fill=%22%234f46e5%22 width=%2242%22 height=%2242%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EI%3C/text%3E%3C/svg%3E';">
+            <div class="admin-sidebar-brand">Instantlly<br><span>Admin Dashboard</span></div>
+        </div>
+        <nav class="admin-sidebar-nav">
+            <a class="admin-sidebar-link active" href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a class="admin-sidebar-link " href="ads.html"><i class="fas fa-bullhorn"></i> Ads Management</a>
+            <a class="admin-sidebar-link " href="users.html"><i class="fas fa-users"></i> Users</a>
+            <a class="admin-sidebar-link " href="credits.html"><i class="fas fa-coins"></i> Credits</a>
+            <a class="admin-sidebar-link " href="promotions.html"><i class="fas fa-star"></i> Promotions</a>
+            <a class="admin-sidebar-link " href="payment-plans.html"><i class="fas fa-dollar-sign"></i> Payment Plans</a>
+            <a class="admin-sidebar-link " href="locations.html"><i class="fas fa-map-marker-alt"></i> Locations</a>
+            <a class="admin-sidebar-link " href="login-help.html"><i class="fas fa-life-ring"></i> Login Help</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <button class="admin-sidebar-link w-100" id="logoutBtn" style="color:#f87171;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
     <div class="container">
         <div class="card upload-card shadow-lg">
             <div class="card-header bg-gradient text-white text-center" style="background: linear-gradient(135deg, #1e88e5 0%, #ff7043 100%);">
@@ -216,6 +248,17 @@
 
         // Check video status on page load
         checkVideoStatus();
+    </script>
+    </div><!-- end admin-main -->
+
+    <script>
+    function toggleAdminSidebar() {
+        document.getElementById('adminSidebar').classList.toggle('open');
+        document.getElementById('sidebarBackdrop').classList.toggle('show');
+    }
+    // Logout button
+    const lb = document.getElementById('logoutBtn');
+    if (lb) lb.addEventListener('click', () => { localStorage.clear(); window.location.href='index.html'; });
     </script>
 </body>
 </html>

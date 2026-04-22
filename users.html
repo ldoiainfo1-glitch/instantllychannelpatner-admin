@@ -78,52 +78,42 @@
             color: white;
         }
     </style>
+    <link href="css/sidebar.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
-                <img src="/logo.jpg" alt="Instantlly Logo" height="50" class="me-3" style="border-radius: 8px;" onerror="console.error('Logo failed to load:', this.src); this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22%3E%3Crect fill=%22%234f46e5%22 width=%2250%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EI%3C/text%3E%3C/svg%3E';">
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #111827;">Instantlly Admin</div>
-                    <div class="subtitle-text d-none d-sm-block">User Management</div>
-                </div>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.html">
-                            <i class="fas fa-home"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="users.html">
-                            <i class="fas fa-users"></i> Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="credits.html">
-                            <i class="fas fa-coins"></i> Credits
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="ads.html">
-                            <i class="fas fa-ad"></i> Ads
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="locations.html">
-                            <i class="fas fa-map-marker-alt"></i> Locations
-                        </a>
-                    </li>
-                </ul>
-            </div>
+    <!-- Mobile Toggle -->
+    <button class="sidebar-mobile-toggle" onclick="toggleAdminSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleAdminSidebar()"></div>
+
+    <!-- Left Sidebar -->
+    <div class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <img src="/logo.jpg" alt="Logo" height="42" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22%3E%3Crect fill=%22%234f46e5%22 width=%2242%22 height=%2242%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EI%3C/text%3E%3C/svg%3E';">
+            <div class="admin-sidebar-brand">Instantlly<br><span>Admin Dashboard</span></div>
         </div>
-    </nav>
+        <nav class="admin-sidebar-nav">
+            <a class="admin-sidebar-link " href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a class="admin-sidebar-link " href="ads.html"><i class="fas fa-bullhorn"></i> Ads Management</a>
+            <a class="admin-sidebar-link active" href="users.html"><i class="fas fa-users"></i> Users</a>
+            <a class="admin-sidebar-link " href="credits.html"><i class="fas fa-coins"></i> Credits</a>
+            <a class="admin-sidebar-link " href="promotions.html"><i class="fas fa-star"></i> Promotions</a>
+            <a class="admin-sidebar-link " href="payment-plans.html"><i class="fas fa-dollar-sign"></i> Payment Plans</a>
+            <a class="admin-sidebar-link " href="locations.html"><i class="fas fa-map-marker-alt"></i> Locations</a>
+            <a class="admin-sidebar-link " href="login-help.html"><i class="fas fa-life-ring"></i> Login Help</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <button class="admin-sidebar-link w-100" id="logoutBtn" style="color:#f87171;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+    <!-- Navigation -->
+    
 
     <!-- Header Section -->
     <div class="header-section">
@@ -449,6 +439,17 @@
                 </tr>
             `;
         }
+    </script>
+    </div><!-- end admin-main -->
+
+    <script>
+    function toggleAdminSidebar() {
+        document.getElementById('adminSidebar').classList.toggle('open');
+        document.getElementById('sidebarBackdrop').classList.toggle('show');
+    }
+    // Logout button
+    const lb = document.getElementById('logoutBtn');
+    if (lb) lb.addEventListener('click', () => { localStorage.clear(); window.location.href='index.html'; });
     </script>
 </body>
 </html>
