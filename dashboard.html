@@ -936,9 +936,13 @@
                         </span>
                     </td>
                     <td id="referrer-${app.applicantInfo.phone.replace(/\D/g, '')}">
-                        ${app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== '' 
-                            ? `<span class="badge bg-primary" style="font-size:0.75rem;">${app.introducedBy}</span>`
-                            : '<span class="text-muted small">Self</span>'}
+                        ${(() => {
+                            const ref = app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== '';
+                            if (!ref) return '<span class="text-muted small">Self</span>';
+                            const refApp = [...allPendingApplications, ...allApprovedApplications].find(a => a.applicantInfo?.phone === app.introducedBy);
+                            const refName = refApp ? refApp.applicantInfo.name : '';
+                            return `<div><span class="badge bg-primary" style="font-size:0.75rem;">${app.introducedBy}</span>${refName ? `<br><small class="text-muted">${refName}</small>` : ''}</div>`;
+                        })()}
                     </td>
                     <td style="white-space: nowrap;">
                         ${actionButtons}
@@ -1165,9 +1169,13 @@
                             </span>
                         </td>
                         <td id="referrer-${app.applicantInfo.phone.replace(/\D/g, '')}">
-                            ${app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== ''
-                                ? `<span class="badge bg-primary" style="font-size:0.75rem;">${app.introducedBy}</span>`
-                                : '<span class="text-muted small">Self</span>'}
+                            ${(() => {
+                                const ref = app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== '';
+                                if (!ref) return '<span class="text-muted small">Self</span>';
+                                const refApp = [...allPendingApplications, ...allApprovedApplications].find(a => a.applicantInfo?.phone === app.introducedBy);
+                                const refName = refApp ? refApp.applicantInfo.name : '';
+                                return `<div><span class="badge bg-primary" style="font-size:0.75rem;">${app.introducedBy}</span>${refName ? `<br><small class="text-muted">${refName}</small>` : ''}</div>`;
+                            })()}
                         </td>
                         <td><small>${app.applicantInfo.email || '-'}</small></td>
                         <td>${plan}</td>
