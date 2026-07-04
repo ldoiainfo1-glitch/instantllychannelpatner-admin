@@ -296,6 +296,7 @@
             <a class="admin-sidebar-link" href="promotions.html"><i class="fas fa-bullhorn"></i> Promotions</a>
             <a class="admin-sidebar-link" href="payment-plans.html"><i class="fas fa-dollar-sign"></i> Payment Plans</a>
             <a class="admin-sidebar-link" href="locations.html"><i class="fas fa-map-marker-alt"></i> Locations</a>
+            <a class="admin-sidebar-link" href="connection-tree.html"><i class="fas fa-sitemap"></i> Connection Tree</a>
             <a class="admin-sidebar-link" href="login-help.html"><i class="fas fa-life-ring"></i> Login Help</a>
             <a class="admin-sidebar-link" href="#" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</a>
         </nav>
@@ -935,29 +936,10 @@
                         </span>
                     </td>
                     <td id="referrer-${app.applicantInfo.phone.replace(/\D/g, '')}">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
+                        ${app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== '' 
+                            ? `<span class="badge bg-primary" style="font-size:0.75rem;">${app.introducedBy}</span>`
+                            : '<span class="text-muted small">Self</span>'}
                     </td>
-                    <td><small>${app.applicantInfo.email || '-'}</small></td>
-                    <td>${plan}</td>
-                    <td>${credits}</td>
-                    <td>
-                        ${cashGiven > 0 ? `<span class="badge bg-success">₹${cashGiven.toLocaleString('en-IN')}</span>` : '<span class="text-muted">-</span>'}
-                    </td>
-                    <td>
-                        ${creditsGiven > 0 ? `<span class="badge bg-info text-white">${creditsGiven.toLocaleString('en-IN')}</span>` : '<span class="text-muted">-</span>'}
-                    </td>
-                    <td>
-                        ${totalCommission > 0 ? `
-                            <button class="btn btn-sm btn-warning" onclick="showCommissionDetails('${app._id}', '${app.applicantInfo.name}')" title="View Commission Details">
-                                ₹${totalCommission.toLocaleString('en-IN')}
-                                ${commissionCount > 0 ? `<span class="badge bg-danger ms-1">${commissionCount}</span>` : ''}
-                            </button>
-                        ` : '<span class="text-muted">₹0</span>'}
-                    </td>
-                    <td><small>${positionTitle}</small></td>
-                    <td><small>${new Date(app.appliedDate).toLocaleDateString()}</small></td>
                     <td style="white-space: nowrap;">
                         ${actionButtons}
                     </td>
@@ -1183,9 +1165,9 @@
                             </span>
                         </td>
                         <td id="referrer-${app.applicantInfo.phone.replace(/\D/g, '')}">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
+                            ${app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== ''
+                                ? `<span class="badge bg-primary" style="font-size:0.75rem;">${app.introducedBy}</span>`
+                                : '<span class="text-muted small">Self</span>'}
                         </td>
                         <td><small>${app.applicantInfo.email || '-'}</small></td>
                         <td>${plan}</td>

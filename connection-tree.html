@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Connection Tree - Admin</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/sidebar.css" rel="stylesheet">
+    <style>
+        body { background: #f9fafb; }
+
+        /* ── Tree nodes ── */
+        .tree-node {
+            border-left: 3px solid #3b82f6;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            margin-bottom: 6px;
+            transition: box-shadow 0.2s;
+        }
+        .tree-node:hover { box-shadow: 0 3px 10px rgba(59,130,246,0.18); }
+        .tree-node.level-0 { border-left-color: #7c3aed; }
+        .tree-node.level-1 { border-left-color: #3b82f6; }
+        .tree-node.level-2 { border-left-color: #10b981; }
+        .tree-node.level-3 { border-left-color: #f59e0b; }
+        .tree-node.level-4 { border-left-color: #ef4444; }
+
+        .tree-header {
+            cursor: pointer;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            user-select: none;
+        }
+        .tree-header:hover { background: #f0f9ff; border-radius: 6px; }
+
+        .tree-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+        .tree-avatar-default {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #e0e7ff;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem; color: #4f46e5;
+        }
+
+        .tree-info { flex: 1; min-width: 0; }
+        .tree-name { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
+        .tree-meta { font-size: 0.78rem; color: #6b7280; }
+
+        .tree-badge {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
+            font-weight: 600; flex-shrink: 0;
+        }
+        .badge-approved  { background: #d1fae5; color: #065f46; }
+        .badge-pending   { background: #fef3c7; color: #92400e; }
+        .badge-children  { background: #ede9fe; color: #5b21b6; }
+
+        .tree-toggle-icon { color: #9ca3af; font-size: 0.85rem; flex-shrink: 0; transition: transform 0.2s; }
+        .tree-toggle-icon.open { transform: rotate(90deg); }
+
+        .tree-children {
+            padding-left: 24px;
+            border-left: 1px dashed #d1d5db;
+            margin-left: 20px;
+            margin-top: 4px;
+        }
+
+        /* ── Search ── */
+        #treeSearch { max-width: 380px; }
+
+        /* ── Stats bar ── */
+        .stat-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: white; border-radius: 20px; padding: 6px 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 0.85rem;
+            font-weight: 600; color: #374151;
+        }
+        .stat-pill i { font-size: 1rem; }
+
+        .loading-tree {
+            text-align: center; padding: 60px 20px; color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <button class="sidebar-mobile-toggle" onclick="toggleAdminSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleAdminSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <img src="/logo.jpg" alt="Logo" height="42" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22%3E%3Crect fill=%22%234f46e5%22 width=%2242%22 height=%2242%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EI%3C/text%3E%3C/svg%3E';">
+            <div class="admin-sidebar-brand">Instantlly<br><span>Admin Dashboard</span></div>
+        </div>
+        <nav class="admin-sidebar-nav">
+            <a class="admin-sidebar-link" href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a class="admin-sidebar-link" href="ads.html"><i class="fas fa-bullhorn"></i> Ads Management</a>
+            <a class="admin-sidebar-link" href="users.html"><i class="fas fa-users"></i> Users</a>
+            <a class="admin-sidebar-link" href="credits.html"><i class="fas fa-coins"></i> Credits</a>
+            <a class="admin-sidebar-link" href="promotions.html"><i class="fas fa-bullhorn"></i> Promotions</a>
+            <a class="admin-sidebar-link" href="payment-plans.html"><i class="fas fa-dollar-sign"></i> Payment Plans</a>
+            <a class="admin-sidebar-link" href="locations.html"><i class="fas fa-map-marker-alt"></i> Locations</a>
+            <a class="admin-sidebar-link active" href="connection-tree.html"><i class="fas fa-sitemap"></i> Connection Tree</a>
+            <a class="admin-sidebar-link" href="login-help.html"><i class="fas fa-life-ring"></i> Login Help</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <button class="admin-sidebar-link w-100" id="logoutBtn" style="color:#f87171;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="container-fluid py-4">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+                <div>
+                    <h4 class="mb-1 fw-bold"><i class="fas fa-sitemap me-2 text-primary"></i>Connection Tree</h4>
+                    <p class="text-muted mb-0" style="font-size:0.88rem;">MLM referral hierarchy — expand any node to see their network</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap align-items-center">
+                    <span class="stat-pill"><i class="fas fa-users text-primary"></i> <span id="statTotal">—</span> Total</span>
+                    <span class="stat-pill"><i class="fas fa-check-circle text-success"></i> <span id="statApproved">—</span> Approved</span>
+                    <span class="stat-pill"><i class="fas fa-clock text-warning"></i> <span id="statPending">—</span> Pending</span>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadTree()"><i class="fas fa-sync me-1"></i>Refresh</button>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="mb-3">
+                <div class="input-group" id="treeSearch">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="treeSearchInput" placeholder="Search by name or phone..." oninput="filterTree()">
+                    <button class="btn btn-outline-secondary" onclick="document.getElementById('treeSearchInput').value=''; filterTree()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expand / Collapse all -->
+            <div class="mb-3 d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="expandAll()"><i class="fas fa-expand-alt me-1"></i>Expand All</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="collapseAll()"><i class="fas fa-compress-alt me-1"></i>Collapse All</button>
+            </div>
+
+            <!-- Tree Container -->
+            <div id="treeContainer">
+                <div class="loading-tree">
+                    <div class="spinner-border text-primary mb-3"></div>
+                    <p>Loading connection tree...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/sidebar.js" onerror="console.warn('sidebar.js not found')"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
+        let allApplications = [];
+        let treeData = {};          // phone → {app, children:[phone,...]}
+        let roots = [];             // phones with no known parent
+
+        // ── Auth check ──
+        const token = localStorage.getItem('channelPartnerToken');
+        if (!token) { window.location.href = 'index.html'; }
+
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('channelPartnerToken');
+            window.location.href = 'index.html';
+        });
+
+        // ── Load all applications ──
+        window.loadTree = async function () {
+            const container = document.getElementById('treeContainer');
+            container.innerHTML = '<div class="loading-tree"><div class="spinner-border text-primary mb-3"></div><p>Loading...</p></div>';
+
+            try {
+                const res  = await fetch(`${API_BASE_URL}/applications?_t=${Date.now()}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                allApplications = Array.isArray(data) ? data : (data.applications || []);
+
+                document.getElementById('statTotal').textContent    = allApplications.length;
+                document.getElementById('statApproved').textContent = allApplications.filter(a => a.status === 'approved').length;
+                document.getElementById('statPending').textContent  = allApplications.filter(a => a.status === 'pending').length;
+
+                buildTree();
+                renderTree(allApplications);
+            } catch (e) {
+                console.error('loadTree error:', e);
+                container.innerHTML = `<div class="alert alert-danger">Failed to load: ${e.message}</div>`;
+            }
+        };
+
+        // ── Build adjacency map ──
+        function buildTree() {
+            treeData = {};
+            roots    = [];
+
+            // Index every application by phone
+            allApplications.forEach(app => {
+                const phone = app.applicantInfo?.phone || '';
+                if (!phone) return;
+                treeData[phone] = { app, children: [] };
+            });
+
+            // Wire up parent → child relationships
+            allApplications.forEach(app => {
+                const phone      = app.applicantInfo?.phone || '';
+                const introducedBy = (app.introducedBy || '').trim();
+
+                if (introducedBy && introducedBy !== 'Self' && treeData[introducedBy]) {
+                    treeData[introducedBy].children.push(phone);
+                } else {
+                    roots.push(phone);
+                }
+            });
+
+            // De-dup roots
+            roots = [...new Set(roots)];
+        }
+
+        // ── Render entire tree ──
+        function renderTree(appsToShow) {
+            const container = document.getElementById('treeContainer');
+
+            if (!appsToShow.length) {
+                container.innerHTML = '<div class="loading-tree text-muted"><i class="fas fa-tree fa-3x mb-3"></i><p>No applications found.</p></div>';
+                return;
+            }
+
+            // When search is active, just show flat list
+            const searchTerm = document.getElementById('treeSearchInput').value.trim().toLowerCase();
+            if (searchTerm) {
+                const filtered = appsToShow.filter(app => {
+                    const name  = (app.applicantInfo?.name || '').toLowerCase();
+                    const phone = (app.applicantInfo?.phone || '').toLowerCase();
+                    return name.includes(searchTerm) || phone.includes(searchTerm);
+                });
+                container.innerHTML = filtered.length
+                    ? filtered.map(app => renderNode(app, 0, false)).join('')
+                    : '<div class="loading-tree text-muted">No results found.</div>';
+                return;
+            }
+
+            // Full tree mode
+            container.innerHTML = roots.map(phone => {
+                const node = treeData[phone];
+                return node ? renderSubtree(phone, 0) : '';
+            }).join('');
+        }
+
+        // ── Render a subtree recursively ──
+        function renderSubtree(phone, level) {
+            const node = treeData[phone];
+            if (!node) return '';
+            const { app, children } = node;
+            const hasChildren = children.length > 0;
+            const nodeId = `node-${phone.replace(/\D/g, '')}`;
+            const childrenId = `children-${phone.replace(/\D/g, '')}`;
+
+            const photo = app.applicantInfo?.photo || '';
+            const name  = app.applicantInfo?.name  || '—';
+            const phn   = app.applicantInfo?.phone || '—';
+            const status = (app.status || '').toLowerCase();
+            const pos   = app.positionId || '—';
+            const introducedBy = app.introducedBy || 'Self';
+
+            const badgeClass  = status === 'approved' ? 'badge-approved' : 'badge-pending';
+            const badgeText   = status === 'approved' ? '✓ Approved' : '⏳ Pending';
+            const levelClass  = `level-${Math.min(level, 4)}`;
+
+            const avatarHtml = photo
+                ? `<img src="${photo}" class="tree-avatar" onerror="this.style.display='none'">`
+                : `<div class="tree-avatar-default"><i class="fas fa-user"></i></div>`;
+
+            const childrenHtml = hasChildren
+                ? `<div class="tree-children" id="${childrenId}" style="display:none;">
+                    ${children.map(c => renderSubtree(c, level + 1)).join('')}
+                   </div>`
+                : '';
+
+            return `
+                <div class="tree-node ${levelClass}" id="${nodeId}">
+                    <div class="tree-header" onclick="toggleNode('${childrenId}', this)" ${!hasChildren ? 'style="cursor:default;"' : ''}>
+                        ${hasChildren ? '<i class="fas fa-chevron-right tree-toggle-icon me-1"></i>' : '<i class="fas fa-minus tree-toggle-icon me-1" style="opacity:0.3"></i>'}
+                        ${avatarHtml}
+                        <div class="tree-info">
+                            <div class="tree-name">${name}</div>
+                            <div class="tree-meta">
+                                <i class="fas fa-phone me-1"></i>${phn}
+                                &nbsp;·&nbsp;
+                                <i class="fas fa-map-pin me-1"></i>${pos}
+                                ${introducedBy !== 'Self' ? `&nbsp;·&nbsp;<i class="fas fa-user-friends me-1"></i>via ${introducedBy}` : ''}
+                            </div>
+                        </div>
+                        <span class="tree-badge ${badgeClass}">${badgeText}</span>
+                        ${hasChildren ? `<span class="tree-badge badge-children ms-1"><i class="fas fa-users me-1"></i>${children.length}</span>` : ''}
+                    </div>
+                    ${childrenHtml}
+                </div>`;
+        }
+
+        // ── Render a single node (flat, for search results) ──
+        function renderNode(app, level, showChildren) {
+            const phone  = app.applicantInfo?.phone || '';
+            return renderSubtree(phone, level);
+        }
+
+        // ── Toggle accordion node ──
+        window.toggleNode = function (childrenId, headerEl) {
+            const childrenDiv = document.getElementById(childrenId);
+            if (!childrenDiv) return;
+            const icon = headerEl.querySelector('.tree-toggle-icon');
+            const isOpen = childrenDiv.style.display !== 'none';
+            childrenDiv.style.display = isOpen ? 'none' : 'block';
+            icon?.classList.toggle('open', !isOpen);
+        };
+
+        // ── Expand / Collapse all ──
+        window.expandAll = function () {
+            document.querySelectorAll('.tree-children').forEach(el => { el.style.display = 'block'; });
+            document.querySelectorAll('.tree-toggle-icon').forEach(el => el.classList.add('open'));
+        };
+        window.collapseAll = function () {
+            document.querySelectorAll('.tree-children').forEach(el => { el.style.display = 'none'; });
+            document.querySelectorAll('.tree-toggle-icon').forEach(el => el.classList.remove('open'));
+        };
+
+        // ── Search ──
+        window.filterTree = function () {
+            const term = document.getElementById('treeSearchInput').value.trim().toLowerCase();
+            if (!term) {
+                buildTree();
+                renderTree(allApplications);
+            } else {
+                renderTree(allApplications);
+            }
+        };
+
+        // ── Sidebar toggle (fallback if sidebar.js not loaded) ──
+        window.toggleAdminSidebar = function () {
+            const sidebar  = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            sidebar?.classList.toggle('open');
+            backdrop?.classList.toggle('show');
+        };
+
+        // ── Init ──
+        loadTree();
+    })();
+    </script>
+</body>
+</html>
