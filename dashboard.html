@@ -1081,11 +1081,11 @@
                                 <th>Staff</th>
                                 <th>Referrer</th>
                                 <th>Email</th>
-                                <th>Plan</th>
+                                <!-- <th>Plan</th>
                                 <th>Credits</th>
                                 <th>Cash Given</th>
                                 <th>Credits Given</th>
-                                <th>Commission Get</th>
+                                <th>Commission Get</th> -->
                                 <th>Position</th>
                                 <th>Applied</th>
                                 <th style="width: 280px;">Actions</th>
@@ -1182,6 +1182,7 @@
                             })()}
                         </td>
                         <td><small>${app.applicantInfo.email || '-'}</small></td>
+                        <!--
                         <td>${plan}</td>
                         <td>${credits}</td>
                         <td>
@@ -1198,6 +1199,7 @@
                                 </button>
                             ` : '<span class="text-muted">₹0</span>'}
                         </td>
+                        -->
                         <td><small>${positionTitle}</small></td>
                         <td><small>${new Date(app.appliedDate).toLocaleDateString()}</small></td>
                         <td style="white-space: nowrap;">
