@@ -936,6 +936,8 @@
                             ${app.applicantInfo.phone}
                         </span>
                     </td>
+                    <td><small>${app.applicantInfo.gender || '-'}</small></td>
+                    <td><small>${app.applicantInfo.staffName || '-'}</small></td>
                     <td id="referrer-${app.applicantInfo.phone.replace(/\D/g, '')}">
                         ${(() => {
                             const ref = app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== '';
@@ -945,6 +947,9 @@
                             return `<div><span class="badge bg-primary" style="font-size:0.75rem;">${app.introducedBy}</span>${refName ? `<br><small class="text-muted">${refName}</small>` : ''}</div>`;
                         })()}
                     </td>
+                    <td><small>${app.applicantInfo.email || '-'}</small></td>
+                    <td><small>${positionTitle}</small></td>
+                    <td><small>${new Date(app.appliedDate).toLocaleDateString()}</small></td>
                     <td style="white-space: nowrap;">
                         ${actionButtons}
                     </td>
