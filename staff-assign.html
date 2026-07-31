@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Staff Assign - Instantlly Cards Admin</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/sidebar.css" rel="stylesheet">
+    <style>
+        .staff-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            padding: 1.75rem;
+            max-width: 720px;
+        }
+        #phonesInput {
+            font-family: monospace;
+            min-height: 220px;
+        }
+        .result-badge-updated { color: #10b981; font-weight: 600; }
+        .result-badge-notfound { color: #ef4444; font-weight: 600; }
+        #resultsBox {
+            display: none;
+            margin-top: 1.5rem;
+        }
+        #notFoundList {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Toggle -->
+    <button class="sidebar-mobile-toggle" onclick="toggleAdminSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleAdminSidebar()"></div>
+
+    <!-- Left Sidebar -->
+    <div class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <img src="/logo.jpg" alt="Logo" height="42" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22%3E%3Crect fill=%22%234f46e5%22 width=%2242%22 height=%2242%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2220%22%3EI%3C/text%3E%3C/svg%3E';">
+            <div class="admin-sidebar-brand">Instantlly<br><span>Admin Dashboard</span></div>
+        </div>
+
+        <nav class="admin-sidebar-nav">
+            <a class="admin-sidebar-link" href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a class="admin-sidebar-link" href="ads.html"><i class="fas fa-bullhorn"></i> Ads Management</a>
+            <a class="admin-sidebar-link" href="users.html"><i class="fas fa-users"></i> Users</a>
+            <a class="admin-sidebar-link" href="credits.html"><i class="fas fa-coins"></i> Credits</a>
+            <a class="admin-sidebar-link" href="promotions.html"><i class="fas fa-bullhorn"></i> Promotions</a>
+            <a class="admin-sidebar-link" href="payment-plans.html"><i class="fas fa-dollar-sign"></i> Payment Plans</a>
+            <a class="admin-sidebar-link" href="locations.html"><i class="fas fa-map-marker-alt"></i> Locations</a>
+            <a class="admin-sidebar-link" href="connection-tree.html"><i class="fas fa-sitemap"></i> Connection Tree</a>
+            <a class="admin-sidebar-link" href="login-help.html"><i class="fas fa-life-ring"></i> Login Help</a>
+            <a class="admin-sidebar-link active" href="staff-assign.html"><i class="fas fa-id-badge"></i> Staff Assign</a>
+        </nav>
+
+        <div class="admin-sidebar-footer">
+            <button class="admin-sidebar-link w-100" id="logoutBtn" style="color:#f87171;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="container-fluid pb-5" style="padding-top: 24px;">
+            <h4 class="fw-bold mb-1">Staff Assign</h4>
+            <p class="text-muted mb-4">Paste a list of phone numbers, pick a staff member, and apply it to every matching application at once.</p>
+
+            <div class="staff-card">
+                <div class="mb-3">
+                    <label for="staffSelect" class="form-label fw-semibold">Staff Name</label>
+                    <select class="form-select" id="staffSelect">
+                        <option value="" selected disabled>Select Staff</option>
+                        <option value="Chirag">Chirag</option>
+                        <option value="Sonu">Sonu</option>
+                        <option value="Roy">Roy</option>
+                        <option value="Divya">Divya</option>
+                        <option value="Deepa">Deepa</option>
+                        <option value="Kaushal">Kaushal</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="phonesInput" class="form-label fw-semibold">Phone Numbers</label>
+                    <textarea class="form-control" id="phonesInput" placeholder="Paste numbers here — one per line, or separated by commas/spaces&#10;e.g.&#10;9729660014&#10;9568611752&#10;9812447757"></textarea>
+                    <div class="form-text" id="phoneCountText">0 numbers detected</div>
+                </div>
+
+                <button class="btn btn-primary" id="assignBtn">
+                    <i class="fas fa-check me-1"></i> Assign Staff
+                </button>
+
+                <div id="resultsBox">
+                    <hr>
+                    <p class="mb-1"><span class="result-badge-updated"><i class="fas fa-check-circle"></i> Updated: <span id="updatedCount">0</span></span></p>
+                    <p class="mb-1"><span class="result-badge-notfound"><i class="fas fa-times-circle"></i> Not Found: <span id="notFoundCount">0</span></span></p>
+                    <div id="notFoundWrap" style="display:none;">
+                        <p class="mb-1 mt-2 small text-muted">These numbers had no matching application:</p>
+                        <div id="notFoundList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/cache-buster.js"></script>
+    <script src="config.js"></script>
+    <script>
+        const API_BASE_URL = ADMIN_CONFIG.getApiBaseUrl();
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = localStorage.getItem('channelPartnerToken');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const phonesInput = document.getElementById('phonesInput');
+            const phoneCountText = document.getElementById('phoneCountText');
+            const assignBtn = document.getElementById('assignBtn');
+            const staffSelect = document.getElementById('staffSelect');
+
+            function extractPhones(raw) {
+                return [...new Set(
+                    raw
+                        .split(/[\s,]+/)
+                        .map(p => p.replace(/\D/g, ''))
+                        .map(p => p.length > 10 ? p.slice(-10) : p)
+                        .filter(p => p.length === 10)
+                )];
+            }
+
+            phonesInput.addEventListener('input', function () {
+                const count = extractPhones(phonesInput.value).length;
+                phoneCountText.textContent = `${count} number${count === 1 ? '' : 's'} detected`;
+            });
+
+            assignBtn.addEventListener('click', async function () {
+                const staffName = staffSelect.value;
+                const phones = extractPhones(phonesInput.value);
+
+                if (!staffName) {
+                    alert('Please select a staff name.');
+                    return;
+                }
+                if (phones.length === 0) {
+                    alert('Please paste at least one valid 10-digit phone number.');
+                    return;
+                }
+
+                const originalHTML = assignBtn.innerHTML;
+                assignBtn.disabled = true;
+                assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Assigning...';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/admin/applications/bulk-assign-staff`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ phones, staffName })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Failed to assign staff');
+                    }
+
+                    document.getElementById('updatedCount').textContent = data.updated;
+                    document.getElementById('notFoundCount').textContent = data.notFound.length;
+
+                    const notFoundWrap = document.getElementById('notFoundWrap');
+                    const notFoundList = document.getElementById('notFoundList');
+                    if (data.notFound.length > 0) {
+                        notFoundList.innerHTML = data.notFound.join('<br>');
+                        notFoundWrap.style.display = 'block';
+                    } else {
+                        notFoundWrap.style.display = 'none';
+                    }
+
+                    document.getElementById('resultsBox').style.display = 'block';
+
+                } catch (error) {
+                    console.error('Bulk assign error:', error);
+                    alert(error.message || 'Something went wrong');
+                } finally {
+                    assignBtn.disabled = false;
+                    assignBtn.innerHTML = originalHTML;
+                }
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                localStorage.removeItem('channelPartnerToken');
+                window.location.href = 'index.html';
+            });
+        });
+
+        function toggleAdminSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('show');
+            document.getElementById('sidebarBackdrop').classList.toggle('show');
+        }
+    </script>
+</body>
+</html>
