@@ -102,9 +102,38 @@
                     <div class="form-text" id="phoneCountText">0 numbers detected</div>
                 </div>
 
-                <button class="btn btn-primary" id="assignBtn">
-                    <i class="fas fa-check me-1"></i> Assign Staff
+                <button class="btn btn-outline-primary" id="previewBtn">
+                    <i class="fas fa-eye me-1"></i> Preview
                 </button>
+                <button class="btn btn-primary" id="assignBtn" style="display:none;">
+                    <i class="fas fa-check me-1"></i> Confirm & Assign
+                </button>
+
+                <div id="previewBox" style="display:none;">
+                    <hr>
+                    <p class="mb-2">
+                        <span class="result-badge-updated"><i class="fas fa-check-circle"></i> Will update: <span id="previewMatchCount">0</span></span>
+                        &nbsp;&nbsp;
+                        <span class="result-badge-notfound"><i class="fas fa-times-circle"></i> Not found: <span id="previewNotFoundCount">0</span></span>
+                    </p>
+                    <div id="previewMatchList" style="max-height:260px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:8px;">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light" style="position: sticky; top: 0;">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Current Staff</th>
+                                    <th>New Staff</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewMatchBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="previewNotFoundWrap" style="display:none;">
+                        <p class="mb-1 mt-2 small text-muted">These numbers had no matching application:</p>
+                        <div id="previewNotFoundList" style="max-height:150px; overflow-y:auto; font-family:monospace; font-size:0.85rem; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:0.75rem;"></div>
+                    </div>
+                </div>
 
                 <div id="resultsBox">
                     <hr>
@@ -134,8 +163,13 @@
 
             const phonesInput = document.getElementById('phonesInput');
             const phoneCountText = document.getElementById('phoneCountText');
+            const previewBtn = document.getElementById('previewBtn');
             const assignBtn = document.getElementById('assignBtn');
             const staffSelect = document.getElementById('staffSelect');
+            const previewBox = document.getElementById('previewBox');
+            const resultsBox = document.getElementById('resultsBox');
+
+            let lastPreviewedPhones = null; // to detect if input changed since preview
 
             function extractPhones(raw) {
                 return [...new Set(
@@ -147,12 +181,22 @@
                 )];
             }
 
+            function resetToPreviewState() {
+                // If the user edits inputs after previewing, hide the stale preview/confirm button
+                previewBox.style.display = 'none';
+                assignBtn.style.display = 'none';
+                previewBtn.style.display = 'inline-block';
+                lastPreviewedPhones = null;
+            }
+
             phonesInput.addEventListener('input', function () {
                 const count = extractPhones(phonesInput.value).length;
                 phoneCountText.textContent = `${count} number${count === 1 ? '' : 's'} detected`;
+                resetToPreviewState();
             });
+            staffSelect.addEventListener('change', resetToPreviewState);
 
-            assignBtn.addEventListener('click', async function () {
+            previewBtn.addEventListener('click', async function () {
                 const staffName = staffSelect.value;
                 const phones = extractPhones(phonesInput.value);
 
@@ -162,6 +206,79 @@
                 }
                 if (phones.length === 0) {
                     alert('Please paste at least one valid 10-digit phone number.');
+                    return;
+                }
+
+                const originalHTML = previewBtn.innerHTML;
+                previewBtn.disabled = true;
+                previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
+                resultsBox.style.display = 'none';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/admin/applications/bulk-assign-staff`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ phones, staffName, dryRun: true })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Failed to preview');
+                    }
+
+                    document.getElementById('previewMatchCount').textContent = data.matches.length;
+                    document.getElementById('previewNotFoundCount').textContent = data.notFound.length;
+
+                    const tbody = document.getElementById('previewMatchBody');
+                    tbody.innerHTML = data.matches.map(m => `
+                        <tr>
+                            <td>${m.name}</td>
+                            <td>${m.phone}</td>
+                            <td>${m.currentStaffName || '<span class="text-muted">-</span>'}</td>
+                            <td><strong>${data.staffName}</strong></td>
+                        </tr>
+                    `).join('');
+
+                    const notFoundWrap = document.getElementById('previewNotFoundWrap');
+                    const notFoundList = document.getElementById('previewNotFoundList');
+                    if (data.notFound.length > 0) {
+                        notFoundList.innerHTML = data.notFound.join('<br>');
+                        notFoundWrap.style.display = 'block';
+                    } else {
+                        notFoundWrap.style.display = 'none';
+                    }
+
+                    previewBox.style.display = 'block';
+                    lastPreviewedPhones = phones.join(',');
+
+                    if (data.matches.length > 0) {
+                        assignBtn.style.display = 'inline-block';
+                        previewBtn.style.display = 'none';
+                    } else {
+                        assignBtn.style.display = 'none';
+                    }
+
+                } catch (error) {
+                    console.error('Preview error:', error);
+                    alert(error.message || 'Something went wrong');
+                } finally {
+                    previewBtn.disabled = false;
+                    previewBtn.innerHTML = originalHTML;
+                }
+            });
+
+            assignBtn.addEventListener('click', async function () {
+                const staffName = staffSelect.value;
+                const phones = extractPhones(phonesInput.value);
+
+                // Safety check: don't let a confirm fire against edited input that was never previewed
+                if (phones.join(',') !== lastPreviewedPhones) {
+                    alert('The list changed since you last previewed. Please preview again before confirming.');
+                    resetToPreviewState();
                     return;
                 }
 
@@ -197,7 +314,10 @@
                         notFoundWrap.style.display = 'none';
                     }
 
-                    document.getElementById('resultsBox').style.display = 'block';
+                    resultsBox.style.display = 'block';
+                    previewBox.style.display = 'none';
+                    assignBtn.style.display = 'none';
+                    previewBtn.style.display = 'inline-block';
 
                 } catch (error) {
                     console.error('Bulk assign error:', error);
