@@ -1077,6 +1077,8 @@
                                 <th style="width: 80px;">Photo</th>
                                 <th>Name</th>
                                 <th>Phone</th>
+                                <th>Gender</th>
+                                <th>Staff</th>
                                 <th>Referrer</th>
                                 <th>Email</th>
                                 <th>Plan</th>
@@ -1168,6 +1170,8 @@
                                 ${app.applicantInfo.phone}
                             </span>
                         </td>
+                        <td><small>${app.applicantInfo.gender || '-'}</small></td>
+                        <td><small>${app.applicantInfo.staffName || '-'}</small></td>
                         <td id="referrer-${app.applicantInfo.phone.replace(/\D/g, '')}">
                             ${(() => {
                                 const ref = app.introducedBy && app.introducedBy !== 'Self' && app.introducedBy !== '';
@@ -1292,6 +1296,18 @@
                                         <p class="mb-1">
                                             <i class="fas fa-envelope text-info me-2"></i>
                                             <strong>Email:</strong> ${app.applicantInfo.email}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <i class="fas fa-venus-mars text-primary me-2"></i>
+                                            <strong>Gender:</strong> ${app.applicantInfo.gender || '-'}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <i class="fas fa-id-badge text-secondary me-2"></i>
+                                            <strong>Staff:</strong> ${app.applicantInfo.staffName || '-'}
                                         </p>
                                     </div>
                                     ${app.payment && app.payment.selectedTier ? `
