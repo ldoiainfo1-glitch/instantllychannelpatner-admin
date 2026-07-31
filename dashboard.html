@@ -480,14 +480,14 @@
         let allApprovedApplications = [];
         let allRejectedApplications = [];
 
+        // Referral count cache to avoid repeated API calls
+        const referralCountCache = {};
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 Dashboard loading...');
             
-        // Referral count cache to avoid repeated API calls
-        const referralCountCache = {};
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-        
         // Check if user is logged in
             const token = localStorage.getItem('channelPartnerToken');
             
