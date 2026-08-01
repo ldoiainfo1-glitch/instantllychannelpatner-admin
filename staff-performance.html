@@ -341,8 +341,10 @@
                                 <option value="14">Last 14 Days</option>
                                 <option value="30">Last 30 Days</option>
                                 <option value="all">All Time (Day-wise)</option>
-                                <option value="totals">All-Time Totals (Summary)</option>
                             </select>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="totalsToggleBtn" onclick="toggleTotalsMode()">
+                                <i class="fas fa-chart-pie me-1"></i>All-Time Totals
+                            </button>
                             <input type="text" class="form-control form-control-sm" id="staffSearch" placeholder="Search staff..." style="width:180px;" oninput="renderTable()">
                         </div>
                     </div>
@@ -409,6 +411,7 @@
         let staffApplications = {};
         let allDateKeys = []; // sorted ascending, unique 'YYYY-MM-DD'
         let currentVisibleDateKeys = []; // date keys currently shown in the table (for the Total column modal)
+        let totalsModeActive = false; // true when the "All-Time Totals" summary button is toggled on
 
         function formatPositionTitle(positionId) {
             if (!positionId) return 'N/A';
@@ -561,8 +564,8 @@
         }
 
         function getVisibleDateKeys() {
+            if (totalsModeActive) return []; // summary view - no day columns
             const range = document.getElementById('rangeSelect').value;
-            if (range === 'totals') return []; // summary view - no day columns
             if (range === 'all') return allDateKeys;
 
             const days = parseInt(range, 10);
@@ -584,8 +587,21 @@
             renderTable();
         }
 
+        function toggleTotalsMode() {
+            totalsModeActive = !totalsModeActive;
+
+            const btn = document.getElementById('totalsToggleBtn');
+            btn.classList.toggle('btn-primary', totalsModeActive);
+            btn.classList.toggle('btn-outline-primary', !totalsModeActive);
+
+            // Day-range dropdown is meaningless while the summary view is active
+            document.getElementById('rangeSelect').disabled = totalsModeActive;
+
+            renderTable();
+        }
+
         function renderTable() {
-            const isTotalsMode = document.getElementById('rangeSelect').value === 'totals';
+            const isTotalsMode = totalsModeActive;
             document.getElementById('rankingModeBadge').textContent = isTotalsMode ? 'Ranked by All-Time Total' : 'Ranked by Today';
             const visibleDateKeys = getVisibleDateKeys();
             currentVisibleDateKeys = visibleDateKeys;
