@@ -197,12 +197,57 @@
         .rank-1 { background: #fef3c7; color: #b45309; }
         .rank-2 { background: #e5e7eb; color: #4b5563; }
         .rank-3 { background: #fde4cf; color: #c2410c; }
+        .rank-default { background: #eef2ff; color: #4338ca; }
 
         .badge {
             padding: 0.5rem 1rem;
             border-radius: 12px;
             font-weight: 500;
             font-size: 0.75rem;
+        }
+
+        .cp-cell-link {
+            color: inherit;
+            text-decoration: none;
+            display: block;
+            border-radius: 6px;
+            padding: 2px 6px;
+            margin: -2px -6px;
+        }
+
+        .cp-cell-link:hover {
+            background: #eff6ff;
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .day-count-cell.zero .cp-cell-link {
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .unassigned-row .staff-name-col {
+            color: var(--danger-color);
+        }
+
+        .today-col {
+            background: #fffbeb;
+        }
+
+        .table thead th.today-col {
+            background: #fef3c7;
+        }
+
+        .today-badge {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.4rem;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        #cpDetailsModal .modal-body .table td,
+        #cpDetailsModal .modal-body .table th {
+            white-space: normal;
         }
 
         @media (max-width: 768px) {
@@ -271,8 +316,8 @@
             </div>
             <div class="col-lg-4 col-md-6">
                 <div class="card bg-warning text-white stat-card">
-                    <i class="fas fa-trophy fa-lg mb-2"></i>
                     <div class="card-body text-center py-3">
+                        <i class="fas fa-trophy fa-lg mb-2"></i>
                         <h3 id="topPerformerName" class="mb-1">-</h3>
                         <p class="mb-0 small">Top Performer Today <span id="topPerformerCount" class="badge bg-light text-dark ms-1">0</span></p>
                     </div>
@@ -288,6 +333,7 @@
                         <h5>
                             <i class="fas fa-chart-line me-2 text-primary"></i>
                             Staff Performance - Day-wise CP Count
+                            <span class="badge bg-primary ms-2" style="font-size:0.65rem;">Ranked by Today</span>
                         </h5>
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <select class="form-select form-select-sm" id="rangeSelect" style="width:auto;" onchange="onRangeChange()">
@@ -323,6 +369,26 @@
         </div>
     </div>
 
+    <!-- CP Details Modal -->
+    <div class="modal fade" id="cpDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cpDetailsModalTitle">
+                        <i class="fas fa-id-card me-2 text-primary"></i>CP Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="cpDetailsModalBody">
+                    <!-- filled dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/cache-buster.js"></script>
@@ -338,7 +404,15 @@
         let approvedApplications = [];
         // staffData[staffName] = { dateKey: count, total: n }
         let staffData = {};
+        // staffApplications[staffName][dateKey] = [ {id, name, phone, positionId, appliedDate}, ... ]
+        let staffApplications = {};
         let allDateKeys = []; // sorted ascending, unique 'YYYY-MM-DD'
+        let currentVisibleDateKeys = []; // date keys currently shown in the table (for the Total column modal)
+
+        function formatPositionTitle(positionId) {
+            if (!positionId) return 'N/A';
+            return positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ');
+        }
 
         function todayKey() {
             const d = new Date();
@@ -373,6 +447,13 @@
             document.getElementById('refreshBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 loadStaffPerformance();
+            });
+
+            // Delegate clicks on any count link inside the table to open the CP details modal
+            document.getElementById('perfTableBody').addEventListener('click', function(e) {
+                const link = e.target.closest('.cp-cell-link');
+                if (!link) return;
+                openCpDetailsModal(link.dataset.staff, link.dataset.datekey);
             });
 
             loadStaffPerformance();
@@ -413,15 +494,18 @@
 
         function buildStaffData() {
             staffData = {};
+            staffApplications = {};
             const dateKeySet = new Set();
 
             // Seed every known staff member so they appear even with 0 CPs
             VALID_STAFF.forEach(name => {
                 staffData[name] = { total: 0 };
+                staffApplications[name] = {};
             });
 
             approvedApplications.forEach(app => {
-                const staffName = (app.applicantInfo && app.applicantInfo.staffName) ? app.applicantInfo.staffName.trim() : 'Unassigned';
+                const staffNameRaw = (app.applicantInfo && app.applicantInfo.staffName) ? app.applicantInfo.staffName.trim() : '';
+                const staffName = staffNameRaw || 'Unassigned';
                 const dKey = dateKeyOf(app.appliedDate);
                 if (!dKey) return;
 
@@ -429,12 +513,24 @@
 
                 if (!staffData[staffName]) {
                     staffData[staffName] = { total: 0 };
+                    staffApplications[staffName] = {};
                 }
                 if (!staffData[staffName][dKey]) {
                     staffData[staffName][dKey] = 0;
                 }
                 staffData[staffName][dKey]++;
                 staffData[staffName].total++;
+
+                if (!staffApplications[staffName][dKey]) {
+                    staffApplications[staffName][dKey] = [];
+                }
+                staffApplications[staffName][dKey].push({
+                    id: app._id,
+                    name: app.applicantInfo?.name || '-',
+                    phone: app.applicantInfo?.phone || '-',
+                    positionId: app.positionId,
+                    appliedDate: app.appliedDate
+                });
             });
 
             allDateKeys = Array.from(dateKeySet).sort(); // ascending
@@ -470,14 +566,16 @@
             const days = parseInt(range, 10);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const cutoff = new Date(today);
-            cutoff.setDate(cutoff.getDate() - (days - 1));
 
-            return allDateKeys.filter(k => {
-                const [y, m, d] = k.split('-').map(Number);
-                const dt = new Date(y, m - 1, d);
-                return dt >= cutoff;
-            });
+            // Build every day in the range (not just days that already have data),
+            // so "today" always shows up as a column even with 0 CPs so far.
+            const keys = [];
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+            }
+            return keys;
         }
 
         function onRangeChange() {
@@ -486,26 +584,35 @@
 
         function renderTable() {
             const visibleDateKeys = getVisibleDateKeys();
+            currentVisibleDateKeys = visibleDateKeys;
             const searchTerm = document.getElementById('staffSearch').value.toLowerCase().trim();
+            const tKey = todayKey();
 
-            // Compute total within the visible range per staff, for sorting/ranking within this view
+            // Compute total within the visible range per staff, plus today's count (the ranking basis)
             let staffRows = Object.keys(staffData).map(staffName => {
                 let rangeTotal = 0;
                 visibleDateKeys.forEach(k => { rangeTotal += (staffData[staffName][k] || 0); });
-                return { staffName, rangeTotal, allTimeTotal: staffData[staffName].total };
+                const todayCount = staffData[staffName][tKey] || 0;
+                return { staffName, rangeTotal, todayCount, allTimeTotal: staffData[staffName].total };
             });
 
             if (searchTerm) {
                 staffRows = staffRows.filter(r => r.staffName.toLowerCase().includes(searchTerm));
             }
 
-            staffRows.sort((a, b) => b.rangeTotal - a.rangeTotal || a.staffName.localeCompare(b.staffName));
+            // Rank by today's CP count first (highest today = rank 1), then range total, then name
+            staffRows.sort((a, b) =>
+                b.todayCount - a.todayCount ||
+                b.rangeTotal - a.rangeTotal ||
+                a.staffName.localeCompare(b.staffName)
+            );
 
             // Header
             const thead = document.getElementById('perfTableHead');
             let headHtml = '<tr><th class="staff-name-col">Staff Name</th>';
             visibleDateKeys.forEach(k => {
-                headHtml += `<th class="text-center">${formatColumnLabel(k)}</th>`;
+                const isToday = k === tKey;
+                headHtml += `<th class="text-center${isToday ? ' today-col' : ''}">${formatColumnLabel(k)}${isToday ? ' <span class="badge bg-primary today-badge">Today</span>' : ''}</th>`;
             });
             headHtml += '<th class="text-center">Total</th></tr>';
             thead.innerHTML = headHtml;
@@ -517,15 +624,31 @@
             } else {
                 let bodyHtml = '';
                 staffRows.forEach((row, idx) => {
-                    const rankBadge = idx === 0 ? '<span class="rank-badge rank-1">1</span>' :
-                                       idx === 1 ? '<span class="rank-badge rank-2">2</span>' :
-                                       idx === 2 ? '<span class="rank-badge rank-3">3</span>' : '';
-                    bodyHtml += `<tr><td class="staff-name-col">${rankBadge}${row.staffName}</td>`;
+                    const isUnassignedRow = row.staffName === 'Unassigned';
+                    const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-default';
+                    const rankBadge = isUnassignedRow
+                        ? '<span class="rank-badge" style="background:#fee2e2;color:#b91c1c;"><i class="fas fa-exclamation" style="font-size:0.7rem;"></i></span>'
+                        : `<span class="rank-badge ${rankClass}">${idx + 1}</span>`;
+                    const rowClass = isUnassignedRow ? 'unassigned-row' : '';
+                    bodyHtml += `<tr class="${rowClass}"><td class="staff-name-col">${rankBadge}${row.staffName}</td>`;
                     visibleDateKeys.forEach(k => {
                         const count = staffData[row.staffName][k] || 0;
-                        bodyHtml += `<td class="day-count-cell ${count === 0 ? 'zero' : ''}">${count}</td>`;
+                        const isToday = k === tKey;
+                        if (count === 0) {
+                            bodyHtml += `<td class="day-count-cell zero${isToday ? ' today-col' : ''}">0</td>`;
+                        } else {
+                            bodyHtml += `<td class="day-count-cell${isToday ? ' today-col' : ''}">
+                                <a href="javascript:void(0)" class="cp-cell-link" data-staff="${row.staffName}" data-datekey="${k}">${count}</a>
+                            </td>`;
+                        }
                     });
-                    bodyHtml += `<td class="total-count-cell">${row.rangeTotal}</td></tr>`;
+                    if (row.rangeTotal === 0) {
+                        bodyHtml += `<td class="total-count-cell">0</td></tr>`;
+                    } else {
+                        bodyHtml += `<td class="total-count-cell">
+                            <a href="javascript:void(0)" class="cp-cell-link" data-staff="${row.staffName}" data-datekey="RANGE_TOTAL">${row.rangeTotal}</a>
+                        </td></tr>`;
+                    }
                 });
                 tbody.innerHTML = bodyHtml;
             }
@@ -542,6 +665,143 @@
             });
             footHtml += `<td class="text-center">${grandTotal}</td></tr>`;
             tfoot.innerHTML = footHtml;
+        }
+
+        // Collect the CP list for a staff+dateKey ('RANGE_TOTAL' aggregates over the visible date range)
+        function getCpListFor(staffName, dateKey) {
+            const byDate = staffApplications[staffName] || {};
+            if (dateKey === 'RANGE_TOTAL') {
+                let list = [];
+                currentVisibleDateKeys.forEach(k => {
+                    if (byDate[k]) list = list.concat(byDate[k]);
+                });
+                // Newest first
+                return list.sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate));
+            }
+            return (byDate[dateKey] || []).slice().sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate));
+        }
+
+        function openCpDetailsModal(staffName, dateKey) {
+            const cpList = getCpListFor(staffName, dateKey);
+            const isUnassigned = staffName === 'Unassigned';
+
+            const titleSuffix = dateKey === 'RANGE_TOTAL' ? '(selected range)' : `on ${formatColumnLabel(dateKey)}`;
+            document.getElementById('cpDetailsModalTitle').innerHTML = isUnassigned
+                ? `<i class="fas fa-user-slash me-2 text-danger"></i>Unassigned CPs ${titleSuffix}`
+                : `<i class="fas fa-id-card me-2 text-primary"></i>${staffName} - CPs Added ${titleSuffix}`;
+
+            renderCpModalBody(cpList, isUnassigned);
+
+            const modalEl = document.getElementById('cpDetailsModal');
+            const existingModal = bootstrap.Modal.getInstance(modalEl);
+            const modal = existingModal || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function renderCpModalBody(cpList, isUnassigned) {
+            const body = document.getElementById('cpDetailsModalBody');
+
+            if (cpList.length === 0) {
+                body.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No CPs found here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const staffOptions = VALID_STAFF.map(s => `<option value="${s}">${s}</option>`).join('');
+
+            const rows = cpList.map(cp => {
+                const dateStr = cp.appliedDate ? new Date(cp.appliedDate).toLocaleDateString('en-IN') : '-';
+                const assignCell = isUnassigned ? `
+                    <div class="d-flex gap-1">
+                        <select class="form-select form-select-sm assign-staff-select" style="width:auto;">
+                            <option value="">Assign to...</option>
+                            ${staffOptions}
+                        </select>
+                        <button class="btn btn-sm btn-primary assign-staff-btn" data-app-id="${cp.id}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                ` : '';
+
+                return `
+                    <tr data-row-app-id="${cp.id}">
+                        <td><strong>${cp.name}</strong></td>
+                        <td>${cp.phone}</td>
+                        <td><small>${formatPositionTitle(cp.positionId)}</small></td>
+                        <td><small>${dateStr}</small></td>
+                        ${isUnassigned ? `<td>${assignCell}</td>` : ''}
+                    </tr>
+                `;
+            }).join('');
+
+            body.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Position</th>
+                                <th>Applied Date</th>
+                                ${isUnassigned ? '<th>Assign Staff</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+
+            if (isUnassigned) {
+                body.querySelectorAll('.assign-staff-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const row = this.closest('tr');
+                        const select = row.querySelector('.assign-staff-select');
+                        const staffName = select.value;
+                        if (!staffName) {
+                            select.classList.add('is-invalid');
+                            return;
+                        }
+                        assignStaffToApplication(this.dataset.appId, staffName, this, row);
+                    });
+                });
+            }
+        }
+
+        async function assignStaffToApplication(appId, staffName, buttonEl, rowEl) {
+            const originalHtml = buttonEl.innerHTML;
+            buttonEl.disabled = true;
+            buttonEl.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/applications/${appId}/edit`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ staffName })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+                // Remove the row from the modal immediately for feedback
+                rowEl.remove();
+
+                // Refresh underlying data in the background so counts/rows update everywhere
+                await loadStaffPerformance();
+
+                // If no rows are left in the modal, show the empty state
+                const tbody = document.querySelector('#cpDetailsModalBody tbody');
+                if (tbody && tbody.children.length === 0) {
+                    renderCpModalBody([], true);
+                }
+            } catch (error) {
+                console.error('❌ Error assigning staff:', error);
+                buttonEl.disabled = false;
+                buttonEl.innerHTML = originalHtml;
+                alert(`Failed to assign staff: ${error.message}`);
+            }
         }
 
         function toggleAdminSidebar() {
