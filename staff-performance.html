@@ -333,14 +333,15 @@
                         <h5>
                             <i class="fas fa-chart-line me-2 text-primary"></i>
                             Staff Performance - Day-wise CP Count
-                            <span class="badge bg-primary ms-2" style="font-size:0.65rem;">Ranked by Today</span>
+                            <span class="badge bg-primary ms-2" id="rankingModeBadge" style="font-size:0.65rem;">Ranked by Today</span>
                         </h5>
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <select class="form-select form-select-sm" id="rangeSelect" style="width:auto;" onchange="onRangeChange()">
                                 <option value="7">Last 7 Days</option>
                                 <option value="14">Last 14 Days</option>
                                 <option value="30">Last 30 Days</option>
-                                <option value="all">All Time</option>
+                                <option value="all">All Time (Day-wise)</option>
+                                <option value="totals">All-Time Totals (Summary)</option>
                             </select>
                             <input type="text" class="form-control form-control-sm" id="staffSearch" placeholder="Search staff..." style="width:180px;" oninput="renderTable()">
                         </div>
@@ -561,6 +562,7 @@
 
         function getVisibleDateKeys() {
             const range = document.getElementById('rangeSelect').value;
+            if (range === 'totals') return []; // summary view - no day columns
             if (range === 'all') return allDateKeys;
 
             const days = parseInt(range, 10);
@@ -583,6 +585,8 @@
         }
 
         function renderTable() {
+            const isTotalsMode = document.getElementById('rangeSelect').value === 'totals';
+            document.getElementById('rankingModeBadge').textContent = isTotalsMode ? 'Ranked by All-Time Total' : 'Ranked by Today';
             const visibleDateKeys = getVisibleDateKeys();
             currentVisibleDateKeys = visibleDateKeys;
             const searchTerm = document.getElementById('staffSearch').value.toLowerCase().trim();
@@ -600,27 +604,37 @@
                 staffRows = staffRows.filter(r => r.staffName.toLowerCase().includes(searchTerm));
             }
 
-            // Rank by today's CP count first (highest today = rank 1), then range total, then name
-            staffRows.sort((a, b) =>
-                b.todayCount - a.todayCount ||
-                b.rangeTotal - a.rangeTotal ||
-                a.staffName.localeCompare(b.staffName)
-            );
+            if (isTotalsMode) {
+                // All-time totals summary - rank purely by the all-time total, no "today" concept here
+                staffRows.sort((a, b) => b.allTimeTotal - a.allTimeTotal || a.staffName.localeCompare(b.staffName));
+            } else {
+                // Rank by today's CP count first (highest today = rank 1), then range total, then name
+                staffRows.sort((a, b) =>
+                    b.todayCount - a.todayCount ||
+                    b.rangeTotal - a.rangeTotal ||
+                    a.staffName.localeCompare(b.staffName)
+                );
+            }
 
             // Header
             const thead = document.getElementById('perfTableHead');
             let headHtml = '<tr><th class="staff-name-col">Staff Name</th>';
-            visibleDateKeys.forEach(k => {
-                const isToday = k === tKey;
-                headHtml += `<th class="text-center${isToday ? ' today-col' : ''}">${formatColumnLabel(k)}${isToday ? ' <span class="badge bg-primary today-badge">Today</span>' : ''}</th>`;
-            });
-            headHtml += '<th class="text-center">Total</th></tr>';
+            if (isTotalsMode) {
+                headHtml += '<th class="text-center">Total CPs (All Time)</th></tr>';
+            } else {
+                visibleDateKeys.forEach(k => {
+                    const isToday = k === tKey;
+                    headHtml += `<th class="text-center${isToday ? ' today-col' : ''}">${formatColumnLabel(k)}${isToday ? ' <span class="badge bg-primary today-badge">Today</span>' : ''}</th>`;
+                });
+                headHtml += '<th class="text-center">Total</th></tr>';
+            }
             thead.innerHTML = headHtml;
 
             // Body
             const tbody = document.getElementById('perfTableBody');
+            const colCount = isTotalsMode ? 2 : (visibleDateKeys.length + 2);
             if (staffRows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${visibleDateKeys.length + 2}" class="text-center text-muted py-4">No staff match your search</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-muted py-4">No staff match your search</td></tr>`;
             } else {
                 let bodyHtml = '';
                 staffRows.forEach((row, idx) => {
@@ -631,45 +645,67 @@
                         : `<span class="rank-badge ${rankClass}">${idx + 1}</span>`;
                     const rowClass = isUnassignedRow ? 'unassigned-row' : '';
                     bodyHtml += `<tr class="${rowClass}"><td class="staff-name-col">${rankBadge}${row.staffName}</td>`;
-                    visibleDateKeys.forEach(k => {
-                        const count = staffData[row.staffName][k] || 0;
-                        const isToday = k === tKey;
-                        if (count === 0) {
-                            bodyHtml += `<td class="day-count-cell zero${isToday ? ' today-col' : ''}">0</td>`;
+
+                    if (isTotalsMode) {
+                        if (row.allTimeTotal === 0) {
+                            bodyHtml += `<td class="total-count-cell">0</td></tr>`;
                         } else {
-                            bodyHtml += `<td class="day-count-cell${isToday ? ' today-col' : ''}">
-                                <a href="javascript:void(0)" class="cp-cell-link" data-staff="${row.staffName}" data-datekey="${k}">${count}</a>
-                            </td>`;
+                            bodyHtml += `<td class="total-count-cell">
+                                <a href="javascript:void(0)" class="cp-cell-link" data-staff="${row.staffName}" data-datekey="ALL_TIME_TOTAL">${row.allTimeTotal}</a>
+                            </td></tr>`;
                         }
-                    });
-                    if (row.rangeTotal === 0) {
-                        bodyHtml += `<td class="total-count-cell">0</td></tr>`;
                     } else {
-                        bodyHtml += `<td class="total-count-cell">
-                            <a href="javascript:void(0)" class="cp-cell-link" data-staff="${row.staffName}" data-datekey="RANGE_TOTAL">${row.rangeTotal}</a>
-                        </td></tr>`;
+                        visibleDateKeys.forEach(k => {
+                            const count = staffData[row.staffName][k] || 0;
+                            const isToday = k === tKey;
+                            if (count === 0) {
+                                bodyHtml += `<td class="day-count-cell zero${isToday ? ' today-col' : ''}">0</td>`;
+                            } else {
+                                bodyHtml += `<td class="day-count-cell${isToday ? ' today-col' : ''}">
+                                    <a href="javascript:void(0)" class="cp-cell-link" data-staff="${row.staffName}" data-datekey="${k}">${count}</a>
+                                </td>`;
+                            }
+                        });
+                        if (row.rangeTotal === 0) {
+                            bodyHtml += `<td class="total-count-cell">0</td></tr>`;
+                        } else {
+                            bodyHtml += `<td class="total-count-cell">
+                                <a href="javascript:void(0)" class="cp-cell-link" data-staff="${row.staffName}" data-datekey="RANGE_TOTAL">${row.rangeTotal}</a>
+                            </td></tr>`;
+                        }
                     }
                 });
                 tbody.innerHTML = bodyHtml;
             }
 
-            // Footer (column totals across all staff for the visible range)
+            // Footer (column totals across all staff)
             const tfoot = document.getElementById('perfTableFoot');
             let grandTotal = 0;
             let footHtml = '<tr><td class="staff-name-col">Total</td>';
-            visibleDateKeys.forEach(k => {
-                let colTotal = 0;
-                staffRows.forEach(row => { colTotal += (staffData[row.staffName][k] || 0); });
-                grandTotal += colTotal;
-                footHtml += `<td class="text-center">${colTotal}</td>`;
-            });
-            footHtml += `<td class="text-center">${grandTotal}</td></tr>`;
+            if (isTotalsMode) {
+                staffRows.forEach(row => { grandTotal += row.allTimeTotal; });
+                footHtml += `<td class="text-center">${grandTotal}</td></tr>`;
+            } else {
+                visibleDateKeys.forEach(k => {
+                    let colTotal = 0;
+                    staffRows.forEach(row => { colTotal += (staffData[row.staffName][k] || 0); });
+                    grandTotal += colTotal;
+                    footHtml += `<td class="text-center">${colTotal}</td>`;
+                });
+                footHtml += `<td class="text-center">${grandTotal}</td></tr>`;
+            }
             tfoot.innerHTML = footHtml;
         }
 
-        // Collect the CP list for a staff+dateKey ('RANGE_TOTAL' aggregates over the visible date range)
+        // Collect the CP list for a staff+dateKey
+        // 'RANGE_TOTAL' aggregates over the visible date range, 'ALL_TIME_TOTAL' aggregates every CP ever
         function getCpListFor(staffName, dateKey) {
             const byDate = staffApplications[staffName] || {};
+            if (dateKey === 'ALL_TIME_TOTAL') {
+                let list = [];
+                Object.keys(byDate).forEach(k => { list = list.concat(byDate[k]); });
+                return list.sort((a, b) => new Date(b.appliedDate) - new Date(a.appliedDate));
+            }
             if (dateKey === 'RANGE_TOTAL') {
                 let list = [];
                 currentVisibleDateKeys.forEach(k => {
@@ -685,7 +721,9 @@
             const cpList = getCpListFor(staffName, dateKey);
             const isUnassigned = staffName === 'Unassigned';
 
-            const titleSuffix = dateKey === 'RANGE_TOTAL' ? '(selected range)' : `on ${formatColumnLabel(dateKey)}`;
+            const titleSuffix = dateKey === 'RANGE_TOTAL' ? '(selected range)' :
+                                 dateKey === 'ALL_TIME_TOTAL' ? '(all time)' :
+                                 `on ${formatColumnLabel(dateKey)}`;
             document.getElementById('cpDetailsModalTitle').innerHTML = isUnassigned
                 ? `<i class="fas fa-user-slash me-2 text-danger"></i>Unassigned CPs ${titleSuffix}`
                 : `<i class="fas fa-id-card me-2 text-primary"></i>${staffName} - CPs Added ${titleSuffix}`;
