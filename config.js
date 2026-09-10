@@ -4,15 +4,15 @@ const ADMIN_CONFIG = {
     API: {
         // Local development
         LOCAL: 'http://localhost:5000/api',
-        
-        // Production backend - Channel Partner Backend (dashboard, applications, credits)
-        PRODUCTION: 'https://api.channel-partner.instantllycards.com/api',
-        
+
+        // Production backend - EC2 instance running the backend service
+        PRODUCTION: 'http://54.226.18.187:5000/api',
+
         // Dedicated admin backend
-        ADMIN_BACKEND: 'https://api.channel-partner.instantllycards.com/api',
-        
-        // Ads backend - ONLY for ads management
-        ADS_BACKEND: 'https://api.instantllycards.com/api'
+        ADMIN_BACKEND: 'http://54.226.18.187:5000/api',
+
+        // Ads backend - points to the same running backend for this deployment
+        ADS_BACKEND: 'http://54.226.18.187:5000/api'
     },
     
     // Determine which API to use
