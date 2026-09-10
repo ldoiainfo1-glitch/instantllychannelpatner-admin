@@ -5,14 +5,15 @@ const ADMIN_CONFIG = {
         // Local development
         LOCAL: 'http://localhost:5000/api',
 
-        // Production backend - EC2 instance running the backend service
-        PRODUCTION: 'http://54.226.18.187:5000/api',
+        // Production backend - same-origin proxy path (see vercel.json rewrites)
+        // avoids browser mixed-content blocking since the EC2 backend is HTTP-only
+        PRODUCTION: '/backend-api',
 
         // Dedicated admin backend
-        ADMIN_BACKEND: 'http://54.226.18.187:5000/api',
+        ADMIN_BACKEND: '/backend-api',
 
         // Ads backend - points to the same running backend for this deployment
-        ADS_BACKEND: 'http://54.226.18.187:5000/api'
+        ADS_BACKEND: '/backend-api'
     },
     
     // Determine which API to use

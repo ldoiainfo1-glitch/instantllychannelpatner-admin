@@ -109,6 +109,10 @@
     {
       "source": "/dashboard",
       "destination": "/dashboard.html"
+    },
+    {
+      "source": "/backend-api/:path*",
+      "destination": "http://54.226.18.187:5000/api/:path*"
     }
   ]
 }
