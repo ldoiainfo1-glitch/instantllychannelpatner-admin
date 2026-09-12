@@ -577,7 +577,12 @@
         // Refresh dashboard statistics
         async function refreshDashboardStats() {
             try {
-                const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard`);
+                const token = localStorage.getItem('channelPartnerToken');
+                const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const stats = await statsResponse.json();
                 
                 document.getElementById('totalPositions').textContent = stats.totalPositions || 0;
@@ -594,7 +599,12 @@
             
             try {
                 // Load dashboard stats
-                const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard`);
+                const token = localStorage.getItem('channelPartnerToken');
+                const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 
                 if (!statsResponse.ok) {
                     throw new Error('Failed to load dashboard stats');
